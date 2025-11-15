@@ -46,7 +46,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
       mostrarMensajeFlotante(
         context,
         "✅ Correo encontrado. Enviando código...",
-        colorFondo: const Color.fromARGB(255, 214, 255, 214),
+        colorFondo: const Color.fromARGB(255, 203, 250, 203),
         colorTexto: Colors.black,
       );
       Navigator.push(
@@ -61,7 +61,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
       mostrarMensajeFlotante(
         context,
         "❌ Correo no encontrado",
-        colorFondo: const Color.fromARGB(255, 243, 243, 243),
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
         colorTexto: Colors.black,
       );
     }

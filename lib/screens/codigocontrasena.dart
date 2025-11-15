@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'rol.dart';
-import 'iniciarsesio.dart';
+import 'iniciarsesion.dart';
 import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'iniciarsesio.dart';
+import 'iniciarsesion.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -32,6 +32,7 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
   }
 
   Future<void> buscarcodigo() async {
+    mostrarLoading(context);
     if (obtenerCodigoIngresado().length != 6) {
       mostrarMensajeFlotante(
         context,
@@ -48,6 +49,8 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
         "correo": widget.correo,
       }),
     );
+
+    ocultarLoading(context);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -66,11 +69,6 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
 
       final String codigoIngresado = obtenerCodigoIngresado();
 
-      if (codigoIngresado != codigo) {
-        mostrarMensajeFlotante(context, "❌ Código incorrecto");
-        return;
-      }
-
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -82,7 +80,7 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       mostrarMensajeFlotante(
         context,
         "❌ Codigo incorrecto",
-        colorFondo: const Color.fromARGB(255, 243, 243, 243),
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
         colorTexto: Colors.black,
       );
     }
@@ -90,9 +88,29 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       mostrarMensajeFlotante(
         context,
         "❌ Error inesperado en el servidor",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
       );
     }
   }
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
     OverlayEntry? overlayEntry;
