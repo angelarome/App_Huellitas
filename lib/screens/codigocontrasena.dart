@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'rol.dart';
-import 'iniciarsesion.dart';
+import 'iniciarsesio.dart';
 import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'iniciarsesion.dart';
+import 'iniciarsesio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -60,14 +60,14 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       final DateTime ahora = DateTime.now();
 
       if (ahora.isAfter(expiracion)) {
-        mostrarMensajeFlotante(context, "Código vencido");
+        mostrarMensajeFlotante(context, "❌ Código vencido");
         return;
       }
 
       final String codigoIngresado = obtenerCodigoIngresado();
 
       if (codigoIngresado != codigo) {
-        mostrarMensajeFlotante(context, "Código incorrecto");
+        mostrarMensajeFlotante(context, "❌ Código incorrecto");
         return;
       }
 
