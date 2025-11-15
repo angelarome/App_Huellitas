@@ -25,6 +25,7 @@ class RecuperarCuentaPage extends StatefulWidget {
 class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
 
   Future<void> recuperarCuenta() async {
+    mostrarLoading(context);
     final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
 
     final response = await http.post(
@@ -34,6 +35,8 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
         "correo": correoController.text,
       }),
     );
+
+    ocultarLoading(context);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -69,6 +72,24 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
       );
     }
   }
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
     OverlayEntry? overlayEntry;
