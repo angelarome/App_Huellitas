@@ -42,6 +42,9 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
     _obtenerPaseador(); // Llamamos a la API apenas se abre la pantalla
   }
 
+  final TextEditingController comentarioCtrl = TextEditingController();
+  int calificacion = 0;
+
   String capitalizar(String texto) {
     if (texto.isEmpty) return texto;
     return texto[0].toUpperCase() + texto.substring(1);
@@ -280,7 +283,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
                   const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
                   const SizedBox(height: 12),
                   Text(
-                    '¿Deseas aceptar esta cita?',
+                    '¿Deseas eliminar este comentario?',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -405,10 +408,251 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
     }
   }
 
-  
-  
+  void _mostrarModalComentario(BuildContext context, Map<String, dynamic>? comentarioEditar) {
+    // Inicializar datos
+    if (comentarioEditar != null) {
+      calificacion = comentarioEditar["calificacion"];
+      comentarioCtrl.text = comentarioEditar["opinion"];
+    } else {
+      calificacion = 0;
+      comentarioCtrl.clear();
+    }
 
-  
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            bool botonHabilitado = calificacion > 0 && comentarioCtrl.text.trim().isNotEmpty;
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFFF8F8F8),
+
+              title: Center(
+                child: Text(
+                  comentarioEditar == null ? "Dejar un comentario" : "Editar comentario",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+                  // ⭐ Estrellas
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          onPressed: () {
+                            setStateModal(() {
+                              calificacion = index + 1;
+                            });
+                          },
+                          iconSize: 35,
+                          icon: Icon(
+                            Icons.star_rounded,
+                            color: (index < calificacion)
+                                ? Colors.amber[700]
+                                : Colors.grey[400],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  // 📝 Texto
+                  TextField(
+                    controller: comentarioCtrl,
+                    maxLines: 3,
+                    onChanged: (_) => setStateModal(() {}),
+                    decoration: InputDecoration(
+                      hintText: "Escribe tu opinión aquí...",
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              actionsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+
+              actionsAlignment: MainAxisAlignment.center, // Centra los botones horizontalmente
+
+              actions: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+
+                    // BOTÓN CANCELAR
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            "assets/cancelar.png", // ← tu imagen
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            "Cancelar",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 16), // Separación entre botones
+
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: botonHabilitado ? Colors.blueAccent : Colors.grey,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: botonHabilitado
+                          ? () async {
+                              if (comentarioEditar == null) {
+                                await _enviarComentario();
+                              } else {
+                                await _editarComentario(
+                                  comentarioEditar["id_calificacion_paseador"],
+                                );
+                              }
+                              Navigator.pop(context);
+                            }
+                          : null,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            comentarioEditar == null
+                                ? "assets/enviar.png"         // Imagen para enviar
+                                : "assets/Correcto.png",       // Imagen para guardar
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            comentarioEditar == null ? "Enviar" : "Editar",
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
+  Future<void> _enviarComentario() async {
+    String comentario = comentarioCtrl.text;
+    int rating = calificacion;
+
+    final url = Uri.parse("http://localhost:5000/comentarPaseador");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_paseador": widget.id_paseador,
+        "id_dueno": widget.id_dueno,
+        "comentario": comentario,
+        "calificacion": rating
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 🔥 Volver a cargar los comentarios
+      await _obtener_comentariosPaseador();
+
+      // 🔥 Volver a cargar el promedio
+      await _promedio_paseador();
+
+      // 🔥 Refrescar la pantalla
+      setState(() {});
+    } else {
+      print("Error: ${response.body}");
+    }
+  }
+
+  Future<void> _editarComentario(int idComentario) async {
+    final url = Uri.parse("http://localhost:5000/editarcomentarioPaseador");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_calificacion_paseador": idComentario,
+        "calificacion": calificacion,
+        "comentario": comentarioCtrl.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      await _obtener_comentariosPaseador();
+      await _promedio_paseador();
+      setState(() {});
+    } else {
+      print("Error: ${response.body}");
+    }
+  }
+
+  Future<void> eliminarComentario(int idComentario) async {
+    final url = Uri.parse("http://localhost:5000/eliminarcomentarioPaseador");
+
+    final response = await http.delete(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"idComentario": idComentario}),
+    );
+
+    if (response.statusCode == 200) {
+      // refrescar datos
+      await _obtener_comentariosPaseador();
+      await _promedio_paseador();
+      setState(() {});
+    } else {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Error al eliminar comentario",
+      );
+    }
+  }
+
   
 
   @override
@@ -619,7 +863,13 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   Widget _contenidoInferior() {
     switch (_seccionActiva) {
       case 0:
-        return _tarjetaComentarios();
+        return Column(
+          children: [
+            _tarjetaComentarios(),   // ⬅️ tu tarjeta principal
+            const SizedBox(height: 20),
+            _comentar(),             // ⬅️ aquí aparece el botón COMENTAR
+          ],
+        );
       case 1:
         return _tarjetaPerfil();
       case 2:
@@ -788,7 +1038,7 @@ Widget _tarjetaPerfil() {
     return Column(
       children: _calificacion.map<Widget>((comentario) {
         return Container(
-          key: ValueKey(comentario["id"]),
+          key: ValueKey(comentario["id_calificacion_paseador"]),
           width: MediaQuery.of(context).size.width * 0.9,
           constraints: const BoxConstraints(minHeight: 200),
           padding: const EdgeInsets.all(20),
@@ -873,7 +1123,7 @@ Widget _tarjetaPerfil() {
                       comentario["yaDioLike"] = true;
                     });
 
-                    await _sumarLike(comentario["id"], comentario["likes"]);
+                    await _sumarLike(comentario["id_calificacion_paseador"], comentario["likes"]);
 
                   },
                 
@@ -892,6 +1142,8 @@ Widget _tarjetaPerfil() {
                   ),
                 ],
               ),
+              if (comentario["id_dueno"] == widget.id_dueno)
+              _botonesEditarEliminar(comentario)
             ],
           ),
         );
@@ -1022,5 +1274,78 @@ Widget _campoConIcono(String label, String iconPath, String hint) {
     ],
   );
 }
+
+Widget _botonesEditarEliminar(Map<String, dynamic> comentario) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.end,
+    children: [
+      // ✏ Botón editar
+      TextButton.icon(
+        onPressed: () {
+          _mostrarModalComentario(context, comentario);
+        },
+        icon: const Icon(Icons.edit, color: Colors.blue),
+        label: const Text("Editar", style: TextStyle(color: Colors.blue)),
+      ),
+
+      const SizedBox(width: 8),
+
+      // 🗑 Botón eliminar
+      TextButton.icon(
+        onPressed: () {
+          mostrarConfirmacionRegistro(
+            context,
+            () => eliminarComentario(comentario["id_calificacion_paseador"]),
+            comentario["id_calificacion_paseador"], // ← tercer parámetro obligatorio
+          );
+        },
+        icon: const Icon(Icons.delete, color: Colors.red),
+        label: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+      ),
+    ],
+  );
+}
+
+
+Widget _comentar() {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: ElevatedButton.icon(
+      onPressed: () {
+        _mostrarModalComentario(context, null);
+      },
+      icon: Image.asset(
+        "assets/Editar.png",
+        width: 24,
+        height: 24,
+      ),
+      label: Stack(
+        children: [
+          // Borde negro
+          Text(
+            "Comentar",
+            style: TextStyle(
+              fontSize: 16,
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2
+                ..color = const Color.fromARGB(255, 29, 29, 29),
+            ),
+          ),
+
+          // Relleno blanco
+          Text(
+            "Comentar",
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color.fromARGB(196, 255, 255, 255),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 }
 

@@ -110,6 +110,26 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> cambiarcontrasena({
+    required String correo,
+    required String contrasena,
+    required String rol,
+  }) async {
+    final url = Uri.parse("$baseUrl/cambiarcontrasena");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"correo": correo, "contrasena": contrasena, "rol": rol}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body); // devuelve {"mensaje": "..."}
+    } else {
+      return null;
+    }
+  }
+
 
   static Future<bool> actualizarImagen({
     required int id,
@@ -509,6 +529,81 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  static Future<Map<String, dynamic>?> enviarcomentariotienda({
+    required int id_tienda,
+    required int id_dueno,
+    required String comentario,
+    required int calificacion,
+  }) async {
+    final url = Uri.parse("$baseUrl/comentarTienda");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_tienda": id_tienda,
+        "id_dueno": id_dueno, 
+        "comentario": comentario,
+        "calificacion": calificacion 
+      }),
+    );
+
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al registrar comentario");
+    }
+
+  }
+
+   static Future<bool> eliminarComentarioTienda({
+    required int idComentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/eliminarcomentarioTienda");
+
+    final response = await http.delete(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"idComentario": idComentario}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Error al eliminar comentario: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<bool> editarComentarioTienda({
+    required int idComentario,
+    required int calificacion,
+    required String comentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/editarcomentarioTienda");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_calificacion_tienda": idComentario,
+        "calificacion": calificacion,
+        "comentario": comentario,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("❌ Error en ApiService editar: ${response.body}");
+      return false;
+    }
+  }
+
+
   static Future<List<Map<String, dynamic>>> obtenerMipaseador({
     required int id_paseador
   }) async {
@@ -740,6 +835,80 @@ class ApiService {
     );
 
     return response.statusCode == 200;
+  }
+
+  static Future<Map<String, dynamic>?> enviarcomentarioVeterinaria({
+    required int id_veterinaria,
+    required int id_dueno,
+    required String comentario,
+    required int calificacion,
+  }) async {
+    final url = Uri.parse("$baseUrl/comentarVeterinaria");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_veterinaria": id_veterinaria,
+        "id_dueno": id_dueno, 
+        "comentario": comentario,
+        "calificacion": calificacion 
+      }),
+    );
+
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al registrar comentario");
+    }
+
+  }
+
+   static Future<bool> eliminarComentarioVeterinaria({
+    required int idComentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/eliminarcomentarioVeterinaria");
+
+    final response = await http.delete(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"idComentario": idComentario}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Error al eliminar comentario: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<bool> editarComentarioVeterinaria({
+    required int idComentario,
+    required int calificacion,
+    required String comentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/editarcomentarioVeterinaria");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_calificacion_veterinaria": idComentario,
+        "calificacion": calificacion,
+        "comentario": comentario,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("❌ Error en ApiService editar: ${response.body}");
+      return false;
+    }
   }
 
   static Future<Map<String, dynamic>> registrarProducto({
@@ -1200,6 +1369,80 @@ class ApiService {
     );
     
     return response.statusCode == 200;
+  }
+
+  static Future<Map<String, dynamic>?> enviarcomentariopaseador({
+    required int id_paseador,
+    required int id_dueno,
+    required String comentario,
+    required int calificacion,
+  }) async {
+    final url = Uri.parse("$baseUrl/comentarPaseador");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_paseador": id_paseador,
+        "id_dueno": id_dueno, 
+        "comentario": comentario,
+        "calificacion": calificacion 
+      }),
+    );
+
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al registrar comentario");
+    }
+
+  }
+
+   static Future<bool> eliminarComentarioPaseador({
+    required int idComentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/eliminarcomentarioPaseador");
+
+    final response = await http.delete(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"idComentario": idComentario}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Error al eliminar comentario: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<bool> editarComentarioPaseador({
+    required int idComentario,
+    required int calificacion,
+    required String comentario,
+  }) async {
+
+    final url = Uri.parse("$baseUrl/editarcomentarioPaseador");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_calificacion_paseador": idComentario,
+        "calificacion": calificacion,
+        "comentario": comentario,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("❌ Error en ApiService editar: ${response.body}");
+      return false;
+    }
   }
 
   

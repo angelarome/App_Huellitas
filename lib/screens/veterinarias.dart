@@ -23,15 +23,9 @@ class PerfilVeterinariaScreen extends StatefulWidget {
 class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> _veterinaria = [];
-  List<Map<String, dynamic>> _citas = [];
-  List<Map<String, dynamic>> _todasLasCitas = [];
-  List<Map<String, dynamic>> _citasPendientes = [];
+
   int _seccionActiva = 1; // 0: Comentarios, 1: Perfil, 2: Citas
-  DateTime? _fecha;
-  TimeOfDay? _horaSeleccionada;
   bool _yaDioLike = false;
-  List<String> _usuario = [];
-  List<String> _telefonos = [];
   List<Map<String, dynamic>> _calificacion = [];
   List<String> _mascotas= [];
   List<Uint8List?> _fotomascotas = [];
@@ -44,6 +38,11 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 
   TextEditingController _fechaController = TextEditingController();
   TextEditingController _horaController = TextEditingController();
+
+  List<Map<String, dynamic>> comentarios = []; // viene de la API
+
+  final TextEditingController comentarioCtrl = TextEditingController();
+  int calificacion = 0;
 
   @override
   void initState() {
@@ -178,6 +177,29 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     }
   }
 
+  Future<void> eliminarComentario(int idComentario) async {
+    final url = Uri.parse("http://localhost:5000/eliminarcomentarioVeterinaria");
+
+    final response = await http.delete(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"idComentario": idComentario}),
+    );
+
+    if (response.statusCode == 200) {
+      // refrescar datos
+      await _obtener_comentariosVeterinaria();
+      await _promedio_veterinaria();
+      setState(() {});
+    } else {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Error al eliminar comentario",
+      );
+    }
+  }
+
+
   Future<void> _sumarLike(int idCalificacion, int nuevosLikes) async {
     final url = Uri.parse("http://localhost:5000/likeComentarioVeterinaria"); // tu endpoint Flask
     try {
@@ -199,7 +221,6 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
       print("❌ Error de conexión: $e");
     }
   }
-
 
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
@@ -288,7 +309,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
                   const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
                   const SizedBox(height: 12),
                   Text(
-                    '¿Deseas cancelar esta cita?',
+                    '¿Deseas eliminar este comentario?',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -341,69 +362,227 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 }
 
 
-  Future<void> aceptar_cita_medica(idCita) async {
-    // 🗓️ FECHA — siempre se formatea (aunque no se cambie)
-    String fecha = "";
-    if (_fecha != null) {
-      // Si el usuario elige nueva fecha
-      fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
-              "${_fecha!.month.toString().padLeft(2, '0')}-"
-              "${_fecha!.day.toString().padLeft(2, '0')}";
-    } 
+  void _mostrarModalComentario(BuildContext context, Map<String, dynamic>? comentarioEditar) {
+    // Inicializar datos
+    if (comentarioEditar != null) {
+      calificacion = comentarioEditar["calificacion"];
+      comentarioCtrl.text = comentarioEditar["opinion"];
+    } else {
+      calificacion = 0;
+      comentarioCtrl.clear();
+    }
 
-    // ⏰ HORA — también siempre se formatea
-    String hora = "";
-    if (_horaSeleccionada != null) {
-      // Si el usuario cambia la hora
-      hora = _horaSeleccionada!.hour.toString().padLeft(2, '0') + ":" +
-            _horaSeleccionada!.minute.toString().padLeft(2, '0') + ":00";
-    } 
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            bool botonHabilitado = calificacion > 0 && comentarioCtrl.text.trim().isNotEmpty;
 
-    final url = Uri.parse("http://localhost:5000/aceptar_cita_medica");
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFFF8F8F8),
 
-    try {
-      final response = await http.put(
-        url,
-        headers: {"Content-Type": "application/json"},
-        
-        body: jsonEncode({
-          "id": idCita,
-          "fecha": fecha,
-          "hora": hora, 
-        }),
-      );
-      if (response.statusCode == 200) {
-        mostrarMensajeFlotante(
-          context,
-          "✅ Cita aceptada correctamente",
-          colorFondo: const Color.fromARGB(255, 243, 243, 243),
-          colorTexto: const Color.fromARGB(255, 0, 0, 0),
+              title: Center(
+                child: Text(
+                  comentarioEditar == null ? "Dejar un comentario" : "Editar comentario",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+                  // ⭐ Estrellas
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          onPressed: () {
+                            setStateModal(() {
+                              calificacion = index + 1;
+                            });
+                          },
+                          iconSize: 35,
+                          icon: Icon(
+                            Icons.star_rounded,
+                            color: (index < calificacion)
+                                ? Colors.amber[700]
+                                : Colors.grey[400],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  // 📝 Texto
+                  TextField(
+                    controller: comentarioCtrl,
+                    maxLines: 3,
+                    onChanged: (_) => setStateModal(() {}),
+                    decoration: InputDecoration(
+                      hintText: "Escribe tu opinión aquí...",
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              actionsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+
+              actionsAlignment: MainAxisAlignment.center, // Centra los botones horizontalmente
+
+              actions: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+
+                    // BOTÓN CANCELAR
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            "assets/cancelar.png", // ← tu imagen
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            "Cancelar",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 16), // Separación entre botones
+
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: botonHabilitado ? Colors.blueAccent : Colors.grey,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: botonHabilitado
+                          ? () async {
+                              if (comentarioEditar == null) {
+                                await _enviarComentario();
+                              } else {
+                                await _editarComentario(
+                                  comentarioEditar["id_calificacion_veterinaria"],
+                                );
+                              }
+                              Navigator.pop(context);
+                            }
+                          : null,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            comentarioEditar == null
+                                ? "assets/enviar.png"         // Imagen para enviar
+                                : "assets/Correcto.png",       // Imagen para guardar
+                            width: 20,
+                            height: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            comentarioEditar == null ? "Enviar" : "Editar",
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
+      },
+    );
+  }
 
 
-        // Limpiar selección de fecha y hora
-        setState(() {
-          _fecha = null;
-          _horaSeleccionada = null;
-        });
+  Future<void> _enviarComentario() async {
+    String comentario = comentarioCtrl.text;
+    int rating = calificacion;
 
-      } else {
-        mostrarMensajeFlotante(
-          context,
-          "❌ Error: No se pudo aceptar la cita",
-          colorFondo: Colors.white,
-          colorTexto: Colors.redAccent,
+    final url = Uri.parse("http://localhost:5000/comentarVeterinaria");
 
-        );
-      }
-    } catch (e) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Error al aceptar cita: $e",
-      );
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_veterinaria": widget.id_veterinaria,
+        "id_dueno": widget.id_dueno,
+        "comentario": comentario,
+        "calificacion": rating
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 🔥 Volver a cargar los comentarios
+      await _obtener_comentariosVeterinaria();
+
+      // 🔥 Volver a cargar el promedio
+      await _promedio_veterinaria();
+
+      // 🔥 Refrescar la pantalla
+      setState(() {});
+    } else {
+      print("Error: ${response.body}");
     }
   }
-  
+
+  Future<void> _editarComentario(int idComentario) async {
+    final url = Uri.parse("http://localhost:5000/editarcomentarioVeterinaria");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_calificacion_veterinaria": idComentario,
+        "calificacion": calificacion,
+        "comentario": comentarioCtrl.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      await _obtener_comentariosVeterinaria();
+      await _promedio_veterinaria();
+      setState(() {});
+    } else {
+      print("Error: ${response.body}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -615,7 +794,13 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   Widget _contenidoInferior() {
     switch (_seccionActiva) {
       case 0:
-        return _tarjetaComentarios();
+        return Column(
+          children: [
+            _tarjetaComentarios(),   // ⬅️ tu tarjeta principal
+            const SizedBox(height: 20),
+            _comentar(),             // ⬅️ aquí aparece el botón COMENTAR
+          ],
+        );
       case 1:
         return _tarjetaPerfil();
       case 2:
@@ -881,13 +1066,87 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
                 ),
               ],
             ),
+
+            if (comentario["id_dueno"] == widget.id_dueno)
+              _botonesEditarEliminar(comentario)
           ],
         ),
       );
     }).toList(),
   );
 }
-  // ═══════════════════════════════════════════
+
+Widget _botonesEditarEliminar(Map<String, dynamic> comentario) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.end,
+    children: [
+      // ✏ Botón editar
+      TextButton.icon(
+        onPressed: () {
+          _mostrarModalComentario(context, comentario);
+        },
+        icon: const Icon(Icons.edit, color: Colors.blue),
+        label: const Text("Editar", style: TextStyle(color: Colors.blue)),
+      ),
+
+      const SizedBox(width: 8),
+
+      // 🗑 Botón eliminar
+      TextButton.icon(
+        onPressed: () {
+          mostrarConfirmacionRegistro(
+            context,
+            () => eliminarComentario(comentario["id_calificacion_veterinaria"]),
+            comentario["id_calificacion_veterinaria"], // ← tercer parámetro obligatorio
+          );
+        },
+        icon: const Icon(Icons.delete, color: Colors.red),
+        label: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+      ),
+    ],
+  );
+}
+
+
+Widget _comentar() {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: ElevatedButton.icon(
+      onPressed: () {
+        _mostrarModalComentario(context, null);
+      },
+      icon: Image.asset(
+        "assets/Editar.png",
+        width: 24,
+        height: 24,
+      ),
+      label: Stack(
+        children: [
+          // Borde negro
+          Text(
+            "Comentar",
+            style: TextStyle(
+              fontSize: 16,
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2
+                ..color = const Color.fromARGB(255, 29, 29, 29),
+            ),
+          ),
+
+          // Relleno blanco
+          Text(
+            "Comentar",
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color.fromARGB(196, 255, 255, 255),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
  
   // ══════════════════════════════════════════
 }

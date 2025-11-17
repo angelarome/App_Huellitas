@@ -94,6 +94,8 @@ class _RegistroUsuarioPageState extends State<RegistroUsuarioPage> {
       mostrarMensajeFlotante(
           context,
           "❌ Las contraseñas no coinciden",
+          colorFondo: const Color.fromARGB(255, 250, 180, 180),
+          colorTexto: Colors.black,
         );
       return;
     }

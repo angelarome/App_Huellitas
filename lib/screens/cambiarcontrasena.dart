@@ -10,15 +10,15 @@ import 'iniciarsesion.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'codigocontrasena.dart';
-
+import 'iniciarsesion.dart';
 
 final TextEditingController correoController = TextEditingController();
 
 class RecuperarCuentaPage extends StatefulWidget {
   final String correo;
-  const RecuperarCuentaPage({super.key, required this.correo});
-
+  final String rol;
+  const RecuperarCuentaPage({super.key, required this.correo, required this.rol});
+  
   @override
   State<RecuperarCuentaPage> createState() => _RecuperarCuentaPageState();
 }
@@ -26,54 +26,84 @@ class RecuperarCuentaPage extends StatefulWidget {
 class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmarController = TextEditingController();
-
+  
   bool _ocultarPassword = true;
   bool _ocultarConfirmar = true;
-  
-  Future<void> recuperarCuenta() async {
-    final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "correo": correoController.text,
-      }),
+  Future<void> contrasena() async {
+  if (passwordController.text != confirmarController.text) {
+    mostrarMensajeFlotante(
+      context,
+      "❌ Las contraseñas no coinciden",
+      colorFondo: const Color.fromARGB(255, 250, 180, 180),
+      colorTexto: Colors.black,
     );
+    return;
+  }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final usuario = data["usuario"];
-      final rol = usuario["rol"]; // si lo necesitas
+  mostrarLoading(context);
 
-      mostrarMensajeFlotante(
-        context,
-        "Correo encontrado. Enviando código...",
-        colorFondo: const Color.fromARGB(255, 214, 255, 214),
-        colorTexto: Colors.black,
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RecuperarCuentaCodigo(correo: correoController.text),
-        ),
-      );
+  final response = await http.put(
+    Uri.parse("http://localhost:5000/cambiarcontrasena"),
+    headers: {"Content-Type": "application/json"},
+    
+    body: jsonEncode({
+      "correo": widget.correo,
+      "contrasena": confirmarController.text,
+      "rol": widget.rol
+    }),
+  );
+  
 
-    }
-    else if (response.statusCode == 404) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Correo no encontrado",
-        colorFondo: const Color.fromARGB(255, 243, 243, 243),
-        colorTexto: Colors.black,
-      );
-    }
-    else {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Error inesperado en el servidor",
-      );
-    }
+  
+  ocultarLoading(context);
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    mostrarMensajeFlotante(
+      context,
+      data["mensaje"], // <--- usar el mensaje del backend
+      colorFondo: const Color.fromARGB(255, 214, 255, 214),
+      colorTexto: Colors.black,
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+    );
+  } else if (response.statusCode == 404) {
+    mostrarMensajeFlotante(
+      context,
+      "❌ No se pudo cambiar la contraseña",
+      colorFondo: const Color.fromARGB(255, 250, 180, 180),
+      colorTexto: Colors.black,
+    );
+  } else {
+    mostrarMensajeFlotante(
+      context,
+      "❌ Error inesperado en el servidor",
+      colorFondo: const Color.fromARGB(255, 250, 180, 180),
+      colorTexto: Colors.black,
+    );
+  }
+}
+
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
@@ -240,18 +270,18 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
 
                   // BOTÓN ENVIAR
                   SizedBox(
-                    width: 150,
+                    width: 175,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        recuperarCuenta();
+                        contrasena();
                       },
                       icon: Image.asset(
-                        'assets/correo.png',
+                        'assets/llave.png',
                         width: 24,
                         height: 24,
                       ),
                       label: const Text(
-                        "Enviar enlace",
+                        "Cambiar contraseña",
                         style: TextStyle(
                           fontWeight: FontWeight.bold, // 🔹 hace la letra más gruesa
                           shadows: [                     // 🔹 agrega sombra al texto
@@ -278,64 +308,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
 
                   const SizedBox(height: 24),
 
-                  // TEXTOS INFERIORES
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Rol1Screen()),
-                        );
-                      },
-                      child: Text(
-                        "¿No tienes cuenta? Crear cuenta",
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 251, 62, 45),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1.5, 1.5),
-                              color: Colors.black,
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                 // 🔹 Texto para ir al login
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginScreen()),
-                        );
-                      },
-                      child: const Text(
-                        "¿Ya tienes una cuenta? Iniciar sesión",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(1.5, 1.5),
-                              color: Colors.black,
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
+                 
                 ],
               ),
             ),

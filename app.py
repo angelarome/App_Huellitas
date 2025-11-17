@@ -322,7 +322,54 @@ def ObtenerCodigo():
     else:
         codigo["expiracion"] = str(expiracion).replace(" ", "T")
         
-    return jsonify(codigo), 200
+    return jsonify(codigo)
+
+@app.route("/cambiarcontrasena", methods=["PUT"])
+def cambiarcontrasena():
+    data = request.get_json()
+    correo = data.get("correo")
+    contrasena = data.get("contrasena")
+    rol = data.get("rol")
+    print("correo:", correo, "rol:", rol, "contrasena:", contrasena)
+    
+    contrasena_cifrada = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    if not all([correo, contrasena]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+    
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    
+    # Actualizar contraseña en usuarios
+    sql = "UPDATE usuarios SET contrasena = %s WHERE correo = %s"
+    cursor.execute(sql, (contrasena_cifrada, correo,))
+    db.commit()
+    
+    # Actualizar contraseña en la tabla correspondiente según rol
+    if rol == "dueno":
+        sql_detalle = "UPDATE dueno_mascotas SET contraseña = %s WHERE correo = %s"
+    elif rol == "veterinaria":
+        sql_detalle = "UPDATE veterinaria SET contrasena = %s WHERE correo = %s"
+    elif rol == "tienda":
+        sql_detalle = "UPDATE tienda SET contrasena = %s WHERE correo = %s"
+    elif rol == "paseador":
+        sql_detalle = "UPDATE paseador SET contrasena = %s WHERE correo = %s"
+    else:
+        cursor.close()
+        db.close()
+        return jsonify({"error": "Rol no reconocido"}), 400
+
+    cursor.execute(sql_detalle, (contrasena_cifrada, correo,))
+    db.commit()  # 🔹 commit necesario
+    # datos_relacionados = cursor.fetchone()  <-- innecesario
+
+    cursor.close()
+    db.close()
+        
+    return jsonify({"mensaje": "Contraseña cambiada correctamente"}), 200
     
 @app.route("/actualizar_imagen", methods=["PUT"])
 def actualizar_imagen():
@@ -827,6 +874,83 @@ def like_comentario():
 
     return jsonify({"mensaje": f"Like sumado al comentario {id} con calificación {like}"}), 200
 
+@app.route("/comentarTienda", methods=["POST"])
+def comentarTienda():
+    data = request.get_json()
+    id_tienda = data.get("id_tienda")
+    id_dueno = data.get("id_dueno")
+    comentario = data.get("comentario")
+    calificacion = data.get("calificacion")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
+    sql = """
+            INSERT INTO calificacion (
+            id_tienda, id_dueno, opinion, calificacion
+            )
+            VALUES (%s, %s, %s, %s)
+        """
+    cursor.execute(sql, (id_tienda, id_dueno, comentario, calificacion))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario registrado"}), 200
+
+
+@app.route("/eliminarcomentarioTienda", methods=["DELETE"])
+def eliminar_comentarioTienda():
+    data = request.get_json()
+    idComentario = data.get("idComentario")
+    
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute(
+        "DELETE FROM calificacion WHERE id_calificacion_tienda = %s",
+        (idComentario,)  # <-- la coma es OBLIGATORIA
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({"mensaje": "Comentario eliminado"}), 200
+
+@app.route("/editarcomentarioTienda", methods=["PUT"])
+def editar_comentarioTienda():
+    data = request.get_json()
+
+    idComentario = data.get("id_calificacion_tienda")
+    calificacion = data.get("calificacion")
+    comentario = data.get("comentario")
+
+    if not idComentario:
+        return jsonify({"error": "Falta el id del comentario"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión con la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE calificacion 
+        SET calificacion = %s, opinion = %s
+        WHERE id_calificacion_tienda  = %s
+    """, (calificacion, comentario, idComentario))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario actualizado"}), 200
+
+
+
 @app.route("/mipaseador", methods=["POST"])
 def obtenerMipaseador():
     data = request.get_json()
@@ -1175,6 +1299,80 @@ def like_comentarioVeterinaria():
 
     return jsonify({"mensaje": f"Like sumado al comentario {id} con calificación {like}"}), 200
 
+@app.route("/comentarVeterinaria", methods=["POST"])
+def comentarVeterinaria():
+    data = request.get_json()
+    id_veterinaria = data.get("id_veterinaria")
+    id_dueno = data.get("id_dueno")
+    comentario = data.get("comentario")
+    calificacion = data.get("calificacion")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
+    sql = """
+            INSERT INTO calificacion_veterinaria (
+            id_veterinaria, id_dueno, opinion, calificacion
+            )
+            VALUES (%s, %s, %s, %s)
+        """
+    cursor.execute(sql, (id_veterinaria, id_dueno, comentario, calificacion))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario registrado"}), 200
+
+
+@app.route("/eliminarcomentarioVeterinaria", methods=["DELETE"])
+def eliminar_comentarioVeterinaria():
+    data = request.get_json()
+    idComentario = data.get("idComentario")
+    
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute(
+        "DELETE FROM calificacion_veterinaria WHERE id_calificacion_veterinaria = %s",
+        (idComentario,)  # <-- la coma es OBLIGATORIA
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({"mensaje": "Comentario eliminado"}), 200
+
+@app.route("/editarcomentarioVeterinaria", methods=["PUT"])
+def editar_comentarioVeterinaria():
+    data = request.get_json()
+
+    idComentario = data.get("id_calificacion_veterinaria")
+    calificacion = data.get("calificacion")
+    comentario = data.get("comentario")
+
+    if not idComentario:
+        return jsonify({"error": "Falta el id del comentario"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión con la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE calificacion_veterinaria 
+        SET calificacion = %s, opinion = %s
+        WHERE id_calificacion_veterinaria = %s
+    """, (calificacion, comentario, idComentario))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario actualizado"}), 200
 
 @app.route("/registrarProducto", methods=["POST"])
 def registrar_producto():
@@ -1666,7 +1864,7 @@ def like_comentarioPaseador():
     db = get_connection()
     cursor = db.cursor()
 
-    cursor.execute("UPDATE calificacion_paseador SET likes = likes + 1 WHERE id = %s", (id,))
+    cursor.execute("UPDATE calificacion_paseador SET likes = likes + 1 WHERE id_calificacion_paseador = %s", (id,))
     db.commit()
 
     return jsonify({"mensaje": f"Like sumado al comentario {id} con calificación {like}"}), 200
@@ -1832,6 +2030,82 @@ def actualizar_Paseador():
     except Exception as e:
         print("💥 Error en actualizar_tienda:", str(e))
         return jsonify({"error": str(e)}), 500
+
+@app.route("/comentarPaseador", methods=["POST"])
+def comentarPaseador():
+    data = request.get_json()
+    id_paseador = data.get("id_paseador")
+    id_dueno = data.get("id_dueno")
+    comentario = data.get("comentario")
+    calificacion = data.get("calificacion")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
+    sql = """
+            INSERT INTO calificacion_paseador (
+            id_paseador, id_dueno, opinion, calificacion
+            )
+            VALUES (%s, %s, %s, %s)
+        """
+    cursor.execute(sql, (id_paseador, id_dueno, comentario, calificacion))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario registrado"}), 200
+
+
+@app.route("/eliminarcomentarioPaseador", methods=["DELETE"])
+def eliminar_comentarioPaseador():
+    data = request.get_json()
+    idComentario = data.get("idComentario")
+    
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute(
+        "DELETE FROM calificacion_paseador WHERE id_calificacion_paseador = %s",
+        (idComentario,)  # <-- la coma es OBLIGATORIA
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({"mensaje": "Comentario eliminado"}), 200
+
+@app.route("/editarcomentarioPaseador", methods=["PUT"])
+def editar_comentarioPaseador():
+    data = request.get_json()
+
+    idComentario = data.get("id_calificacion_paseador")
+    calificacion = data.get("calificacion")
+    comentario = data.get("comentario")
+
+    if not idComentario:
+        return jsonify({"error": "Falta el id del comentario"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión con la base de datos"}), 500
+
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE calificacion_paseador 
+        SET calificacion = %s, opinion = %s
+        WHERE id_calificacion_paseador  = %s
+    """, (calificacion, comentario, idComentario))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Comentario actualizado"}), 200
+
 
 @app.route("/eliminarProducto", methods=["POST"])
 def eliminar_producto():

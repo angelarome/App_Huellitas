@@ -12,13 +12,16 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'cambiarcontrasena.dart';
+import 'dart:async';
 
 class RecuperarCuentaCodigo extends StatefulWidget {
   final String correo;
-
+  final String rol;
+  
   const RecuperarCuentaCodigo({
     super.key,
     required this.correo,
+    required this.rol
   });
 
   @override
@@ -26,10 +29,97 @@ class RecuperarCuentaCodigo extends StatefulWidget {
 }
 
 class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
+  int _segundosRestantes = 120; // 2 minutos
+  Timer? _timer;
+  bool _puedeReenviar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _iniciarTemporizador();
+  }
+
+  void _iniciarTemporizador() {
+    _puedeReenviar = false;
+    _segundosRestantes = 60;
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_segundosRestantes > 0) {
+        setState(() {
+          _segundosRestantes--;
+        });
+      } else {
+        setState(() {
+          _puedeReenviar = true;
+        });
+        _timer?.cancel();
+      }
+    });
+  }
+
+  String _formatearTiempo(int segundos) {
+    final minutos = segundos ~/ 60;
+    final segs = segundos % 60;
+    return '${minutos.toString().padLeft(2, '0')}:${segs.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _reenviarCodigo() async {
+    mostrarLoading(context);
+    final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "correo": widget.correo,
+      }),
+    );
+
+    ocultarLoading(context);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final usuario = data["usuario"];
+
+      mostrarMensajeFlotante(
+        context,
+        "✅ Enviando código...",
+        colorFondo: const Color.fromARGB(255, 203, 250, 203),
+        colorTexto: Colors.black,
+      );
+    }
+    else if (response.statusCode == 404) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Correo no encontrado",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+    }
+    else {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Error inesperado en el servidor",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+    }
+
+    print("Código reenviado");
+    _iniciarTemporizador(); // Reinicia la cuenta regresiva
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   String obtenerCodigoIngresado() {
     return codigoControllers.map((c) => c.text).join();
   }
+
 
   Future<void> buscarcodigo() async {
     mostrarLoading(context);
@@ -63,7 +153,9 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       final DateTime ahora = DateTime.now();
 
       if (ahora.isAfter(expiracion)) {
-        mostrarMensajeFlotante(context, "❌ Código vencido");
+        mostrarMensajeFlotante(context, "❌ Código vencido",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black);
         return;
       }
 
@@ -72,7 +164,7 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => RecuperarCuentaPage(correo: widget.correo),
+          builder: (context) => RecuperarCuentaPage(correo: widget.correo, rol: widget.rol),
         ),
       );
     }
@@ -258,17 +350,17 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
 
                   // BOTÓN ENVIAR
                   SizedBox(
-                    width: 320,
+                    width: 150,
                     child: ElevatedButton.icon(
                       onPressed: () {
                         buscarcodigo();
                       },
                       icon: Image.asset(
-                        'assets/correo.png',
+                        'assets/llave.png',
                         width: 24,
                         height: 24,
                       ),
-                      label: const Text("Enviar codigo"),
+                      label: const Text("Verificar código"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
@@ -280,9 +372,18 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
-
-                ],
+                  const SizedBox(height: 10),
+                    // Botón Reenviar Código
+                  TextButton(
+                      onPressed: _puedeReenviar ? _reenviarCodigo : null,
+                      style: TextButton.styleFrom(
+                        foregroundColor: _puedeReenviar ? Colors.white : Colors.grey, 
+                      ),
+                      child: _puedeReenviar
+                          ? const Text("Reenviar código")
+                          : Text("Reenviar en ${_formatearTiempo(_segundosRestantes)}"),
+                    ),
+                  ],
               ),
             ),
           ),

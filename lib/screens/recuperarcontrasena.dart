@@ -52,7 +52,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => RecuperarCuentaCodigo(correo: correoController.text),
+          builder: (context) => RecuperarCuentaCodigo(correo: correoController.text, rol: rol),
         ),
       );
 
@@ -247,12 +247,12 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
                         recuperarCuenta();
                       },
                       icon: Image.asset(
-                        'assets/correo.png',
+                        'assets/llave.png',
                         width: 24,
                         height: 24,
                       ),
                       label: const Text(
-                        "Enviar enlace",
+                        "Enviar código",
                         style: TextStyle(
                           fontWeight: FontWeight.bold, // 🔹 hace la letra más gruesa
                           shadows: [                     // 🔹 agrega sombra al texto
