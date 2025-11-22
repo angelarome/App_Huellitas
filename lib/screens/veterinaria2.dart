@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'editarVeterinaria.dart';
+import 'calendarioveterinaria.dart';
 
 class PerfilVeterinariaScreen extends StatefulWidget {
   final int id_veterinaria;
@@ -646,6 +647,22 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     );
   }
 
+  Widget getImagenEstado(String estado) {
+    switch (estado.toLowerCase()) {
+      case "Aceptado":
+        return Image.asset("assets/Correcto.png", width: 16, height: 16);
+      case "pendiente":
+        return Image.asset("assets/reloj-de-arena.png", width: 16, height: 16);
+      case "Cancelado":
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+      case "No asistió":
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+      case "Finalizado":
+        return Image.asset("assets/correcto.png", width: 16, height: 16);
+      default:
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+    }
+  }
   // ═══════════════════════════════════════════
   // MENÚ SUPERIOR
   Widget _menuSuperior() {
@@ -828,8 +845,6 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
         return Column(
           key: const ValueKey("citas"),
           children: [
-            _tarjetaMascotasCompartidas(),
-            const SizedBox(height: 20),
             _tarjetaCitaLara(),
           ],
         );
@@ -1096,226 +1111,270 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 }
   // ═══════════════════════════════════════════
   // TARJETAS DE CITAS
-  Widget _tarjetaMascotasCompartidas() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 246, 245, 245),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-          border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
-        ),
-        child: Row(
-          children: [
-            Image.asset("assets/Calendario.png", width: 40, height: 40),
-            const SizedBox(width: 12),
-            Stack(
-              children: [
-                Text(
-                  "Calendario de citas",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    foreground: Paint()
-                      ..style = PaintingStyle.stroke
-                      ..strokeWidth = 2
-                      ..color = Colors.black,
-                  ),
-                ),
-                const Text(
-                  "Calendario de citas",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+ Widget _tarjetaCitaLara() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Calendario
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  CalendarioScreen(id_veterinaria: widget.id_veterinaria),
             ),
-          ],
-        ),
-      );
-    }
-
-  Widget _tarjetaCitaLara() {
-    // 🔹 Tarjeta calendario
-      Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 246, 245, 245),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-          border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
-        ),
-        child: Row(
-          children: [
-            Image.asset("assets/Calendario.png", width: 40, height: 40),
-            const SizedBox(width: 12),
-            Stack(
-              children: [
-                Text(
-                  "Calendario de pedidos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    foreground: Paint()
-                      ..style = PaintingStyle.stroke
-                      ..strokeWidth = 2
-                      ..color = Colors.black,
-                  ),
-                ),
-                const Text(
-                  "Calendario de pedidos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    if (_citasPendientes.isEmpty) {
-      return const SizedBox(); // o un texto: Center(child: Text("No hay citas pendientes"))
-    }
-
-    return Column(
-      children: _citasPendientes.map<Widget>((cita) {
-        final id = cita["id_cita_veterinaria"];
-        final idMascota = cita["id_mascota"];
-        final id_dueno = cita["id_dueno"];
-        final motivo = cita["motivo"] ?? "N/A";
-        final metodoPago = cita["metodo_pago"] ?? "N/A";
-
-        return FutureBuilder<List<dynamic>>(
-          future: Future.wait([
-            _obtenerMascota(idMascota),
-            _obtenerCitasUsuarios(id_dueno),
-          ]),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Text("❌ Error al cargar datos: ${snapshot.error}");
-            }
-
-            final nombreMascota = snapshot.data?[0]?["nombre"] ?? "Sin nombre";
-            final imagenMascota = snapshot.data?[0]?["imagen_perfil"];
-            final nombre = snapshot.data?[1]?["nombre"] ?? "";
-            final apellido = snapshot.data?[1]?["apellido"] ?? "";
-            final nombreUsuario = (nombre.isNotEmpty || apellido.isNotEmpty)
-                ? '${nombre[0].toUpperCase()}${nombre.substring(1)} ${apellido[0].toUpperCase()}${apellido.substring(1)}'
-                : "Sin propietario";
-
-            final telefonoUsuario = snapshot.data?[1]?["telefono"] ?? "N/A";
-
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(blurRadius: 4, color: Colors.black26)],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 246, 245, 245),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
+            border: Border.all(
+                color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+          ),
+          child: Row(
+            children: [
+              Image.asset("assets/Calendario.png", width: 40, height: 40),
+              const SizedBox(width: 12),
+              Stack(
                 children: [
-                  Row(
-                    children: [
-                      ClipOval(
-                        child: imagenMascota != null
-                            ? Image.memory(
-                                base64Decode(imagenMascota),
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                "assets/usuario.png",
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              capitalizar(nombreMascota),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text("Propietario: $nombreUsuario"),
-                            Text("Teléfono: $telefonoUsuario"),
-                            const SizedBox(height: 4),
-                            Text("Motivo: $motivo"),
-                            Text("Tipo de pago: $metodoPago"),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Calendario de pedidos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 2
+                        ..color = Colors.black,
+                    ),
                   ),
-                  const SizedBox(height: 17),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                      onPressed: () {
-                        mostrarConfirmacionRegistro(
-                          context,
-                          () {
-                            cancelar_cita_medica(id); // acción concreta al confirmar
-                          },
-                          id,
-                        );
-                      },  
-                        icon: Image.asset("assets/cancelar.png", width: 24, height: 24),
-                        label: const Text("Cancelar cita",
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 202, 65, 65),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _mostrarModalFechaHora(id);
-                        },
-                        icon: Image.asset("assets/correcto.png", width: 24, height: 24),
-                        label: const Text("Aceptar cita",
-                        style: TextStyle(color: Colors.white)), 
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 93, 195, 113),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Calendario de pedidos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
-            );
-          },
-        );
-      }).toList(),
-    );
-  }
+            ],
+          ),
+        ),
+      ),
+
+      // Citas
+      if (_citasPendientes.isEmpty)
+        const SizedBox() // o un mensaje "No hay citas"
+      else
+        ..._citasPendientes.map<Widget>((cita) {
+          final id = cita["id_cita_veterinaria"];
+          final idMascota = cita["id_mascota"];
+          final id_dueno = cita["id_dueno"];
+          final motivo = cita["motivo"] ?? "N/A";
+          final metodoPago = cita["metodo_pago"] ?? "N/A";
+
+          return FutureBuilder<List<dynamic>>(
+            future: Future.wait([
+              _obtenerMascota(idMascota),
+              _obtenerCitasUsuarios(id_dueno),
+            ]),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Text("❌ Error al cargar datos: ${snapshot.error}");
+              }
+
+              final nombreMascota = snapshot.data?[0]?["nombre"] ?? "Sin nombre";
+              final imagenMascota = snapshot.data?[0]?["imagen_perfil"];
+              final nombre = snapshot.data?[1]?["nombre"] ?? "";
+              final apellido = snapshot.data?[1]?["apellido"] ?? "";
+              final nombreUsuario =
+                  (nombre.isNotEmpty || apellido.isNotEmpty)
+                      ? '${nombre[0].toUpperCase()}${nombre.substring(1)} ${apellido[0].toUpperCase()}${apellido.substring(1)}'
+                      : "Sin propietario";
+              final telefonoUsuario = snapshot.data?[1]?["telefono"] ?? "N/A";
+
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(blurRadius: 4, color: Colors.black26)],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ClipOval(
+                          child: imagenMascota != null
+                              ? Image.memory(
+                                  base64Decode(imagenMascota),
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  "assets/usuario.png",
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Stack(
+                                children: [
+                                  // Contorno negro
+                                  Text(
+                                    _capitalizar(nombreMascota),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      foreground: Paint()
+                                        ..style = PaintingStyle.stroke
+                                        ..strokeWidth = 2
+                                        ..color = Colors.black,
+                                    ),
+                                  ),
+                                  // Texto blanco encima
+                                  Text(
+                                    _capitalizar(nombreMascota),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/Nombre.png",
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text("Propietario: $nombreUsuario"),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/Telefono.png",
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text("Teléfono: $telefonoUsuario"),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/descripcion.png",
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text("Motivo: $motivo"),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    "assets/pago.png",
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text("Tipo de pago: $metodoPago"),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  getImagenEstado(cita["estado"] ?? ""),
+                                  const SizedBox(width: 4),
+                                  Text("Estado: ${cita["estado"] ?? "Desconocido"}"),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 17),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            mostrarConfirmacionRegistro(
+                              context,
+                              () {
+                                cancelar_cita_medica(id);
+                              },
+                              id,
+                            );
+                          },
+                          icon: Image.asset("assets/cancelar.png",
+                              width: 24, height: 24),
+                          label: const Text("Cancelar cita",
+                              style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 202, 65, 65),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _mostrarModalFechaHora(id);
+                          },
+                          icon: Image.asset("assets/correcto.png",
+                              width: 24, height: 24),
+                          label: const Text("Aceptar cita",
+                              style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 93, 195, 113),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }).toList(),
+    ],
+  );
+}
+
 
   // ═══════════════════════════════════════════
   void _mostrarModalFechaHora(int idCita) {
@@ -1425,11 +1484,30 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
       GestureDetector(
         onTap: () async {
           final DateTime? picked = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-          );
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+          builder: (context, child) {
+            return Theme(
+              data: ThemeData(
+                useMaterial3: true,
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                  onPrimary: Colors.white,      // Texto dentro de los botones
+                  surface: Colors.white,        // Fondo del calendario
+                  onSurface: Colors.black87,    // Texto general
+                ),
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                  ),
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
           if (picked != null) {
             setState(() {
               _fecha = picked;
@@ -1491,19 +1569,23 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
             initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  timePickerTheme: TimePickerThemeData(
-                    backgroundColor: Colors.blue[700],
-                    hourMinuteTextColor: Colors.white,
-                    dialHandColor: Colors.white,
-                    dialTextColor: Colors.white,
-                    entryModeIconColor: Colors.white,
+                data: ThemeData(
+                  useMaterial3: true, // Material 3 más moderno
+                  colorScheme: ColorScheme.light(
+                    primary: const Color(0xFF3A97F5), // color del círculo del reloj
+                    onPrimary: Colors.white, // color del texto dentro del círculo
+                    surface: Colors.white, // fondo del diálogo
+                    onSurface: Colors.black87, // color del texto fuera del círculo
+                  ),
+                  textTheme: const TextTheme(
+                    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ),
                 child: child!,
               );
             },
           );
+
           if (picked != null) {
             setState(() {
               _horaSeleccionada = picked;
@@ -1516,7 +1598,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
             controller: _horaController,
             decoration: InputDecoration(
               hintText: "Seleccione la hora",
-              hintStyle: TextStyle(color: Colors.grey[800]),
+              hintStyle: TextStyle(color: const Color.fromARGB(255, 31, 30, 30)),
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Image.asset(

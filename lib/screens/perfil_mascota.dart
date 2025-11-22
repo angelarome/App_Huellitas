@@ -11,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'buscarTienda.dart';
 import 'buscarVeterinaria.dart';
+import 'editarMascota.dart';
+import 'medicamentos.dart';
 
 class ServiciosScreen extends StatefulWidget {
   final int id_dueno;
@@ -281,12 +283,45 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _iconoAccion("Compartir", "assets/compartir.png"),
-            _iconoAccion("Información", "assets/Informacion.png"),
-            _iconoAccion("Emergencia", "assets/Medicina.png"),
-            _iconoAccion("Ver ubicación", "assets/Mapa.png"),
+            InkWell(
+              onTap: () {
+                // Acción para Compartir
+                print("Compartir presionado");
+                // Navigator.push(...);
+              },
+              child: _iconoAccion("Compartir", "assets/compartir.png"),
+            ),
+
+            InkWell(
+              onTap: () {
+                // Acción para Información
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditarMascotaScreen(idMascota: widget.idMascota, id_dueno: widget.id_dueno),
+                  ),
+                );
+              },
+              child: _iconoAccion("Información", "assets/Informacion.png"),
+            ),
+
+            InkWell(
+              onTap: () {
+                // Acción para Emergencia
+                print("Emergencia presionado");
+              },
+              child: _iconoAccion("Emergencia", "assets/Medicina.png"),
+            ),
+
+            InkWell(
+              onTap: () {
+                // Acción para Ver ubicación
+                print("Ver ubicación presionado");
+              },
+              child: _iconoAccion("Ver ubicación", "assets/Mapa.png"),
+            ),
           ],
-        ),
+        )
       ],
     );
   }
@@ -354,13 +389,13 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         "borderColor": const Color.fromARGB(255, 206, 139, 51),
       },
       {
-        "label": "Documentos",
+        "label": "DOCUMENTOS",
         "icons": ["assets/documentos.png", "assets/archivo.png"],
         "color": const Color.fromARGB(255, 209, 211, 187),
         "borderColor": const Color.fromARGB(255, 106, 103, 100),
       },
       {
-        "label": "Historial clinico",
+        "label": "HISTORIAL CLÍNICO",
         "icons": ["assets/informec.png", "assets/historiac.png"],
         "color": const Color.fromARGB(255, 238, 59, 59),
         "borderColor": const Color.fromARGB(255, 191, 14, 14),
@@ -478,16 +513,17 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
           MaterialPageRoute(builder: (_) => HigieneScreen(id: widget.idMascota)),
         );
         break;
-      case 'PASEADORES':
-        
-        break;
-      case 'VETERINARIA':
-        break;
       case 'BIENESTAR DIARIO':
         break;
-      case 'TIENDA':
-        break;
       case 'MEDICINA':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MedicamentosScreen(id: widget.idMascota)),
+        );
+        break;
+      case 'DOCUMENTOS':
+        break;
+      case 'HISTORIAL CLÍNICO':
         break;
       default:
         ScaffoldMessenger.of(context).showSnackBar(

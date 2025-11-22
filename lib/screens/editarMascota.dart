@@ -2,37 +2,61 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:http/http.dart' as http; 
 import 'dart:convert';
+import 'package:http_parser/http_parser.dart';
 import 'dart:typed_data'; // Para Uint8List
 import 'dart:io'; // Para File (solo en móvil, no en web)
-import 'higiene.dart';
-import 'editarhigiene.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show File; // Solo se usa en móvil
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'mimascota.dart';
+import 'modificarMascota.dart';
 
-class RecordatorioBanioScreen extends StatefulWidget {
+class EditarMascotaScreen extends StatefulWidget {
   final int idMascota;
-  final int id_higiene;
-  final String frecuencia;
-  final String notas;
-  final String tipo;
-  final String hora;
-  final String fecha;
+  final int id_dueno;
 
-  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const EditarMascotaScreen({super.key, required this.idMascota, required this.id_dueno});
 
   @override
-  State<RecordatorioBanioScreen> createState() => _RecordatorioBanioScreenState();
+  State<EditarMascotaScreen> createState() => _EditarMascotaScreen();
 
 }
-class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
-  String nombreMascota = "";
-  File? _imagen; // para móvil
-  Uint8List? _webImagen; // para web
-  
-
+class _EditarMascotaScreen extends State<EditarMascotaScreen> {
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
     obtenerMascotasPorId(); // Llamamos a la API apenas se abre la pantalla
   }
+
+
+  String nombreMascota = "";
+  String apellidoMascota = "";
+  String especieMascota = "";
+  String generoMascota = "";
+  String razaMascota = "";
+  double pesoMascota = 0.0;
+  double limpiarPeso(dynamic valor) {
+    if (valor == null) return 0.0;
+
+    // Convertir a string y reemplazar comas por puntos
+    final texto = valor.toString().replaceAll(",", ".");
+
+    return double.tryParse(texto) ?? 0.0;
+  }
+  String esterilizadoMascota = "";
+  DateTime? fechaNacimientoMascota;
+  String formatearFecha(DateTime fecha) {
+    return "${fecha.day.toString().padLeft(2,'0')}/"
+          "${fecha.month.toString().padLeft(2,'0')}/"
+          "${fecha.year}";
+  }
+
+  File? _imagen; // para móvil
+  Uint8List? _webImagen; // para web
+
 
   void mostrarConfirmacionRegistro(BuildContext context, VoidCallback onConfirmar) {
     OverlayEntry? overlayEntry;
@@ -75,7 +99,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                     const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
                     const SizedBox(height: 12),
                     Text(
-                      '¿Deseas eliminar ${widget.tipo}?',
+                      '¿Deseas eliminar $nombreMascota?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.black87,
@@ -109,7 +133,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                         ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
-                            eliminarHigiene(); // 👉 Llama a la función que hace el registro
+                            eliminarMascota(); // 👉 Llama a la función que hace el registro
                           },
                           icon: Image.asset(
                             "assets/Correcto.png", // tu icono
@@ -202,37 +226,123 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
 
 
   Future<void> obtenerMascotasPorId() async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"id_mascota": widget.idMascota}),
-    );
+    try {
+      final url = Uri.parse("http://localhost:5000/obtenermascota");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"id_mascota": widget.idMascota}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List mascotasJson = data["mascotas"] ?? [];
-      setState(() {
-        nombreMascota = mascotasJson[0]["nombre"] ?? "Sin nombre";
-        _webImagen = mascotasJson[0]["imagen_perfil"] != null 
-          ? base64Decode(mascotasJson[0]["imagen_perfil"]) 
-          : null;
-      });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List mascotasJson = data["mascotas"] ?? [];
+        if (mascotasJson.isEmpty) {
+          print("No hay datos de mascota");
+          setState(() => isLoading = false);
+          return; // salir para no acceder al índice 0
+        }
+        setState(() {
+          nombreMascota = mascotasJson[0]["nombre"] ?? "Sin nombre";
+          apellidoMascota = mascotasJson[0]["apellido"] ?? "Sin apellido";
+          especieMascota = mascotasJson[0]["especies"] ?? "Sin especie";
+          generoMascota = mascotasJson[0]["sexo"] ?? "Sin género";
+          razaMascota = mascotasJson[0]["raza"] ?? "Sin raza";
+          pesoMascota = limpiarPeso(mascotasJson[0]["peso"]);
+          esterilizadoMascota = mascotasJson[0]["esterilizado"] ?? "";
+          final fechaJson = mascotasJson[0]["fecha_nacimiento"];
 
-    } else {
-        print("Error al obtener mascotas: ${response.statusCode}");
+          if (fechaJson != null && fechaJson.toString().isNotEmpty) {
+            fechaNacimientoMascota = HttpDate.parse(fechaJson);
+          } else {
+            fechaNacimientoMascota = null;
+          }
+          _webImagen = mascotasJson[0]["imagen_perfil"] != null 
+            ? base64Decode(mascotasJson[0]["imagen_perfil"]) 
+            : null;
+          isLoading = false; 
+        });
+
+      } else {
+          print("Error al obtener mascotas: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error: $e");
+      setState(() => isLoading = false);
     }
   }
 
-  Future<void> eliminarHigiene() async {
-    final url = Uri.parse("http://localhost:5000/eliminar_higiene");
+  // Método para abrir galería y actualizar imagen
+  Future<void> _seleccionarImagen() async {
+    final picker = ImagePicker();
+    final imagenSeleccionada = await picker.pickImage(source: ImageSource.gallery);
+
+    if (imagenSeleccionada != null) {
+      try {
+        Uint8List bytes;
+
+        // 📱 Si es móvil, leemos con File
+        if (!kIsWeb) {
+          final imagenFile = File(imagenSeleccionada.path);
+          bytes = await imagenFile.readAsBytes();
+          setState(() {
+            _imagen = imagenFile;
+          });
+        } 
+        // 💻 Si es web, leemos los bytes directamente
+        else {
+          bytes = await imagenSeleccionada.readAsBytes();
+          setState(() {
+            _webImagen = bytes;
+          });
+        }
+
+        // ✅ Convertimos la imagen a Base64
+        final imagenBase64 = base64Encode(bytes);
+
+        // ✅ Enviamos al backend
+        final url = Uri.parse("http://localhost:5000/actualizar_imagen_mascota");
+        final response = await http.put(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "idMascota": widget.idMascota,
+            "fotoMascota": imagenBase64,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          // 👈 AÑADIDO: Forzar redibujado de la interfaz
+          setState(() {});
+        } else {
+          mostrarMensajeFlotante(
+            context,
+            "❌ Error al actualizar la imagen",
+            colorFondo: Colors.white,
+            colorTexto: Colors.redAccent,
+          );
+        }
+      } catch (e) {
+        mostrarMensajeFlotante(
+            context,
+            "❌ Error al actualizar la imagen {$e}",
+            colorFondo: Colors.white,
+            colorTexto: Colors.redAccent,
+          );
+      }
+    }
+  }
+
+  Future<void> eliminarMascota() async {
+    final url = Uri.parse("http://localhost:5000/eliminarMascota");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "id_mascota": widget.idMascota,
-        "id_higiene": widget.id_higiene,
       }),
     );
 
@@ -240,14 +350,14 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HigieneScreen(id: widget.idMascota),
+          builder: (context) => MiMascotaScreen(id_dueno: widget.id_dueno),
         ),
       );
 
       Future.delayed(const Duration(milliseconds: 300), () {
         mostrarMensajeFlotante(
           context,
-          "✅ Higiene eliminada correctamente",
+          "✅ Mascota eliminada correctamente",
           colorFondo: const Color.fromARGB(255, 243, 243, 243),
         );
       });
@@ -255,45 +365,69 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
     } else {
       mostrarMensajeFlotante(
         context,
-        "❌ Error: No se pudo elimar",
+        "❌ Error: No se pudo eliminar la mascota",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
     }
   }
 
-  Color _getColorHigiene(String? tipo) {
-    switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade300;       // azul para baño
-      case "Peluquería":
-        return const Color.fromARGB(255, 169, 160, 255);    // morado para peluquería
-      case "Manicure":
-        return const Color.fromARGB(255, 252, 156, 235);    // naranja para manicure
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 204, 181, 107);     // verde para arenero
+  Color _getColorHigiene(String? generoMascota) {
+    switch (generoMascota) {
+      case "Macho":
+        return const Color.fromARGB(255, 76, 162, 255);     
+      case "Hembra":
+        return const Color.fromARGB(255, 255, 105, 180);   
       default:
         return Colors.grey.shade300;      // color por defecto
     }
   }
 
-  Color _getBorderColorHigiene(String? tipo) {
-    switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade700;
-      case "Peluquería":
-        return const Color.fromARGB(255, 103, 46, 172);
-      case "Manicure":
-        return const Color.fromARGB(255, 175, 25, 194);
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 140, 112, 41);
+  Color _getBorderColorHigiene(String? generoMascota) {
+    switch (generoMascota) {
+      case "Macho":
+        return const Color.fromARGB(255, 28, 106, 190);
+      case "Hembra":
+        return const Color.fromARGB(255, 219, 44, 131);
       default:
         return Colors.grey.shade700;
     }
   }
 
+  String getIconoEspecie(String especie) {
+    switch (especie.toLowerCase()) {
+      case "perro":
+        return "assets/Perrocafe.png";
+      case "gato":
+        return "assets/gato-negro.png";
+      case "conejo":
+        return "assets/conejo1.png";
+      case "ave":
+        return "assets/guacamayo.png";
+      default:
+        return "assets/masmascotas.png";
+    }
+  }
+
+  String getIconoSexo(String sexo) {
+    switch (sexo.toLowerCase()) {
+      case "macho":
+        return "assets/masculino.png";
+      case "hembra":
+        return "assets/mujer.png";
+      default:
+        return "assets/mujer.png"; // o cualquier icono neutro
+    }
+  }
+
+  
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
@@ -308,7 +442,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Invierno.jpg"),
+                image: AssetImage("assets/fall-8404115_1280.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -361,31 +495,6 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  Text(
-                    (widget.tipo.isNotEmpty ? widget.tipo : "Sin tipo").toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(1.5, 1.5),
-                          color: Colors.black,
-                          blurRadius: 2,
-                        ),
-                        Shadow(
-                          offset: Offset(-1.5, -1.5),
-                          color: Colors.black,
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                
-                  const SizedBox(height: 10),
-
-                 
 
                   // Tarjeta azul con contenido
                   Center(
@@ -394,10 +503,10 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                       padding: const EdgeInsets.all(20),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color:  _getColorHigiene(widget.tipo),
+                        color: _getColorHigiene(generoMascota),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-                        border: Border.all(color: _getBorderColorHigiene(widget.tipo), width: 2),
+                        border: Border.all(color: _getBorderColorHigiene(generoMascota), width: 2),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,14 +524,43 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                           const SizedBox(height: 16),
 
                           Center(
-                            child: CircleAvatar(
-                              radius: 40,
-                              backgroundImage: _webImagen != null
-                                  ? MemoryImage(_webImagen!) // Base64 desde la API
-                                  : AssetImage("assets/usuario.png") as ImageProvider, // Imagen por defecto
+                            child: Stack(
+                              children: [
+                                GestureDetector(
+                                  onTap: _seleccionarImagen,
+                                  child: CircleAvatar(
+                                    radius: 45,
+                                    backgroundImage: 
+                                        _webImagen != null
+                                            ? MemoryImage(_webImagen!)
+                                            : _imagen != null
+                                                ? FileImage(_imagen!)
+                                                : const AssetImage("assets/usuario.png") as ImageProvider,
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 2,
+                                  child: GestureDetector(
+                                    onTap: _seleccionarImagen,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.redAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(6),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),   
-                          const SizedBox(height: 12),
+                          ),
+                          const SizedBox(height: 10),
 
                           infoItem(
                             "assets/Nombre.png",
@@ -430,13 +568,35 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                                 ? nombreMascota[0].toUpperCase() + nombreMascota.substring(1).toLowerCase() 
                                 : ''}",
                           ),
-                          infoItem("assets/Etiqueta.png", "Tipo: ${widget.tipo}"),
-                          infoItem("assets/Calendario.png", "Fecha: ${widget.fecha}"),
-                          infoItem("assets/Hora.png", "Hora: ${widget.hora}"),
-                          infoItem("assets/Frecuencia.png", "Frecuencia: ${widget.frecuencia}"),
-                          const SizedBox(height: 8),
-                          infoItem("assets/Notas.png", "Notas: ${widget.notas}", isNote: true),
-
+                          infoItem("assets/Apellido.png", "Apellido: ${apellidoMascota.isNotEmpty 
+                                ? apellidoMascota[0].toUpperCase() + apellidoMascota.substring(1).toLowerCase() 
+                                : ''}"),
+                          infoItem(
+                            getIconoEspecie(especieMascota),
+                            "Especie: ${especieMascota.isNotEmpty 
+                                ? especieMascota[0].toUpperCase() + especieMascota.substring(1).toLowerCase() 
+                                : ''}",
+                          ),
+                          infoItem(
+                            getIconoSexo(generoMascota),
+                            "Género: ${generoMascota[0].toUpperCase() + generoMascota.substring(1).toLowerCase()}",
+                          ),
+                          infoItem("assets/Raza.png", "Raza: ${razaMascota.isNotEmpty 
+                                ? razaMascota[0].toUpperCase() + razaMascota.substring(1).toLowerCase() 
+                                : ''}"),
+                          infoItem(
+                            "assets/Peso.png",
+                            "Peso: $pesoMascota"
+                          ),
+                          infoItem(
+                            "assets/Calendario.png",
+                            "Fecha de nacimiento: ${fechaNacimientoMascota != null
+                              ? formatearFecha(fechaNacimientoMascota!)
+                              : "Sin fecha"}"
+                          ),
+                          infoItem("assets/carpeta.png", "Esterilizado: ${esterilizadoMascota.isNotEmpty 
+                                ? esterilizadoMascota[0].toUpperCase() + esterilizadoMascota.substring(1).toLowerCase() 
+                                : ''}"),
                           const SizedBox(height: 20),
 
                           Row(
@@ -444,7 +604,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  mostrarConfirmacionRegistro(context, eliminarHigiene);
+                                  mostrarConfirmacionRegistro(context, eliminarMascota);
                                 },
                                 icon: Image.asset('assets/Botebasura.png', width: 20),
                                 label: const Text("Eliminar"),
@@ -457,28 +617,12 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                               ),
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  Navigator.push(
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => EditarCuidadoScreen(
-                                        idMascota: widget.idMascota,
-                                        id_higiene: widget.id_higiene,
-                                        nombreMascota: nombreMascota,
-                                        frecuencia: widget.frecuencia,
-                                        notas: widget.notas,
-                                        tipo: widget.tipo,
-                                        hora: widget.hora,
-                                        fecha: widget.fecha,
-                                      ),
+                                      builder: (context) => ModificarMascotaScreen(id_mascota: widget.idMascota, id_dueno: widget.id_dueno, imagen: _webImagen, nombre: nombreMascota, apellido: apellidoMascota, raza: razaMascota, especie: especieMascota, genero: generoMascota, esterilizado: esterilizadoMascota, pesoMascota: pesoMascota, fechaNacimientoMascota: fechaNacimientoMascota),
                                     ),
-                                  ).then((value) {
-                                    if (value == true) {
-                                      // 👇 Aquí recargas la info sin reabrir la pantalla
-                                      setState(() {
-                                        obtenerMascotasPorId(); // vuelve a obtener nombre e imagen
-                                      });
-                                    }
-                                  });
+                                  );
                                 },
                                 icon: Image.asset('assets/Editar.png', width: 20),
                                 label: const Text("Editar"),

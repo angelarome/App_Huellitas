@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'editarPaseador.dart';
+import 'calendariopaseador.dart';
 
 class PerfilPaseadorScreen extends StatefulWidget {
   final int id_paseador;
@@ -668,6 +669,22 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
     );
   }
 
+  Widget getImagenEstado(String estado) {
+    switch (estado.toLowerCase()) {
+      case "Aceptado":
+        return Image.asset("assets/Correcto.png", width: 16, height: 16);
+      case "pendiente":
+        return Image.asset("assets/reloj-de-arena.png", width: 16, height: 16);
+      case "Cancelado":
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+      case "No asistió":
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+      case "Finalizado":
+        return Image.asset("assets/correcto.png", width: 16, height: 16);
+      default:
+        return Image.asset("assets/cancelar.png", width: 16, height: 16);
+    }
+  }
   // ═══════════════════════════════════════════
   // MENÚ SUPERIOR
   Widget _menuSuperior() {
@@ -1032,7 +1049,7 @@ Widget _tarjetaPerfil() {
     return Column(
       children: _calificacion.map<Widget>((comentario) {
         return Container(
-          key: ValueKey(comentario["id"]),
+          key: ValueKey(comentario["id_calificacion_paseador"]),
           width: MediaQuery.of(context).size.width * 0.9,
           constraints: const BoxConstraints(minHeight: 200),
           padding: const EdgeInsets.all(20),
@@ -1117,7 +1134,7 @@ Widget _tarjetaPerfil() {
                       comentario["yaDioLike"] = true;
                     });
 
-                    await _sumarLike(comentario["id"], comentario["likes"]);
+                    await _sumarLike(comentario["id_calificacion_paseador"], comentario["likes"]);
 
                   },
                 
@@ -1198,19 +1215,30 @@ Widget _tarjetaPerfil() {
 }
 
   Widget _tarjetaMascotasCompartidas() {
-    return Container(
-       margin: const EdgeInsets.only(bottom: 20),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => CalendarioScreen(id_paseador: widget.id_paseador)),
+        );
+      },
+      borderRadius: BorderRadius.circular(18), // efecto onda redondeado
+
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color.fromARGB(255, 246, 245, 245),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-          border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+          border: Border.all(color: Color.fromARGB(255, 156, 141, 96), width: 2),
         ),
+
         child: Row(
           children: [
             Image.asset("assets/Calendario.png", width: 40, height: 40),
             const SizedBox(width: 12),
+
             Stack(
               children: [
                 Text(
@@ -1236,9 +1264,10 @@ Widget _tarjetaPerfil() {
             ),
           ],
         ),
-      );
-    }
-
+      ),
+    );
+  }
+  
   Widget _tarjetaCitaLara() {
     if (_citasPendientes.isEmpty) {
       return const SizedBox(); // o un texto: Center(child: Text("No hay citas pendientes"))
@@ -1317,27 +1346,126 @@ Widget _tarjetaPerfil() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      
-                      // Datos de la mascota
-                      Text(
-                        capitalizar(nombreMascota),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Stack(
+                        children: [
+                          // Contorno negro
+                          Text(
+                            capitalizar(nombreMascota),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 2
+                                ..color = Colors.black,
+                            ),
+                          ),
+                          // Texto blanco encima
+                          Text(
+                            capitalizar(nombreMascota),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      // Datos del propietario
-                      Text("Propietario: $nombreUsuario"),
-                      Text("Teléfono: $telefonoUsuario"),
-                      Text("Fecha: ${_citasPendientes[0]["fecha"]}"),
-                      Text("Hora inicio: ${_citasPendientes[0]["hora_inicio"]}"),
-                      Text("Hora fin: ${_citasPendientes[0]["hora_fin"]}"),
-                      Text("Punto de encuentro: $puntoEncuentro"),
-                      Text("Tipo de pago: $metodoPago"),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Nombre.png", // tu imagen
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Propietario: $nombreUsuario"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Telefono.png", // tu imagen
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Teléfono: $telefonoUsuario"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Calendario1.png",
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Fecha: ${cita["fecha"] ?? "N/A"}"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Hora.png",
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Hora inicio: ${cita["hora_inicio"] ?? "N/A"}"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Hora.png",
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Hora fin: ${cita["hora_fin"] ?? "N/A"}"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/Ubicacion.png",
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Punto de encuentro: ${cita["punto_encuentro"] ?? "N/A"}"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Image.asset(
+                            "assets/pago.png",
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text("Tipo de pago: ${cita["metodo_pago"] ?? "N/A"}"),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          getImagenEstado(cita["estado"] ?? ""),
+                          const SizedBox(width: 4),
+                          Text("Estado: ${cita["estado"] ?? "Desconocido"}"),
+                        ],
+                      ),
 
 
-                const SizedBox(height: 17),
+                const SizedBox(height: 10),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

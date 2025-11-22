@@ -273,13 +273,13 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       color: m["sexo"] == "Macho"
-                                          ? const Color.fromARGB(255, 173, 216, 230)
-                                          : const Color.fromARGB(255, 255, 182, 193),
+                                          ? const Color.fromARGB(255, 76, 162, 255)
+                                          : const Color.fromARGB(255, 255, 105, 180),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                         color: m["sexo"] == "Macho"
-                                            ? const Color.fromARGB(255, 76, 162, 255)
-                                            : const Color.fromARGB(255, 255, 105, 180),
+                                            ? const Color.fromARGB(255, 28, 106, 190)
+                                            : const Color.fromARGB(255, 219, 44, 131),
                                         width: 2,
                                       ),
                                     ),
@@ -343,7 +343,7 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     m["especies"] ?? "Especie no disponible",
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: const TextStyle(fontSize: 16, color: Colors.white),
                                                   ),
                                                 ],
                                               ),
@@ -360,7 +360,7 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     m["sexo"] ?? "Sexo no disponible",
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: const TextStyle(fontSize: 16, color: Colors.white),
                                                   ),
                                                 ],
                                               ),
@@ -377,7 +377,7 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                                                     m["fecha_nacimiento"] != null
                                                         ? calcularEdad(m["fecha_nacimiento"])
                                                         : "Edad no disponible",
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: const TextStyle(fontSize: 16, color: Colors.white),
                                                   ),
                                                 ],
                                               ),

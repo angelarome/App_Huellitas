@@ -4,25 +4,28 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data'; // Para Uint8List
 import 'dart:io'; // Para File (solo en móvil, no en web)
-import 'higiene.dart';
-import 'editarhigiene.dart';
+import 'medicamentos.dart';
+import 'editarmedicamentos.dart';
 
-class RecordatorioBanioScreen extends StatefulWidget {
+class TarjetaMedicamentoScreen extends StatefulWidget {
   final int idMascota;
-  final int id_higiene;
+  final int id_medicamento;
   final String frecuencia;
+  final String dias_personalizados;
   final String notas;
   final String tipo;
+  final String unidad;
+  final double dosis;
   final String hora;
   final String fecha;
 
-  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const TarjetaMedicamentoScreen({super.key, required this.idMascota, required this.id_medicamento, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.unidad, required this.dosis, required this.hora, required this.fecha});
 
   @override
-  State<RecordatorioBanioScreen> createState() => _RecordatorioBanioScreenState();
+  State<TarjetaMedicamentoScreen> createState() => _TarjetaMedicamentoScreenState();
 
 }
-class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
+class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
   String nombreMascota = "";
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
@@ -109,7 +112,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                         ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
-                            eliminarHigiene(); // 👉 Llama a la función que hace el registro
+                            eliminarMedicamento(); // 👉 Llama a la función que hace el registro
                           },
                           icon: Image.asset(
                             "assets/Correcto.png", // tu icono
@@ -224,15 +227,15 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
     }
   }
 
-  Future<void> eliminarHigiene() async {
-    final url = Uri.parse("http://localhost:5000/eliminar_higiene");
+  Future<void> eliminarMedicamento() async {
+    final url = Uri.parse("http://localhost:5000/eliminar_medicamento");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "id_mascota": widget.idMascota,
-        "id_higiene": widget.id_higiene,
+        "id_medicamento": widget.id_medicamento,
       }),
     );
 
@@ -240,14 +243,14 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HigieneScreen(id: widget.idMascota),
+          builder: (context) => MedicamentosScreen(id: widget.idMascota),
         ),
       );
 
       Future.delayed(const Duration(milliseconds: 300), () {
         mostrarMensajeFlotante(
           context,
-          "✅ Higiene eliminada correctamente",
+          "✅ Medicamento eliminado correctamente",
           colorFondo: const Color.fromARGB(255, 243, 243, 243),
         );
       });
@@ -262,33 +265,70 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
     }
   }
 
-  Color _getColorHigiene(String? tipo) {
+  Color _getColorMedicamentos(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade300;       // azul para baño
-      case "Peluquería":
-        return const Color.fromARGB(255, 169, 160, 255);    // morado para peluquería
-      case "Manicure":
-        return const Color.fromARGB(255, 252, 156, 235);    // naranja para manicure
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 204, 181, 107);     // verde para arenero
+      case "Vacuna":
+        return const Color.fromARGB(255, 47, 161, 255);  
+      case "Inyección":
+        return const Color.fromARGB(255, 35, 177, 202);      // azul para baño
+      case "Antipulgas":
+        return const Color.fromARGB(255, 232, 136, 136);    // morado para peluquería
+      case "Medicamentos":
+        return const Color.fromARGB(255, 196, 73, 73);    // naranja para manicure
+      case "Desparasitación":
+        return const Color.fromARGB(255, 203, 189, 64);  
+      case "Vitaminas y suplementos":
+        return const Color.fromARGB(255, 34, 168, 123);   // verde para arenero
       default:
         return Colors.grey.shade300;      // color por defecto
     }
   }
 
-  Color _getBorderColorHigiene(String? tipo) {
+  Color _getBorderColorMedicamentos(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade700;
-      case "Peluquería":
-        return const Color.fromARGB(255, 103, 46, 172);
-      case "Manicure":
-        return const Color.fromARGB(255, 175, 25, 194);
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 140, 112, 41);
+      case "Vacuna":
+        return const Color.fromARGB(255, 28, 94, 159);
+      case "Inyección":
+        return const Color.fromARGB(255, 36, 117, 117);
+      case "Antipulgas":
+        return const Color.fromARGB(255, 197, 116, 116);
+      case "Medicamentos":
+        return const Color.fromARGB(255, 135, 31, 20);
+      case "Desparasitación":
+        return const Color.fromARGB(255, 173, 161, 53); 
+      case "Vitaminas y suplementos":
+        return const Color.fromARGB(255, 27, 97, 44);
       default:
         return Colors.grey.shade700;
+    }
+  }
+
+  String obtenerImagenSegunUnidad(String unidad) {
+    switch (unidad.toLowerCase()) {
+
+      case "ml":
+        return "assets/gotass.png";
+      
+      case "mg":
+        return "assets/frasco-de-pastillas.png";
+
+      case "g":
+        return "assets/escala-de-justicia.png";
+
+      case "gotas":
+        return "assets/gotero-de-tinta.png";
+
+      case "pasta":
+        return "assets/pasta.png";
+
+      case "spray":
+        return "assets/rociar.png";
+
+      case "cucharada":
+        return "assets/cuchara.png";
+
+      default:
+        return "assets/Etiqueta.png"; // imagen por defecto
     }
   }
 
@@ -308,7 +348,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Invierno.jpg"),
+                image: AssetImage("assets/vete.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -394,10 +434,10 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                       padding: const EdgeInsets.all(20),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color:  _getColorHigiene(widget.tipo),
+                        color:  _getColorMedicamentos(widget.tipo),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-                        border: Border.all(color: _getBorderColorHigiene(widget.tipo), width: 2),
+                        border: Border.all(color: _getBorderColorMedicamentos(widget.tipo), width: 2),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,9 +471,25 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                                 : ''}",
                           ),
                           infoItem("assets/Etiqueta.png", "Tipo: ${widget.tipo}"),
+                          infoItem(
+                            obtenerImagenSegunUnidad(widget.unidad),
+                            "Dosis: ${widget.dosis} ${widget.unidad}",
+                          ),
                           infoItem("assets/Calendario.png", "Fecha: ${widget.fecha}"),
                           infoItem("assets/Hora.png", "Hora: ${widget.hora}"),
-                          infoItem("assets/Frecuencia.png", "Frecuencia: ${widget.frecuencia}"),
+                          Column(
+                            children: [
+                              infoItem("assets/Frecuencia.png", "Frecuencia: ${widget.frecuencia}"),
+
+                              if (widget.frecuencia == "Personalizada" &&
+                                  widget.dias_personalizados != null &&
+                                  widget.dias_personalizados!.isNotEmpty)
+                                infoItem(
+                                  "assets/evaluacion.png",
+                                  "Días: ${widget.dias_personalizados}",
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           infoItem("assets/Notas.png", "Notas: ${widget.notas}", isNote: true),
 
@@ -444,7 +500,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  mostrarConfirmacionRegistro(context, eliminarHigiene);
+                                  mostrarConfirmacionRegistro(context, eliminarMedicamento);
                                 },
                                 icon: Image.asset('assets/Botebasura.png', width: 20),
                                 label: const Text("Eliminar"),
@@ -460,25 +516,11 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => EditarCuidadoScreen(
-                                        idMascota: widget.idMascota,
-                                        id_higiene: widget.id_higiene,
-                                        nombreMascota: nombreMascota,
-                                        frecuencia: widget.frecuencia,
-                                        notas: widget.notas,
-                                        tipo: widget.tipo,
-                                        hora: widget.hora,
-                                        fecha: widget.fecha,
-                                      ),
+                                      builder: (context) => EditarMedicamentoScreen(
+                                      idMascota: widget.idMascota, id_medicamento: widget.id_medicamento, nombreMascota: nombreMascota
+                                      , frecuencia: widget.frecuencia, dias_personalizados: widget.dias_personalizados, notas: widget.notas, tipo: widget.tipo, unidad: widget.unidad, dosis: widget.dosis, hora: widget.hora, fecha: widget.fecha
                                     ),
-                                  ).then((value) {
-                                    if (value == true) {
-                                      // 👇 Aquí recargas la info sin reabrir la pantalla
-                                      setState(() {
-                                        obtenerMascotasPorId(); // vuelve a obtener nombre e imagen
-                                      });
-                                    }
-                                  });
+                                  ));
                                 },
                                 icon: Image.asset('assets/Editar.png', width: 20),
                                 label: const Text("Editar"),

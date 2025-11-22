@@ -9,6 +9,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'editarVeterinaria.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class PerfilVeterinariaScreen extends StatefulWidget {
   final int id_dueno;
@@ -23,7 +26,10 @@ class PerfilVeterinariaScreen extends StatefulWidget {
 class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> _veterinaria = [];
-
+  DateTime? _fecha;
+  TimeOfDay? _horaSeleccionada;
+  TimeOfDay? _horaInicio;
+  TimeOfDay? _horaFin;
   int _seccionActiva = 1; // 0: Comentarios, 1: Perfil, 2: Citas
   bool _yaDioLike = false;
   List<Map<String, dynamic>> _calificacion = [];
@@ -43,13 +49,22 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 
   final TextEditingController comentarioCtrl = TextEditingController();
   int calificacion = 0;
+  List<String> tiposPago = ["Cargando..."];
+  String? _tipoPago = "Cargando...";
+  List<Map<String, dynamic>> mascotas = [];
+  List<String> nombresMascotas = ["Cargando..."];
+  String? _nombreMascota; 
+  String? _idMascota;
+  final TextEditingController _motivo = TextEditingController();
+
 
   @override
   void initState() {
     super.initState();
     _obtenerVeterinaria();
+    _obtenerMascotas();
   }
-
+  bool cargando = true;
   
   String _capitalizar(String texto) {
   if (texto.isEmpty) return "";
@@ -117,12 +132,66 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
         }).toList();
       });
 
+      setState(() {
+        _veterinaria = _veterinaria;
+
+        if (_veterinaria.isNotEmpty) {
+          final tipo = (_veterinaria[0]["tipo_pago"] ?? "").toString();
+
+          // SEPARAR tipos de pago por coma
+          tiposPago = tipo.split(",").map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+          // NO seleccionar automáticamente ninguno
+          _tipoPago = null;
+        } else {
+          tiposPago = ["No disponible"];
+          _tipoPago = "No disponible";
+        }
+      });
+
       // ✅ Si hay veterinaria, obtener comentarios
       if (_veterinaria.isNotEmpty) {
         await _obtener_comentariosVeterinaria();
       }
     } else {
       print("❌ Error al obtener veterinaria: ${response.statusCode}");
+    }
+  }
+
+  Future<void> _obtenerMascotas() async {
+    setState(() => cargando = true);
+
+    final url = Uri.parse("http://localhost:5000/mascotas");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": widget.id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+
+      final data = jsonDecode(response.body);
+
+      final List mascotasJson = data["mascotas"] ?? [];
+
+      setState(() {
+        mascotas = mascotasJson
+            .map<Map<String, dynamic>>((m) => Map<String, dynamic>.from(m))
+            .toList();
+
+        nombresMascotas = mascotas
+            .map((m) => m["nombre"].toString())
+            .toList();
+
+        // NO asignamos automáticamente la primera mascota
+        _nombreMascota = null;
+
+        cargando = false;
+
+      });
+    } else {
+      setState(() => cargando = false);
+      print("❌ Error al obtener mascotas: ${response.statusCode}");
     }
   }
 
@@ -136,6 +205,99 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     });
   }
 
+  Uint8List? _decodificarImagenMascota(String? nombre) {
+    if (nombre == null) return null;
+
+    Map<String, dynamic>? mascota;
+
+    try {
+      mascota = mascotas.firstWhere(
+        (m) => m["nombre"] == nombre,
+      );
+    } catch (e) {
+      return null; // no encontró la mascota → no hay imagen
+    }
+
+    final base64Img = mascota["imagen_perfil"];
+
+    if (base64Img == null || base64Img.isEmpty) return null;
+
+    try {
+      return base64Decode(base64Img);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> registrarCita() async {
+    if (_nombreMascota == null ||
+      _nombreMascota == "Cargando..." ||
+      _tipoPago == null ||
+      _tipoPago!.isEmpty ||
+      _motivo.text.isEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "⚠️ Por favor complete todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
+
+    try {
+      // 🌐 URL del backend
+      final url = Uri.parse("http://localhost:5000/registrarCitaVeterinaria");
+
+      // 🧠 Datos a enviar
+      final body = {
+        "id_mascota": _idMascota,
+        "id_dueno": widget.id_dueno,
+        "id_veterinaria": widget.id_veterinaria,
+        "motivo": _motivo.text,
+        "metodopago": _tipoPago,
+      };
+      
+      // 📤 Enviar solicitud al backend
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      // ✅ Respuesta correcta
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        // 🔹 Limpiar formulario para nueva cita
+        setState(() {
+          _motivo.clear();
+          _nombreMascota = null;
+          _idMascota = null;
+          _tipoPago = null;
+        });
+        mostrarMensajeFlotante(
+          context,
+          "✅ Cita veterinaria agendada correctamente",
+          colorFondo: const Color.fromARGB(255, 243, 243, 243),
+          colorTexto: const Color.fromARGB(255, 0, 0, 0),
+        );
+
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "❌ Error al agendar la cita veterinaria (${response.statusCode})",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      }
+    } catch (e) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Error: ${e.toString()}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+    }
+  }
 
   Future<double> _promedio_veterinaria() async {
     if (_veterinaria.isEmpty) return 0.0;
@@ -584,6 +746,87 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     }
   }
 
+  void mostrarConfirmacionAgenda(BuildContext context, VoidCallback onConfirmar, id) {
+    OverlayEntry? overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {},
+              child: Container(color: Colors.black.withOpacity(0.4)),
+            ),
+          ),
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 6))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
+                    const SizedBox(height: 12),
+                    Text(
+                      '¿Deseas agendar este cita?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () { overlayEntry?.remove(); },
+                          icon: Image.asset(
+                            "assets/cancelar.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('No', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 202, 65, 65),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                  
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            overlayEntry?.remove();
+                            onConfirmar();
+                          },
+                          icon: Image.asset(
+                            "assets/Correcto.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('Sí', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4CAF50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(overlayEntry);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -804,12 +1047,48 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
       case 1:
         return _tarjetaPerfil();
       case 2:
-        return Column(
-          key: const ValueKey("citas"),
-          children: [
-            const SizedBox(height: 20),
-            
-          ],
+        return SingleChildScrollView(
+          child: Column(
+            key: const ValueKey("citas"),
+            children: [
+              _tarjetaMascotasCompartidas(),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      mostrarConfirmacionAgenda(
+                        context,
+                        () async {
+                          await registrarCita();
+                        },
+                        _idMascota,
+                      );
+                    },
+                    icon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Image.asset('assets/Especie.png'),
+                    ),
+                    label: const Text(
+                      "Agendar Cita",
+                      style: TextStyle(color: Color.fromARGB(255, 46, 45, 45)),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.9),
+                      foregroundColor: const Color.fromARGB(255, 131, 123, 99),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
         );
       default:
         return const SizedBox();
@@ -1148,5 +1427,297 @@ Widget _comentar() {
   );
 }
  
-  // ══════════════════════════════════════════
+  Widget _tarjetaMascotasCompartidas() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 20),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(255, 246, 245, 245),
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
+      border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+    ),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+
+        // 🔵 Título
+        Stack(
+          children: [
+            Text(
+              "Agendar Cita",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 2
+                  ..color = Colors.black,
+              ),
+            ),
+            const Text(
+              "Agendar Cita",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 15),
+
+        // 🔵 Imagen + Nombre Mascota
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _imagenMascota(),
+            const SizedBox(width: 12),
+
+
+          Expanded(
+            child: nombresMascotas.isEmpty
+                ? const Text("No tienes mascotas registradas")
+                : _dropdownConEtiqueta(
+                    "Nombre Mascota",
+                    _icono("assets/Nombre.png"),
+                    nombresMascotas,
+                    "Seleccione la mascota",
+                    _nombreMascota, // inicial = null
+                    (val) {
+                      setState(() {
+                        _nombreMascota = val;
+
+                        final mascota = mascotas.cast<Map<String, dynamic>>().firstWhere(
+                          (m) => m["nombre"] == val,
+                          orElse: () => <String, dynamic>{},
+                        );
+                        _idMascota = mascota.isNotEmpty ? mascota["id_mascotas"].toString() : null;
+                      });
+                    },
+                  ),
+          )
+
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // 🔵 FECHA Y HORA UNO AL LADO DEL OTRO
+        Row(
+          children: [
+            Expanded(
+              child: _dropdownConEtiqueta(
+                "Tipo de pago",
+                _icono("assets/Pago.png"),
+                tiposPago,
+                "Seleccione",
+                _tipoPago,
+                (val) => setState(() => _tipoPago = val),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              child: _campoTextoSimple(
+                "Motivo",
+                "assets/descripcion.png",
+                _motivo,
+                "Ej.: control, fiebre, herida.",
+                esDireccion: true,
+              ),
+            ),
+            const SizedBox(width: 12), // espacio entre los campos
+          ],
+        ),
+      ],
+    ),
+  );
+  
+}
+
+  Widget _imagenMascota() {
+    final imagen = _decodificarImagenMascota(_nombreMascota);
+
+    if (imagen == null) {
+      return Image.asset(
+        "assets/usuario.png",
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(50),
+      child: Image.memory(
+        imagen,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _icono(String assetPath) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
+    );
+  }
+
+  Widget _campoConIcono(String label, String iconPath, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 4),
+        TextField(
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: Image.asset(iconPath, fit: BoxFit.contain),
+              ),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dropdownConEtiqueta(
+  String etiqueta,
+  Widget icono,
+  List<String>? opciones,
+  String hintText,
+  String? valorActual,
+  Function(String?)? onChanged,
+) {
+  final listaSegura =
+      (opciones == null || opciones.isEmpty) ? ["Sin opciones"] : opciones;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        etiqueta,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 46, 45, 45),
+        ),
+      ),
+      const SizedBox(height: 4),
+      DropdownButtonFormField<String>(
+        value: valorActual, // <-- permitimos que sea null
+        decoration: InputDecoration(
+          hintText: hintText, // esto se mostrará si valorActual es null
+          hintStyle: TextStyle(color: Colors.grey[800]),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(0),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: icono,
+            ),
+          ),
+        ),
+        items: listaSegura.map((opcion) {
+          return DropdownMenuItem(
+            value: opcion,
+            child: Text(opcion),
+          );
+        }).toList(),
+        onChanged: onChanged,
+      ),
+      const SizedBox(height: 12),
+    ],
+  );
+}
+  Widget _campoTextoSimple(
+    String etiqueta,
+    String iconoPath,
+    TextEditingController controller,
+    String hintText, {
+    bool soloLetras = false,
+    bool soloNumeros = false,
+    bool esDireccion = false,
+    bool formatoMiles = false, 
+    bool readOnly = false, 
+    bool esCorreo = false,
+  }) {
+    List<TextInputFormatter> filtros = [];
+
+    if (soloLetras) {
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')));
+    } else if (soloNumeros) {
+      filtros.add(FilteringTextInputFormatter.digitsOnly);
+    } else if (esDireccion) {
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s#\-\.,]')));
+    } else if (esCorreo) {
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9@._\-]')));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          etiqueta,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 46, 45, 45),
+          ),
+        ),
+        const SizedBox(height: 4),
+
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.multiline,
+          maxLines: 6,
+          minLines: 6,
+          inputFormatters: filtros,
+          readOnly: readOnly,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: Colors.grey[800]),
+            
+            // 🔥 AQUÍ EL CAMBIO IMPORTANTE
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(bottom: 115, right: 2),
+              child: Image.asset(iconoPath, width: 22, height: 22),
+            ),
+
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 }

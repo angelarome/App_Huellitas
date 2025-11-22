@@ -8,17 +8,28 @@ import 'package:image_picker/image_picker.dart';
 import 'mimascota.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'compartirmascota.dart';
+import 'editarMascota.dart';
 
-class AgregarMascotaScreen extends StatefulWidget {
-  const AgregarMascotaScreen({super.key, required this.id_dueno});
-
+class ModificarMascotaScreen extends StatefulWidget {
+  final int id_mascota;
   final int id_dueno;
+  final Uint8List? imagen;
+  final String nombre;
+  final String apellido;
+  final String raza;
+  final String especie;
+  final String genero;
+  final String esterilizado;
+  final double pesoMascota;
+  final DateTime? fechaNacimientoMascota;
+  const ModificarMascotaScreen({super.key, required this.id_mascota, required this.id_dueno, required this.imagen, required this.nombre, required this.apellido, required this.raza, required this.especie, required this.genero, required this.esterilizado, required this.pesoMascota, required this.fechaNacimientoMascota});
+
 
   @override
-  State<AgregarMascotaScreen> createState() => _AgregarMascotaScreenState();
+  State<ModificarMascotaScreen> createState() => _ModificarMascotaScreen();
 }
   
-class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
+class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
   DateTime? _fechaNacimiento;
   
   final _formKey = GlobalKey<FormState>(); 
@@ -38,28 +49,58 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
     });
   }
 
-  final nombreController = TextEditingController();
-  final apellidoController = TextEditingController();
-  final razaController = TextEditingController();
-  final pesoController = TextEditingController();
-  final generoController = TextEditingController();
-  final especiesController = TextEditingController();
-  final esterilizadoController = TextEditingController();
+  double limpiarPeso(dynamic valor) {
+    if (valor == null) return 0.0;
+
+    final texto = valor.toString().replaceAll(",", ".");
+    return double.tryParse(texto) ?? 0.0;
+  }
+
+  String formatearFecha(DateTime fecha) {
+    return "${fecha.day.toString().padLeft(2,'0')}/"
+           "${fecha.month.toString().padLeft(2,'0')}/"
+           "${fecha.year}";
+  }
+
+  late TextEditingController nombreController;
+  late TextEditingController apellidoController;
+  late TextEditingController razaController;
+  late TextEditingController pesoController;
+  late TextEditingController generoController;
+  late TextEditingController especiesController;
+  late TextEditingController esterilizadoController;
   // ✅ Cargar imagen por defecto apenas se abra la pantalla
   @override
   void initState() {
     super.initState();
-    _cargarImagenPorDefecto();
+
+
+    // Inicializar controladores
+    nombreController = TextEditingController(text: widget.nombre);
+    apellidoController = TextEditingController(text: widget.apellido);
+    razaController = TextEditingController(text: widget.raza);
+    especiesController = TextEditingController(text: widget.especie);
+    generoController = TextEditingController(text: widget.genero);
+    esterilizadoController = TextEditingController(text: widget.esterilizado);
+    pesoController = TextEditingController(
+      text: widget.pesoMascota.toString().replaceAll('.', ',')
+    );
+
+    // Inicializar dropdowns
+    especieSeleccionada = widget.especie;
+    generoSeleccionado = widget.genero;
+    esterilizado = widget.esterilizado;
+
+    // Inicializar imagen Base64
+    if (widget.imagen != null) {
+      _webImagen = widget.imagen;
+      _imagenBase64 = base64Encode(widget.imagen!);
+    }
+
+    // Inicializar fecha
+    _fechaNacimiento = widget.fechaNacimientoMascota;
   }
 
-  Future<void> _cargarImagenPorDefecto() async {
-    final byteData = await rootBundle.load('assets/usuario.png');
-    final bytes = byteData.buffer.asUint8List();
-    setState(() {
-      _imagenBase64 = base64Encode(bytes);
-      _webImagen = bytes; // para mostrarla en web
-    });
-  }
   
   // Método para abrir galería y actualizar imagen
   Future<void> _seleccionarImagen() async {
@@ -137,7 +178,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                     const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
                     const SizedBox(height: 12),
                     const Text(
-                      '¿Deseas registrar esta mascota?',
+                      '¿Deseas editar esta mascota?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.black87,
@@ -150,36 +191,41 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // ❌ Botón "No"
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
                           },
+                          icon: Image.asset(
+                            "assets/cancelar.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('No', style: TextStyle(color: Colors.white, fontSize: 16)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 202, 65, 65),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'No',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          
                         ),
                         // ✅ Botón "Sí"
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
                             _registrarMascota(); // 👉 Llama a la función que hace el registro
                           },
+                          icon: Image.asset(
+                            "assets/Correcto.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('Sí', style: TextStyle(color: Colors.white, fontSize: 16)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                          ),
-                          child: const Text(
-                            'Sí',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
                       ],
@@ -280,12 +326,13 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                 "${_fechaNacimiento!.day.toString().padLeft(2,'0')}";
     }
 
-    final url = Uri.parse("http://localhost:5000/registrarMascota");
+    final url = Uri.parse("http://localhost:5000/editarMascota");
 
-    final response = await http.post(
+    final response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
+        "id_mascota": widget.id_mascota,
         "nombre": nombreController.text,
         "apellido": apellidoController.text,
         "raza": razaController.text,
@@ -295,18 +342,14 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
         "fecha_nacimiento": fechaStr,
         "imagen": _imagenBase64,
         "esterilizado": esterilizado,
-        "id_dueno": widget.id_dueno,
       }),
     );
 
     if (response.statusCode == 201) {
-      // Decodificamos la respuesta si quieres usarla
-      final data = jsonDecode(response.body);
-      final mascota = data["mascota"];
 
       mostrarMensajeFlotante(
         context,
-        "✅ Mascota registrada correctamente",
+        "✅ Mascota Editada correctamente",
         colorFondo: const Color.fromARGB(255, 243, 243, 243), // verde bonito
         colorTexto: const Color.fromARGB(255, 0, 0, 0),
       );
@@ -315,7 +358,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MiMascotaScreen(id_dueno: widget.id_dueno),
+          builder: (context) => EditarMascotaScreen(idMascota: widget.id_mascota, id_dueno: widget.id_dueno),
         ),
       );
     } else {

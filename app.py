@@ -476,6 +476,41 @@ def registrar_mascota():
 
     return jsonify({"mensaje": "Mascota registrada correctamente", "mascota": resultado}), 201
 
+@app.route("/editarMascota", methods=["PUT"])
+def editar_mascota():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    nombre = data.get("nombre")
+    apellido = data.get("apellido")
+    raza = data.get("raza")
+    genero = data.get("genero")
+    peso = data.get("peso")
+    especies = data.get("especie")
+    fecha_nacimiento = data.get("fecha_nacimiento")
+    imagen_base64 = data.get("imagen")
+    esterilizado = data.get("esterilizado")
+
+    if not all([nombre, apellido, raza, genero, peso, especies, fecha_nacimiento, imagen_base64, esterilizado]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+    
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar mascota
+    sql = """
+        UPDATE mascotas SET nombre = %s, apellido = %s, raza = %s, peso = %s, fecha_nacimiento = %s, sexo = %s, especies = %s, esterilizado = %s, imagen_perfil = %s WHERE id_mascotas = %s
+    """
+    valores = (nombre, apellido, raza, peso, fecha_nacimiento, genero, especies, esterilizado, imagen_base64, id_mascota)
+    cursor.execute(sql, valores)
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Mascota editada correctamente"}), 201
+
 @app.route("/mascotas", methods=["POST"])
 def mascotas():
     data = request.get_json()
@@ -512,6 +547,10 @@ def mascotas():
             # Si ya es texto (por ejemplo, un path o un base64), lo dejamos igual
             elif isinstance(imagen, str):
                 m["imagen_perfil"] = imagen
+
+    print("➡️ Mascotas enviadas (solo id y nombre):")
+    for m in mascotas:
+        print(f"- ID: {m['id_mascotas']} | Nombre: {m['nombre']}")
     return jsonify({"mascotas": mascotas}), 200
 
 @app.route("/higiene", methods=["POST"])
@@ -549,6 +588,42 @@ def higiene():
             h["fecha"] = h["fecha"].strftime("%Y-%m-%d")
 
     return jsonify({"higiene": higiene}), 200
+
+@app.route("/medicamento", methods=["POST"])
+def medicamento():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+
+    if not id_mascota:
+        return jsonify({"error": "Falta el ID de la mascota"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        SELECT id_medicamento, tipo, dosis, unidad, frecuencia, dias_personalizados, hora, fecha, descripcion
+        FROM medicamento 
+        WHERE id_mascota = %s
+    """
+    cursor.execute(sql, (id_mascota,))
+    medicamento = cursor.fetchall()
+    cursor.close()
+    db.close()
+    for h in medicamento:
+        if isinstance(h.get("hora"), timedelta):
+            total_seconds = int(h["hora"].total_seconds())
+            horas = total_seconds // 3600
+            minutos = (total_seconds % 3600) // 60
+            h["hora"] = f"{horas:02d}:{minutos:02d}"
+        elif isinstance(h.get("hora"), time):
+            h["hora"] = h["hora"].strftime("%H:%M")
+        
+        if isinstance(h.get("fecha"), date):
+            h["fecha"] = h["fecha"].strftime("%Y-%m-%d")
+
+    return jsonify({"medicamento": medicamento}), 200
     
 @app.route("/registrarHigiene", methods=["POST"])
 def registrar_higiene():
@@ -595,6 +670,90 @@ def registrar_higiene():
             "hora": hora
         }
     }), 201
+    
+@app.route("/registrarMedicamento", methods=["POST"])
+def registrar_medicamento():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    frecuencia = data.get("frecuencia")
+    dosis = data.get("dosis")
+    unidad = data.get("unidad")
+    notas = data.get("notas")
+    tipo = data.get("tipo")
+    dias_personalizados = data.get("dias_personalizados")
+    fecha = data.get("fecha")
+    hora = data.get("hora")
+
+    if not all([tipo, fecha, hora, id_mascota, dosis, unidad]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar higiene
+    sql = """
+        INSERT INTO medicamento (id_mascota, tipo, dosis, unidad, frecuencia, dias_personalizados, hora, fecha, descripcion)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    valores = (id_mascota, tipo, dosis, unidad, frecuencia, dias_personalizados, hora, fecha, notas)
+    cursor.execute(sql, valores)
+    db.commit()
+    
+    cursor.close()
+    db.close()
+    return jsonify({
+        "mensaje": "Medicamento registrado correctamente",
+    }), 201
+    
+@app.route("/editarMedicamento", methods=["PUT"])
+def editar_medicamento():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    id_medicamento = data.get("id_medicamento")
+    frecuencia = data.get("frecuencia")
+    dosis = data.get("dosis")
+    unidad = data.get("unidad")
+    notas = data.get("notas")
+    tipo = data.get("tipo")
+    dias_personalizados = data.get("dias_personalizados")
+    fecha = data.get("fecha")
+    hora = data.get("hora")
+
+    if not all([tipo, fecha, hora, id_mascota, dosis, unidad]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar higiene
+    sql = """
+            UPDATE medicamento
+            SET tipo = %s,
+                dosis = %s,
+                unidad = %s,
+                frecuencia = %s,
+                dias_personalizados = %s,
+                hora = %s,
+                fecha = %s,
+                descripcion = %s
+            WHERE id_medicamento = %s
+        """
+
+    valores = (tipo, dosis, unidad, frecuencia, dias_personalizados, hora, fecha,notas, id_medicamento)
+    cursor.execute(sql, valores)
+    db.commit()
+    
+    cursor.close()
+    db.close()
+    return jsonify({
+        "mensaje": "Medicamento editado correctamente",
+    }), 201
 
 @app.route("/obtenermascota", methods=["POST"])
 def obtener_mascotas():
@@ -615,6 +774,22 @@ def obtener_mascotas():
     db.close()
     
     return jsonify({"mascotas": resultados})
+
+@app.route('/eliminar_medicamento', methods=['DELETE'])
+def eliminar_medicamento():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    id_medicamento = data.get("id_medicamento")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    # Aquí haces la lógica para eliminar el registro de higiene
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("DELETE FROM medicamento WHERE id_mascota = %s AND id_medicamento = %s", (id_mascota, id_medicamento))
+    db.commit()
+
+    return jsonify({"mensaje": "Medicamento eliminado correctamente"}), 200
 
 @app.route('/eliminar_higiene', methods=['DELETE'])
 def eliminar_higiene():
@@ -695,6 +870,21 @@ def obtenerMiTienda():
             tienda[k] = convertir_tiempo(v)
 
     return jsonify({"tienda": resultados})
+
+@app.route('/eliminarMascota', methods=['DELETE'])
+def eliminarMascota():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    # Aquí haces la lógica para eliminar el registro de higiene
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("DELETE FROM mascotas WHERE id_mascotas = %s", (id_mascota,))
+    db.commit()
+
+    return jsonify({"mensaje": "Mascota eliminada correctamente"}), 200
 
 
 @app.route("/registrarTienda", methods=["POST"])
@@ -1452,12 +1642,21 @@ def obtenerCitas_veterinaria():
         return jsonify({"error": "No hay conexión a la base de datos"}), 500
 
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT id_cita_veterinaria, id_mascota, id_dueno, motivo, estado, metodo_pago FROM `cita_veterinaria` WHERE id_veterinaria = %s;", (id_veterinaria,))
+    cursor.execute("SELECT id_cita_veterinaria, id_mascota, id_dueno, motivo, fecha, hora, estado, metodo_pago FROM `cita_veterinaria` WHERE id_veterinaria = %s;", (id_veterinaria,))
     resultados = cursor.fetchall()
     cursor.close()
     db.close()
+    
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha'] = r['fecha'].isoformat() if isinstance(r['fecha'], datetime) else str(r['fecha'])
+        r['hora'] = r['hora'].strftime('%H:%M:%S') if isinstance(r['hora'], datetime) else str(r['hora'])
 
-    return jsonify({"citas": resultados})
+
+        resultados_serializables.append(r)
+        
+    return jsonify({"citas": resultados_serializables})
 
 @app.route("/obtenerUsuario", methods=["POST"])
 def obtenerUsuario():
@@ -1496,7 +1695,7 @@ def aceptar_cita_medica():
         return jsonify({"error": "No hay conexión a la base de datos"}), 500
 
     cursor = db.cursor()
-    sql = "UPDATE cita_veterinaria SET fecha = %s, hora = %s, estado = 'aceptada' WHERE id_cita_veterinaria = %s"
+    sql = "UPDATE cita_veterinaria SET fecha = %s, hora = %s, estado = 'Aceptada' WHERE id_cita_veterinaria = %s"
     cursor.execute(sql, (fecha, hora, id))
     db.commit()
     cursor.close()
@@ -1518,7 +1717,7 @@ def cancelar_cita_medica():
         return jsonify({"error": "No hay conexión a la base de datos"}), 500
 
     cursor = db.cursor()
-    sql = "UPDATE cita_veterinaria SET estado = 'cancelada' WHERE id_cita_veterinaria = %s"
+    sql = "UPDATE cita_veterinaria SET estado = 'Cancelada' WHERE id_cita_veterinaria = %s"
     cursor.execute(sql, (id,))
     db.commit()
     cursor.close()
@@ -2148,6 +2347,161 @@ def actualizar_producto():
 
     return jsonify({"mensaje": "Producto editado correctamente"}), 200
 
+@app.route("/registrarPaseo", methods=["POST"])
+def registrarPaseo():
+    data = request.get_json()
+    print("📩 Datos recibidos:", data)
+    id_mascota = data.get("id_mascota")
+    id_dueno = data.get("id_dueno")
+    id_paseador = data.get("id_paseador")
+    direccion = data.get("direccion")
+    horarioInicio = data.get("horarioInicio")
+    cierrefin = data.get("cierrefin")
+    metodopago = data.get("metodopago")
+    tarifa = data.get("tarifa")
+    fecha = data.get("fecha")
+
+    if not all([id_mascota, id_dueno, id_paseador, direccion, horarioInicio, cierrefin, metodopago, tarifa, fecha]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    try:
+        # 1️⃣ Insertar en usuarios
+        sql_usuario = """
+            INSERT INTO paseo (id_paseador, id_mascota, id_dueno, metodo_pago, fecha, hora_inicio, hora_fin, punto_encuentro, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql_usuario, (id_paseador, id_mascota, id_dueno, metodopago, fecha, horarioInicio, cierrefin, direccion, 'pendiente'))
+        db.commit()
+
+        cursor.close()
+        db.close()
+        return jsonify({
+            "mensaje": "Paseo registrado correctamente",
+        }), 201
+        
+    except Exception as e:
+        cursor.close()
+        db.close()
+        return jsonify({"error": f"❌ Error al registrar: {str(e)}"}), 500
+
+@app.route("/registrarCitaVeterinaria", methods=["POST"])
+def registrarCita():
+    data = request.get_json()
+    print("📩 Datos recibidos:", data)
+    id_mascota = data.get("id_mascota")
+    id_dueno = data.get("id_dueno")
+    id_veterinaria = data.get("id_veterinaria")
+    motivo = data.get("motivo")
+    metodopago = data.get("metodopago")
+
+
+    if not all([id_mascota, id_dueno, id_veterinaria, motivo, metodopago]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    try:
+        # 1️⃣ Insertar en usuarios
+        sql_usuario = """
+            INSERT INTO cita_veterinaria (id_mascota, id_dueno, motivo, estado, id_veterinaria, metodo_pago)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql_usuario, (id_mascota, id_dueno, motivo, 'pendiente', id_veterinaria, metodopago))
+        db.commit()
+
+        cursor.close()
+        db.close()
+        return jsonify({
+            "mensaje": "Cita registrada correctamente",
+        }), 201
+        
+    except Exception as e:
+        cursor.close()
+        db.close()
+        return jsonify({"error": f"❌ Error al registrar: {str(e)}"}), 500
+
+@app.route("/no_asistio_paseo", methods=["PUT"])
+def no_asistio_paseo():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE paseo SET estado = %s WHERE idpaseo = %s"
+    cursor.execute(sql, ("No asistió", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Paseo marcado como 'No asistió' correctamente"}), 200
+
+@app.route("/finalizado_paseo", methods=["PUT"])
+def finalizado_paseo():
+    data = request.get_json()
+    id = data.get("id")
+    comentario = data.get("comentario")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE paseo SET estado = %s, comportamiento = %s WHERE idpaseo = %s"
+    cursor.execute(sql, ("Finalizado", comentario, id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Paseo finalizado correctamente"}), 200
+
+@app.route("/no_asistio_cita", methods=["PUT"])
+def no_asistio_cita():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE cita_veterinaria SET estado = %s WHERE id_cita_veterinaria = %s"
+    cursor.execute(sql, ("No asistió", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Paseo marcado como 'No asistió' correctamente"}), 200
+
+@app.route("/finalizada_cita", methods=["PUT"])
+def finalizado_cita():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE cita_veterinaria SET estado = %s WHERE id_cita_veterinaria = %s"
+    cursor.execute(sql, ("Finalizada", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Cita finalizada correctamente"}), 200
 
 
 if __name__ == "__main__":

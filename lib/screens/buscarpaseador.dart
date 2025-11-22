@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';  
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'paseadores.dart';
+import 'package:intl/intl.dart';
 
 class BuscarPaseador extends StatefulWidget {
   final int id_dueno;
@@ -267,12 +268,21 @@ class _BuscarPaseador extends State<BuscarPaseador> {
     }
 
     return Column(
-      children: _paseador.map<Widget>((paseador) {
-        final String nombre = capitalizar(paseador['nombre'] ?? 'Sin nombre');
-        final String apellido = capitalizar(paseador['apellido'] ?? 'Sin apellido');
-        final String direccion = paseador['zona_servicio'] ?? 'Sin zona';
-        final String telefono = paseador['telefono']?.toString() ?? 'No disponible';
-        final String? imagenBase64 = paseador['imagen']; // ✅ campo correcto del backend
+        children: _paseador.map<Widget>((paseador) {
+          final String nombre = capitalizar(paseador['nombre'] ?? 'Sin nombre');
+          final String apellido = capitalizar(paseador['apellido'] ?? 'Sin apellido');
+          final String direccion = paseador['zona_servicio'] ?? 'Sin zona';
+          final String telefono = paseador['telefono']?.toString() ?? 'No disponible';
+
+          final tarifaRaw = paseador["tarifa_hora"];
+          final tarifaNumero = tarifaRaw is num
+              ? tarifaRaw
+              : num.tryParse(tarifaRaw?.toString() ?? "0") ?? 0;
+
+          final tarifaFormateada =
+              "\$${NumberFormat("#,##0", "es_CO").format(tarifaNumero)}";
+
+          final String? imagenBase64 = paseador['imagen'];
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -331,6 +341,13 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                         const SizedBox(width: 4),
                         Text(
                           telefono,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(width: 10),
+                        Image.asset('assets/precio.png', width: 16, height: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          tarifaFormateada,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ],

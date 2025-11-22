@@ -43,7 +43,7 @@ class Rol1Screen extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () {
-                    // Acción de volver
+                    Navigator.pop(context);
                   },
                   child: Image.asset(
                     'assets/devolver5.png',
@@ -85,7 +85,7 @@ class Rol1Screen extends StatelessWidget {
                     );
                   },
                   child: Image.asset(
-                    'assets/signo.jpg',
+                    'assets/ayudar.jpg',
                     width: 32,
                     height: 32,
                   ),

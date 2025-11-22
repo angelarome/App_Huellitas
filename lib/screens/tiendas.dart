@@ -37,7 +37,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
 
   final TextEditingController comentarioCtrl = TextEditingController();
   int calificacion = 0;
-
+  int cantidad = 1;
   Set<int> _comentariosConLike = {};
   @override
   void initState() {
@@ -1159,7 +1159,7 @@ Widget _tarjetaComentarios() {
             : "Sin nombre";
         final descripcion = producto["descripcion"] ?? "Sin descripción";
         final disponibles = producto["cantidad_disponible"] ?? "N/A";
-
+        final int maxCantidad = int.tryParse(producto["cantidad_disponible"].toString()) ?? 0;
         final precioNumero = producto["precio"] is num
             ? producto["precio"]
             : num.tryParse(producto["precio"]?.toString() ?? "0") ?? 0;
@@ -1207,13 +1207,92 @@ Widget _tarjetaComentarios() {
                         const SizedBox(height: 4),
                         Text("Disponibles: $disponibles",
                             style: const TextStyle(fontSize: 14, color: Colors.black)),
+                        Text(
+                          precioFormateado,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
-                  Text(
-                    precioFormateado,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+              
+                  Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Color.fromARGB(255, 131, 123, 99),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Botón MENOS
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (cantidad > 1) cantidad--;
+                            });
+                          },
+                          child: Container(
+                            width: 35,
+                            height: double.infinity,
+                            alignment: Alignment.center,
+                            child: const Text(
+                              "-",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+
+                        // Línea separadora
+                        Container(
+                          width: 1,
+                          height: 22,
+                          color: Color.fromARGB(255, 131, 123, 99),
+                        ),
+
+                        // Número
+                        Container(
+                          width: 40,
+                          height: double.infinity,
+                          alignment: Alignment.center,
+                          child: Text(
+                            "$cantidad",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+
+                        // Línea separadora
+                        Container(
+                          width: 1,
+                          height: 22,
+                          color: Color.fromARGB(255, 131, 123, 99),
+                        ),
+
+                        // Botón MÁS
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (cantidad < maxCantidad) {
+                                cantidad++;
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 35,
+                            height: double.infinity,
+                            alignment: Alignment.center,
+                            child: const Text(
+                              "+",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 ],
               ),
               const SizedBox(height: 20),

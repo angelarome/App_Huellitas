@@ -8,7 +8,31 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'editarPaseador.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+class _MilesFormatter extends TextInputFormatter {
+  final NumberFormat _formatter = NumberFormat.decimalPattern('es_CO');
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    String texto = newValue.text.replaceAll('.', '');
+    if (texto.isEmpty) return newValue.copyWith(text: '');
+    try {
+      final valor = int.parse(texto);
+      final nuevoTexto = _formatter.format(valor);
+      return TextEditingValue(
+        text: nuevoTexto,
+        selection: TextSelection.collapsed(offset: nuevoTexto.length),
+      );
+    } catch (_) {
+      return oldValue;
+    }
+  }
+}
+
 
 class PerfilPaseadorScreen extends StatefulWidget {
   final int id_dueno;
@@ -35,22 +59,35 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
   List<Map<String, dynamic>> _todasLasCitas = [];
   List<Map<String, dynamic>> _citasPendientes = [];
   List<Map<String, dynamic>> _nombrePaseador = [];
-  bool _cargando = true;
+  List<String> tiposPago = ["Cargando..."];
+  String? _tipoPago = "Cargando...";
+  List<Map<String, dynamic>> mascotas = [];
+  List<String> nombresMascotas = ["Cargando..."];
+  String? _nombreMascota; 
+  String? _idMascota;
+  final TextEditingController _direccion = TextEditingController();
+  TextEditingController _tarifa = TextEditingController();
+  TextEditingController _total = TextEditingController(); 
+  double _tarifaPaseador = 0;
+
   @override
-  void initState() {
-    super.initState();
-    _obtenerPaseador(); // Llamamos a la API apenas se abre la pantalla
-  }
+    void initState() {
+      super.initState();
+      _obtenerPaseador(); // Llamamos a la API apenas se abre la pantalla
+      _obtenerMascotas();
+  } 
+  
+  bool cargando = true;
 
   final TextEditingController comentarioCtrl = TextEditingController();
-  int calificacion = 0;
+    int calificacion = 0;
 
-  String capitalizar(String texto) {
-    if (texto.isEmpty) return texto;
-    return texto[0].toUpperCase() + texto.substring(1);
-  }
-  
-  Future<void> _obtenerPaseador() async {
+    String capitalizar(String texto) {
+      if (texto.isEmpty) return texto;
+      return texto[0].toUpperCase() + texto.substring(1);
+    }
+    
+    Future<void> _obtenerPaseador() async {
     final url = Uri.parse("http://localhost:5000/mipaseador");
     final response = await http.post(
       url,
@@ -61,60 +98,247 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final List paseador = data["paseador"] ?? [];
-      setState(() {
-        _paseador = paseador.map<Map<String, dynamic>>((m) {
-          final paseadorMap = Map<String, dynamic>.from(m);
 
-          // Decodificar imagen principal
-          if (paseadorMap["imagen"] != null && paseadorMap["imagen"].isNotEmpty) {
-            try {
-              paseadorMap["foto"] = base64Decode(paseadorMap["imagen"]);
-            } catch (e) {
-              print("❌ Error decodificando imagen: $e");
-              paseadorMap["foto"] = null;
-            }
-          } else {
+      // PRIMERO llenas _paseador
+      final listaMapeada = paseador.map<Map<String, dynamic>>((m) {
+        final paseadorMap = Map<String, dynamic>.from(m);
+
+        // Decodificar imagen principal
+        if (paseadorMap["imagen"] != null && paseadorMap["imagen"].isNotEmpty) {
+          try {
+            paseadorMap["foto"] = base64Decode(paseadorMap["imagen"]);
+          } catch (e) {
+            print("❌ Error decodificando imagen: $e");
             paseadorMap["foto"] = null;
           }
+        } else {
+          paseadorMap["foto"] = null;
+        }
 
-          // Decodificar certificados (lista de Base64)
-          final certificadosRaw = paseadorMap["certificado"];
-          if (certificadosRaw != null) {
-            if (certificadosRaw is List && certificadosRaw.isNotEmpty) {
-              try {
-                paseadorMap["certificadosBytes"] =
-                    certificadosRaw.map<Uint8List>((c) => base64Decode(c.toString())).toList();
-              } catch (e) {
-                print("❌ Error decodificando certificados: $e");
-                paseadorMap["certificadosBytes"] = [];
-              }
-            } else if (certificadosRaw is String && certificadosRaw.isNotEmpty) {
-              try {
-                paseadorMap["certificadosBytes"] = [base64Decode(certificadosRaw)];
-              } catch (e) {
-                print("❌ Error decodificando certificado único: $e");
-                paseadorMap["certificadosBytes"] = [];
-              }
-            } else {
-              paseadorMap["certificadosBytes"] = [];
-            }
+        // Decodificar certificados
+        final certificadosRaw = paseadorMap["certificado"];
+        if (certificadosRaw != null) {
+          if (certificadosRaw is List && certificadosRaw.isNotEmpty) {
+            paseadorMap["certificadosBytes"] =
+                certificadosRaw.map<Uint8List>((c) => base64Decode(c.toString())).toList();
+          } else if (certificadosRaw is String && certificadosRaw.isNotEmpty) {
+            paseadorMap["certificadosBytes"] = [base64Decode(certificadosRaw)];
           } else {
             paseadorMap["certificadosBytes"] = [];
           }
+        } else {
+          paseadorMap["certificadosBytes"] = [];
+        }
 
-          return paseadorMap;
-        }).toList();
+        return paseadorMap;
+      }).toList();
+
+      setState(() {
+        _paseador = listaMapeada;
+
+        if (_paseador.isNotEmpty) {
+          final tipo = (_paseador[0]["tipo_pago"] ?? "").toString();
+
+          // SEPARAR tipos de pago por coma
+          tiposPago = tipo.split(",").map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+          // NO seleccionar automáticamente ninguno
+          _tipoPago = null;
+          _tarifaPaseador = double.tryParse((_paseador[0]["tarifa_hora"] ?? "0").toString()) ?? 0;
+
+          // También podemos actualizar el TextEditingController
+          _tarifa.text = _tarifaPaseador.toStringAsFixed(0).replaceAllMapped(
+              RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+        } else {
+          tiposPago = ["No disponible"];
+          _tipoPago = "No disponible";
+          _tarifaPaseador = 0;
+          _tarifa.text = "0";
+        }
       });
 
-      // ✅ Si hay veterinaria, obtener comentarios
+
+      // Obtener comentarios
       if (_paseador.isNotEmpty) {
         await _obtener_comentariosPaseador();
       }
+
     } else {
       print("❌ Error al obtener veterinaria: ${response.statusCode}");
     }
   }
 
+  Future<void> _obtenerMascotas() async {
+    setState(() => cargando = true);
+
+    final url = Uri.parse("http://localhost:5000/mascotas");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": widget.id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+
+      final data = jsonDecode(response.body);
+
+      final List mascotasJson = data["mascotas"] ?? [];
+
+      setState(() {
+        mascotas = mascotasJson
+            .map<Map<String, dynamic>>((m) => Map<String, dynamic>.from(m))
+            .toList();
+
+        nombresMascotas = mascotas
+            .map((m) => m["nombre"].toString())
+            .toList();
+
+        // NO asignamos automáticamente la primera mascota
+        _nombreMascota = null;
+
+        cargando = false;
+
+      });
+    } else {
+      setState(() => cargando = false);
+      print("❌ Error al obtener mascotas: ${response.statusCode}");
+    }
+  }
+
+  void _calcularTotal() {
+    if (_horaInicio != null && _horaFin != null) {
+      // Convertir TimeOfDay a horas decimales
+      final inicio = _horaInicio!.hour + _horaInicio!.minute / 60;
+      final fin = _horaFin!.hour + _horaFin!.minute / 60;
+
+      double horas = fin - inicio;
+      if (horas < 0) horas = 0; // evita negativo si se escoge mal
+
+      // Tomar la tarifa por hora del TextEditingController
+      String tarifaTexto = _tarifa.text.replaceAll('.', ''); // quitar puntos de miles
+      double tarifa = double.tryParse(tarifaTexto) ?? 0;
+
+      double total = tarifa * horas;
+
+      // Formatear con puntos de miles
+      _total.text = total.toStringAsFixed(0).replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+    }
+  }
+
+  Uint8List? _decodificarImagenMascota(String? nombre) {
+    if (nombre == null) return null;
+
+    Map<String, dynamic>? mascota;
+
+    try {
+      mascota = mascotas.firstWhere(
+        (m) => m["nombre"] == nombre,
+      );
+    } catch (e) {
+      return null; // no encontró la mascota → no hay imagen
+    }
+
+    final base64Img = mascota["imagen_perfil"];
+
+    if (base64Img == null || base64Img.isEmpty) return null;
+
+    try {
+      return base64Decode(base64Img);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> registrarPaseo() async {
+    if (_nombreMascota == null ||
+      _nombreMascota == "Cargando..." ||
+      _tipoPago == null ||
+      _tipoPago!.isEmpty ||
+      _horaInicio == null ||
+      _horaFin == null ||
+      _direccion.text.isEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "⚠️ Por favor complete todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
+
+    try {
+      // 💰 Procesar tarifa (quitar puntos y convertir a double)
+      String textoTarifa = _tarifa.text.replaceAll('.', '');
+      double tarifaDecimal = double.parse(textoTarifa);
+
+      String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
+                  "${_fecha!.month.toString().padLeft(2, '0')}-"
+                  "${_fecha!.day.toString().padLeft(2, '0')}";
+      // 🕒 Formatear horarios
+      String horaInicio = "${_horaInicio!.hour.toString().padLeft(2, '0')}:${_horaInicio!.minute.toString().padLeft(2, '0')}:00";
+      String cierreFin= "${_horaFin!.hour.toString().padLeft(2, '0')}:${_horaFin!.minute.toString().padLeft(2, '0')}:00";
+      // 🌐 URL del backend
+      final url = Uri.parse("http://localhost:5000/registrarPaseo");
+
+      // 🧠 Datos a enviar
+      final body = {
+        "id_mascota": _idMascota,
+        "id_dueno": widget.id_dueno,
+        "id_paseador": widget.id_paseador,
+        "direccion": _direccion.text,
+        "horarioInicio": horaInicio,
+        "cierrefin": cierreFin,
+        "metodopago": _tipoPago,
+        "tarifa": tarifaDecimal.toString(),
+        "fecha": fecha,
+      };
+      
+      // 📤 Enviar solicitud al backend
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      // ✅ Respuesta correcta
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        // 🔹 Limpiar formulario para nueva cita
+        setState(() {
+          _fecha = null;
+          _horaInicio = null;
+          _horaFin = null;
+          _direccion.clear();
+          _total.clear();
+          _nombreMascota = null;
+          _idMascota = null;
+          _tipoPago = null;
+        });
+        mostrarMensajeFlotante(
+          context,
+          "✅ Paseo agendado correctamente",
+          colorFondo: const Color.fromARGB(255, 243, 243, 243),
+          colorTexto: const Color.fromARGB(255, 0, 0, 0),
+        );
+
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "❌ Error al agendar paseo (${response.statusCode})",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      }
+    } catch (e) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Error: ${e.toString()}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+    }
+  }
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
     OverlayEntry? overlayEntry;
@@ -334,6 +558,87 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
 
   Overlay.of(context).insert(overlayEntry);
 }
+
+  void mostrarConfirmacionAgenda(BuildContext context, VoidCallback onConfirmar, id) {
+    OverlayEntry? overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {},
+              child: Container(color: Colors.black.withOpacity(0.4)),
+            ),
+          ),
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 6))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
+                    const SizedBox(height: 12),
+                    Text(
+                      '¿Deseas agendar este paseo?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () { overlayEntry?.remove(); },
+                          icon: Image.asset(
+                            "assets/cancelar.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('No', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 202, 65, 65),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                  
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            overlayEntry?.remove();
+                            onConfirmar();
+                          },
+                          icon: Image.asset(
+                            "assets/Correcto.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('Sí', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4CAF50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Overlay.of(context).insert(overlayEntry);
+  }
 
   Future<void> _cargarImagenPorDefecto() async {
     final byteData = await rootBundle.load('assets/usuario.png');
@@ -877,7 +1182,50 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
           key: const ValueKey("citas"),
           children: [
             _tarjetaMascotasCompartidas(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+
+          // 🔹 Botón debajo de la tarjeta
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                mostrarConfirmacionAgenda(
+                  context,
+                  () async {
+                    // 🔹 Función que registra la cita en el backend
+                    await registrarPaseo();
+                  },
+                  _idMascota,
+                );
+              },
+                icon: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Image.asset('assets/Especie.png'),
+                ),
+                label: const Text(
+                  "Agendar Cita",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 46, 45, 45), // 👈 aquí cambias el color
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  foregroundColor:  const Color.fromARGB(255, 131, 123, 99),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 30),
           ],
         );
       default:
@@ -1151,23 +1499,272 @@ Widget _tarjetaPerfil() {
     );
   }
 
+  Widget _tarjetaMascotasCompartidas() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 20),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: const Color.fromARGB(255, 246, 245, 245),
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
+      border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+    ),
+
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+
+        // 🔵 Título
+        Stack(
+          children: [
+            Text(
+              "Agendar Cita",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 2
+                  ..color = Colors.black,
+              ),
+            ),
+            const Text(
+              "Agendar Cita",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 15),
+
+        // 🔵 Imagen + Nombre Mascota
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _imagenMascota(),
+            const SizedBox(width: 12),
+
+
+          Expanded(
+            child: nombresMascotas.isEmpty
+                ? const Text("No tienes mascotas registradas")
+                : _dropdownConEtiqueta(
+                    "Nombre Mascota",
+                    _icono("assets/Nombre.png"),
+                    nombresMascotas,
+                    "Seleccione la mascota",
+                    _nombreMascota, // inicial = null
+                    (val) {
+                      setState(() {
+                        _nombreMascota = val;
+
+                        final mascota = mascotas.cast<Map<String, dynamic>>().firstWhere(
+                          (m) => m["nombre"] == val,
+                          orElse: () => <String, dynamic>{},
+                        );
+                        _idMascota = mascota.isNotEmpty ? mascota["id_mascotas"].toString() : null;
+                      });
+                    },
+                  ),
+          )
+
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // 🔵 FECHA Y HORA UNO AL LADO DEL OTRO
+        Row(
+          children: [
+            Expanded(child: _campoFecha(context)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _dropdownConEtiqueta(
+                "Tipo de pago",
+                _icono("assets/Pago.png"),
+                tiposPago,
+                "Seleccione",
+                _tipoPago,
+                (val) => setState(() => _tipoPago = val),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _campoHora(
+                context: context,
+                titulo: "Hora inicio",
+                horaSeleccionada: _horaInicio,
+                onHoraSeleccionada: (val) {
+                  setState(() {
+                    _horaInicio = val;
+                    _calcularTotal();
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _campoHora(
+                context: context,
+                titulo: "Hora fin",
+                horaSeleccionada: _horaFin,
+                onHoraSeleccionada: (val) {
+                  setState(() {
+                    _horaFin = val;
+                    _calcularTotal();
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              child: _campoTextoSimple(
+                "Zona de servicio",
+                "assets/Ubicacion.png",
+                _direccion,
+                "Ej: Sevilla Valle, Caicedonia Valle",
+                esDireccion: true,
+              ),
+            ),
+            const SizedBox(width: 12), // espacio entre los campos
+            Expanded(
+              child: _campoTextoSimple(
+                "Total a pagar",
+                "assets/precio.png",
+                _total,
+                "Total",
+                formatoMiles: true,
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  
+}
+
+  Widget _imagenMascota() {
+    final imagen = _decodificarImagenMascota(_nombreMascota);
+
+    if (imagen == null) {
+      return Image.asset(
+        "assets/usuario.png",
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(50),
+      child: Image.memory(
+        imagen,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _campoFecha(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Fecha",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 46, 45, 45)),
+        ),
+        const SizedBox(height: 4),
+        GestureDetector(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              builder: (context, child) {
+                return Theme(
+                  data: ThemeData.dark().copyWith(
+                    colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              setState(() {
+                _fecha = picked;
+              });
+            }
+          },
+          child: AbsorbPointer(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: _fecha == null
+                    ? "Seleccione la fecha"
+                    : "${_fecha!.day}/${_fecha!.month}/${_fecha!.year}",
+                hintStyle: TextStyle(color: Colors.grey[800]),
+
+                // 👇 Aquí reemplazamos el ícono por una imagen personalizada
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(8.0), // Ajusta el espacio
+                  child: Image.asset(
+                    "assets/Calendario.png", // ruta de tu imagen
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 
   Widget _campoHora({
   required BuildContext context,
-  required String label,
-  required TimeOfDay? hora,
-  required void Function(TimeOfDay) onHoraSeleccionada,
+  required String titulo,
+  required TimeOfDay? horaSeleccionada,
+  required Function(TimeOfDay?) onHoraSeleccionada,
 }) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      Text(
+        titulo,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 43, 42, 42),
+        ),
+      ),
       const SizedBox(height: 4),
+
       GestureDetector(
         onTap: () async {
           final TimeOfDay? picked = await showTimePicker(
             context: context,
-            initialTime: hora ?? TimeOfDay.now(),
+            initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
                 data: ThemeData.dark().copyWith(
@@ -1183,169 +1780,269 @@ Widget _tarjetaPerfil() {
               );
             },
           );
+
           if (picked != null) {
-            setState(() => onHoraSeleccionada(picked));
+            onHoraSeleccionada(picked);
           }
         },
+
         child: AbsorbPointer(
           child: TextField(
             decoration: InputDecoration(
-              hintText: hora == null ? "Seleccione la hora" : hora.format(context),
+              hintText: horaSeleccionada == null
+                  ? "Seleccione la hora"
+                  : horaSeleccionada.format(context),
               hintStyle: TextStyle(color: Colors.grey[800]),
-              prefixIcon: const Icon(Icons.access_time),
+
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset("assets/Hora.png", width: 24, height: 24),
+              ),
+
               filled: true,
               fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),
+      ),
+
+      const SizedBox(height: 12),
+    ],
+  );
+}
+
+  Widget _icono(String assetPath) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
+    );
+  }
+
+  Widget _campoConIcono(String label, String iconPath, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 4),
+        TextField(
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: Image.asset(iconPath, fit: BoxFit.contain),
+              ),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dropdownConEtiqueta(
+  String etiqueta,
+  Widget icono,
+  List<String>? opciones,
+  String hintText,
+  String? valorActual,
+  Function(String?)? onChanged,
+) {
+  final listaSegura =
+      (opciones == null || opciones.isEmpty) ? ["Sin opciones"] : opciones;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        etiqueta,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 46, 45, 45),
+        ),
+      ),
+      const SizedBox(height: 4),
+      DropdownButtonFormField<String>(
+        value: valorActual, // <-- permitimos que sea null
+        decoration: InputDecoration(
+          hintText: hintText, // esto se mostrará si valorActual es null
+          hintStyle: TextStyle(color: Colors.grey[800]),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(0),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: icono,
+            ),
+          ),
+        ),
+        items: listaSegura.map((opcion) {
+          return DropdownMenuItem(
+            value: opcion,
+            child: Text(opcion),
+          );
+        }).toList(),
+        onChanged: onChanged,
       ),
       const SizedBox(height: 12),
     ],
   );
 }
 
-  Widget _tarjetaMascotasCompartidas() {
-    return Container(
-       margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 246, 245, 245),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-          border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+
+  Widget _botonesEditarEliminar(Map<String, dynamic> comentario) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        // ✏ Botón editar
+        TextButton.icon(
+          onPressed: () {
+            _mostrarModalComentario(context, comentario);
+          },
+          icon: const Icon(Icons.edit, color: Colors.blue),
+          label: const Text("Editar", style: TextStyle(color: Colors.blue)),
         ),
-        child: Row(
+
+        const SizedBox(width: 8),
+
+        // 🗑 Botón eliminar
+        TextButton.icon(
+          onPressed: () {
+            mostrarConfirmacionRegistro(
+              context,
+              () => eliminarComentario(comentario["id_calificacion_paseador"]),
+              comentario["id_calificacion_paseador"], // ← tercer parámetro obligatorio
+            );
+          },
+          icon: const Icon(Icons.delete, color: Colors.red),
+          label: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _comentar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          _mostrarModalComentario(context, null);
+        },
+        icon: Image.asset(
+          "assets/Editar.png",
+          width: 24,
+          height: 24,
+        ),
+        label: Stack(
           children: [
-            Image.asset("assets/Calendario.png", width: 40, height: 40),
-            const SizedBox(width: 12),
-            Stack(
-              children: [
-                Text(
-                  "Calendario de paseos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    foreground: Paint()
-                      ..style = PaintingStyle.stroke
-                      ..strokeWidth = 2
-                      ..color = Colors.black,
-                  ),
-                ),
-                const Text(
-                  "Calendario de paseos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+            // Borde negro
+            Text(
+              "Comentar",
+              style: TextStyle(
+                fontSize: 16,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 2
+                  ..color = const Color.fromARGB(255, 29, 29, 29),
+              ),
+            ),
+
+            // Relleno blanco
+            Text(
+              "Comentar",
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color.fromARGB(196, 255, 255, 255),
+              ),
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _campoTextoSimple(
+    String etiqueta,
+    String iconoPath,
+    TextEditingController controller,
+    String hintText, {
+    bool soloLetras = false,
+    bool soloNumeros = false,
+    bool esDireccion = false,
+    bool formatoMiles = false, 
+    bool readOnly = false, 
+    bool esCorreo = false,// 👈 NUEVO: agrega puntos de miles (ej: 10.000)
+  }) {
+    List<TextInputFormatter> filtros = [];
+
+    if (soloLetras) {
+      // ✅ Solo letras (mayúsculas, minúsculas, tildes, ñ) y espacios
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')));
+      
+    } else if (soloNumeros) {
+      // ✅ Solo números
+      filtros.add(FilteringTextInputFormatter.digitsOnly);
+    } else if (esDireccion) {
+      // ✅ Letras, números, espacios y caracteres comunes en direcciones
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s#\-\.,]')));
+    } else if (formatoMiles) {
+      // ✅ Formatear con puntos de miles automáticamente
+      filtros.add(_MilesFormatter());
+    } else if (esCorreo) {
+    // ✅ Solo caracteres válidos para correos electrónicos
+    filtros.add(FilteringTextInputFormatter.allow(
+        RegExp(r'[a-zA-Z0-9@._\-]')));
     }
 
-
-
-Widget _campoConIcono(String label, String iconPath, String hint) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      const SizedBox(height: 4),
-      TextField(
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: Image.asset(iconPath, fit: BoxFit.contain),
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          etiqueta,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 46, 45, 45)),
         ),
-      ),
-    ],
-  );
-}
-
-Widget _botonesEditarEliminar(Map<String, dynamic> comentario) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.end,
-    children: [
-      // ✏ Botón editar
-      TextButton.icon(
-        onPressed: () {
-          _mostrarModalComentario(context, comentario);
-        },
-        icon: const Icon(Icons.edit, color: Colors.blue),
-        label: const Text("Editar", style: TextStyle(color: Colors.blue)),
-      ),
-
-      const SizedBox(width: 8),
-
-      // 🗑 Botón eliminar
-      TextButton.icon(
-        onPressed: () {
-          mostrarConfirmacionRegistro(
-            context,
-            () => eliminarComentario(comentario["id_calificacion_paseador"]),
-            comentario["id_calificacion_paseador"], // ← tercer parámetro obligatorio
-          );
-        },
-        icon: const Icon(Icons.delete, color: Colors.red),
-        label: const Text("Eliminar", style: TextStyle(color: Colors.red)),
-      ),
-    ],
-  );
-}
-
-
-Widget _comentar() {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: ElevatedButton.icon(
-      onPressed: () {
-        _mostrarModalComentario(context, null);
-      },
-      icon: Image.asset(
-        "assets/Editar.png",
-        width: 24,
-        height: 24,
-      ),
-      label: Stack(
-        children: [
-          // Borde negro
-          Text(
-            "Comentar",
-            style: TextStyle(
-              fontSize: 16,
-              foreground: Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 2
-                ..color = const Color.fromARGB(255, 29, 29, 29),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          keyboardType: formatoMiles || soloNumeros ? TextInputType.number : TextInputType.text,
+          inputFormatters: filtros,
+          readOnly: readOnly,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: Colors.grey[800]),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: Image.asset(iconoPath, fit: BoxFit.contain),
+              ),
             ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
-
-          // Relleno blanco
-          Text(
-            "Comentar",
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color.fromARGB(196, 255, 255, 255),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 }
 

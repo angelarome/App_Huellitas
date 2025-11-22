@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'dart:ui'; // Para aplicar desenfoque si lo necesitas más adelante
 import 'package:http/http.dart' as http; 
 import 'dart:convert';  
-import 'agregarhigiene.dart';  
-import 'tarjetasHigiene.dart';
-
-class HigieneScreen extends StatefulWidget {
+import 'añadirmedicamento.dart';
+import 'tarjetamedicamento.dart';
+class MedicamentosScreen extends StatefulWidget {
   
   final int id;
 
-  const HigieneScreen({super.key, required this.id});
+  const MedicamentosScreen({super.key, required this.id});
   @override
-  State<HigieneScreen> createState() => _HigieneScreenState();
+  State<MedicamentosScreen> createState() => _MedicamentosScreenState();
   
 }
 
-class _HigieneScreenState extends State<HigieneScreen> {
+class _MedicamentosScreenState extends State<MedicamentosScreen> {
   bool _confirmado = false;
-  List<Map<String, dynamic>> _higiene = [];
+  List<Map<String, dynamic>> _medicamento = [];
 
   bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
 
@@ -30,12 +29,12 @@ class _HigieneScreenState extends State<HigieneScreen> {
   @override
   void initState() {
     super.initState();
-    _obtenerHigiene(); // Llamamos a la API apenas se abre la pantalla
+    _obtenerMedicamentos(); // Llamamos a la API apenas se abre la pantalla
   }
 
 
-  Future<void> _obtenerHigiene() async {
-    final url = Uri.parse("http://localhost:5000/higiene");
+  Future<void> _obtenerMedicamentos() async {
+    final url = Uri.parse("http://localhost:5000/medicamento");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -44,10 +43,10 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final List higieneJson = data["higiene"] ?? [];
+      final List medicamentoJson = data["medicamento"] ?? [];
 
       setState(() {
-        _higiene = List<Map<String, dynamic>>.from(higieneJson);
+        _medicamento = List<Map<String, dynamic>>.from(medicamentoJson);
       });
     } else {
         print("Error al obtener higiene: ${response.statusCode}");
@@ -56,44 +55,56 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
   String _getImagenHigiene(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return "assets/Perroagua.png";
-      case "Cambio de arenero":
-        return "assets/arenero.png";
-      case "Manicure":
-        return "assets/unas.png";
-      case "Peluquería":
-        return "assets/peluqueria.png";
+      case "Vacuna":
+        return "assets/Gatoinyeccion.png";
+      case "Desparasitación":
+        return "assets/purgante.png";
+      case "Inyección":
+        return "assets/Gatoinyeccion.png";
+      case "Antipulgas":
+        return "assets/pulgas.png";
+      case "Medicamentos":
+        return "assets/medigeneral.png";
+      case "Vitaminas y suplementos":
+        return "assets/vitamina.png";
       default:
         return "assets/usuario.png"; // Imagen por defecto si no coincide
     }
   }
 
-  Color _getColorHigiene(String? tipo) {
+  Color _getColorMedicamentos(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return const Color.fromARGB(255, 36, 129, 206);       // azul para baño
-      case "Peluquería":
-        return const Color.fromARGB(255, 98, 82, 237);    // morado para peluquería
-      case "Manicure":
-        return const Color.fromARGB(255, 244, 76, 213);    // naranja para manicure
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 200, 167, 58);     // verde para arenero
+      case "Vacuna":
+        return const Color.fromARGB(255, 47, 161, 255);  
+      case "Inyección":
+        return const Color.fromARGB(255, 35, 177, 202);      // azul para baño
+      case "Antipulgas":
+        return const Color.fromARGB(255, 232, 136, 136);    // morado para peluquería
+      case "Medicamentos":
+        return const Color.fromARGB(255, 196, 73, 73);   // naranja para manicure
+      case "Desparasitación":
+        return const Color.fromARGB(255, 203, 189, 64);  
+      case "Vitaminas y suplementos":
+        return const Color.fromARGB(255, 34, 168, 123);   // verde para arenero
       default:
         return Colors.grey.shade300;      // color por defecto
     }
   }
 
-  Color _getBorderColorHigiene(String? tipo) {
+  Color _getBorderColorMedicamentos(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade700;
-      case "Peluquería":
-        return const Color.fromARGB(255, 103, 46, 172);
-      case "Manicure":
-        return const Color.fromARGB(255, 175, 25, 194);
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 140, 112, 41);
+      case "Vacuna":
+        return const Color.fromARGB(255, 28, 94, 159);
+      case "Inyección":
+        return const Color.fromARGB(255, 36, 117, 117);
+      case "Antipulgas":
+        return const Color.fromARGB(255, 197, 116, 116);
+      case "Medicamentos":
+        return const Color.fromARGB(255, 135, 31, 20);
+      case "Desparasitación":
+        return const Color.fromARGB(255, 173, 161, 53); 
+      case "Vitaminas y suplementos":
+        return const Color.fromARGB(255, 27, 97, 44);
       default:
         return Colors.grey.shade700;
     }
@@ -116,7 +127,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Invierno.jpg"),
+                image: AssetImage("assets/vete.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -192,7 +203,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
                   const Center(
                     child: Text(
-                      "HIGIENE",
+                      "Medicamentos",
                       style: TextStyle(
                         fontSize: 32,
                         color: Colors.white,
@@ -206,7 +217,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
                   Column(
                     children: [
-                      if (_higiene.isEmpty)
+                      if (_medicamento.isEmpty)
                         Center(
                           child: Container(
                             width: MediaQuery.of(context).size.width * 0.85,
@@ -221,7 +232,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                             child: Column(
                               children: [
                                 Image.asset(
-                                  "assets/Corazonpata.png",
+                                  "assets/medi.png",
                                   height: 100,
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) {
@@ -231,7 +242,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                 ),
                                 const SizedBox(height: 10),
                                 const Text(
-                                  "Añade el primer cuidado y lleva el control fácilmente",
+                                  "Añade el primer medicamento y lleva el control fácilmente",
                                   style: TextStyle(
                                       fontSize: 18, color: Colors.black),
                                   textAlign: TextAlign.center,
@@ -242,23 +253,16 @@ class _HigieneScreenState extends State<HigieneScreen> {
                         )
                      else
                       Column(
-                        children: _higiene.map((item) {
+                        children: _medicamento.map((item) {
                           return GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RecordatorioBanioScreen(
-                                    idMascota: widget.id,
-                                    id_higiene: item["id_higiene"],
-                                    frecuencia: item["frecuencia"],
-                                    notas: item["notas"] ?? "",
-                                    tipo: item["tipo"],
-                                    hora: item["hora"],
-                                    fecha: item["fecha"],
-                                  ),
-                                ),
-                              );
+                            
+                              Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TarjetaMedicamentoScreen(idMascota: widget.id, id_medicamento: item["id_medicamento"], frecuencia: item["frecuencia"], dias_personalizados: item["dias_personalizados"], notas: item["descripcion"] ?? "", tipo: item["tipo"], unidad: item["unidad"], dosis: double.tryParse(item["dosis"].toString()) ?? 0.0, hora: item["hora"], fecha: item["fecha"]),
+                              ),
+                            );
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width * 0.9,
@@ -276,10 +280,10 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                 height: 150,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: _getColorHigiene(item["tipo"]),
+                                  color: _getColorMedicamentos(item["tipo"]),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: _getBorderColorHigiene(item["tipo"]),
+                                    color: _getBorderColorMedicamentos(item["tipo"]),
                                     width: 2,
                                   ),
                                 ),
@@ -373,14 +377,10 @@ class _HigieneScreenState extends State<HigieneScreen> {
                       Center(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
-                              
                               MaterialPageRoute(
-                                
-                                builder: (context) => AgregarCuidadoScreen(
-                                  idMascota: widget.id,
-                                ),
+                                builder: (context) => AgregarCuidadoScreen(idMascota: widget.id),
                               ),
                             );
                           },
@@ -393,7 +393,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                             children: [
                               // 🔹 Texto negro (borde)
                               Text(
-                                "Añadir Higiene",
+                                "Añadir Medicamento",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -405,7 +405,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                               ),
                               // 🔹 Texto blanco encima
                               const Text(
-                                "Añadir Higiene",
+                                "Añadir Medicamento",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
