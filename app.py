@@ -26,9 +26,10 @@ def get_connection():
     try:
         db = mysql.connector.connect(
             host="localhost",
+            port=3307,
             user="root",
-            password="",
-            database="huellitas_app"
+            password="nico",
+            database="huellitas_app (4)"
         )
         return db
     except Error as e:
