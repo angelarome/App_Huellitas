@@ -25,10 +25,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def get_connection():
     try:
         db = mysql.connector.connect(
-            host="https://xwhmdjixftodirsdjkmh.supabase.co",
-            port="5432", 
-            user="angelarome",
-            password="Famili@5577",
+            host="localhost",
+            user="root",
+            password="",
             database="huellitas_app"
         )
         return db
