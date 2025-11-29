@@ -435,12 +435,7 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                           // 🔹 PERFIL
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => listvaciacompartirScreen(),
-                                ),
-                              );
+                              
                            
                             },
                             child: SizedBox(
@@ -661,7 +656,12 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                               children: [
                                 ElevatedButton.icon(
                                   onPressed: () {
-                                    Navigator.pop(context);
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditarMascotaScreen(idMascota: widget.id_mascota, id_dueno: widget.id_dueno),
+                                      ),
+                                    );
                                   },
                                   icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/cancelar.png')),
                                   label: const Text("Cancelar"),
@@ -876,11 +876,22 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
             lastDate: DateTime.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.light(
+                    primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                    onPrimary: Colors.white,      // Texto dentro de los botones
+                    surface: Colors.white,        // Fondo del calendario
+                    onSurface: Colors.black87,    // Texto general
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                    ),
+                  ),
                 ),
                 child: child!,
-              );
+                );
             },
           );
           if (picked != null) {

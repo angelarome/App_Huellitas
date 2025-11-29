@@ -312,6 +312,7 @@ class ApiService {
   static Future<Map<String, dynamic>> registrarHigiene({
     required String id,
     required String frecuencia,
+    required String dias_personalizados,
     required String notas,
     required String tipo,
     required String fecha,
@@ -325,6 +326,7 @@ class ApiService {
       body: jsonEncode({
         "id": id,
         "frecuencia": frecuencia,
+        "dias_personalizados": dias_personalizados,
         "notas": notas,
         "tipo": tipo,
         "fecha": fecha,
@@ -439,6 +441,7 @@ class ApiService {
   static Future<bool> actualizar_higiene({
     required String idHigiene,
     required String frecuencia,
+    required String dias_personalizados,
     required String notas,
     required String tipo,
     required String fecha,
@@ -452,6 +455,7 @@ class ApiService {
       body: jsonEncode({
         "id_higiene": idHigiene,
         "frecuencia": frecuencia,
+        "dias_personalizados": dias_personalizados,
         "notas": notas,
         "tipo": tipo,
         "fecha": fecha,
@@ -1766,7 +1770,538 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-}
+  static Future<List<Map<String, dynamic>>> obtenerHistorial({
+    required int id,
+  }) async {
+    final url = Uri.parse("$baseUrl/historialClinico");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List historia = data["historia"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return historia.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> eliminarHistorial({
+    required int id_historial,
+  }) async {
+    final url = Uri.parse(
+      "$baseUrl/eliminar_historial",
+    );
+
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Error: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> registrarHistorial({
+    required String id_mascota,
+    required String? id_veterinaria,
+    required String fecha,
+    required String hora,
+    required String nombre_veterinaria,
+    required String peso,
+    required String motivo,
+    required String diagnostico,
+    required String tratamiento,
+    required String observaciones,
+  }) async {
+    final url = Uri.parse("$baseUrl/registrarHistorial");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_mascota": id_mascota,
+        "id_veterinaria": id_veterinaria,
+        "fecha": fecha,
+        "hora": hora,
+        "nombre_veterinaria": nombre_veterinaria,
+        "peso": peso,
+        "motivo": motivo,
+        "diagnostico": diagnostico,
+        "tratamiento": tratamiento,
+        "observaciones": observaciones,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al registrar el historial");
+    }
+  }
+
+  static Future<Map<String, dynamic>> editarHistorial({
+    required String id_mascota,
+    required String id_historial,
+    required String fecha,
+    required String hora,
+    required String nombre_veterinaria,
+    required String peso,
+    required String motivo,
+    required String diagnostico,
+    required String tratamiento,
+    required String observaciones,
+  }) async {
+    final url = Uri.parse("$baseUrl/editarHistorial");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_mascota": id_mascota,
+        "id_historial": id_historial,
+        "fecha": fecha,
+        "hora": hora,
+        "nombre_veterinaria": nombre_veterinaria,
+        "peso": peso,
+        "motivo": motivo,
+        "diagnostico": diagnostico,
+        "tratamiento": tratamiento,
+        "observaciones": observaciones,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al editar el historial");
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerDocumentos({
+    required int id_mascota,
+  }) async {
+    final url = Uri.parse("$baseUrl/documentos");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id_mascota}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List documentos = data["documentos"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return documentos.map<Map<String, dynamic>>((d) => Map<String, dynamic>.from(d)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> eliminarDocumento({
+    required int id_documento,
+  }) async {
+    final url = Uri.parse(
+      "$baseUrl/eliminar_documento",
+    );
+
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print("Error: ${response.body}");
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> registrarDocumento({
+    required int id_mascota,
+    required String nombre_documento,
+    required String certificado,
+
+  }) async {
+    final url = Uri.parse("$baseUrl/registrarDocumento");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_mascota": id_mascota,
+        "nombre_documento": nombre_documento,
+        "certificado": certificado,
+
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Error al registrar documento");
+    }
+
+    
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerComida({
+    required int id_mascota,
+  }) async {
+    final url = Uri.parse("$baseUrl/Comida");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id_mascota}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List comida = data["comida"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return comida.map<Map<String, dynamic>>((m) => Map<String, dynamic>.from(m)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> GuardarComida({
+    required int id_mascota,
+    required int gramos_totales_dia,
+    required int agua_total_dia,
+  }) async {
+    final url = Uri.parse("$baseUrl/GuardarComida");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_mascota": id_mascota,
+        "gramos_totales_dia": gramos_totales_dia,
+        "agua_total_dia": agua_total_dia,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // 🔹 Falta retornar algo. Si quieres devolver la lista:
+      return List<Map<String, dynamic>>.from(data['comida']);
+    } else {
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> EditarComidaa({
+    required int id_mascota,
+    required int gramos_totales_dia,
+    required int agua_total_dia,
+  }) async {
+    final url = Uri.parse("$baseUrl/ActualizarComida");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id_mascota": id_mascota,
+        "gramos_totales_dia": gramos_totales_dia,
+        "agua_total_dia": agua_total_dia,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // 🔹 Falta retornar algo. Si quieres devolver la lista:
+      return List<Map<String, dynamic>>.from(data['comida']);
+    } else {
+      return [];
+    }
+  }
+
+
+  Future<bool> EditarComida({
+    required String idMascota,
+    required DateTime fecha,
+    required int gramos,
+
+  }) async {
+    final fechaStr =
+        "${fecha.year.toString().padLeft(4,'0')}-"
+        "${fecha.month.toString().padLeft(2,'0')}-"
+        "${fecha.day.toString().padLeft(2,'0')}";
+
+    final url = Uri.parse("$baseUrl/EditarComida");
+
+    final body = {
+      "id_mascota": idMascota,
+      "fecha": fechaStr,
+      "gramos": gramos,
+    };
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> EditarAgua({
+    required String idMascota,
+    required DateTime fecha,
+    required int agua,
+  }) async {
+    final fechaStr =
+        "${fecha.year.toString().padLeft(4,'0')}-"
+        "${fecha.month.toString().padLeft(2,'0')}-"
+        "${fecha.day.toString().padLeft(2,'0')}";
+
+    final url = Uri.parse("$baseUrl/EditarAgua");
+
+    final body = {
+      "id_mascota": idMascota,
+      "fecha": fechaStr,
+      "agua": agua,
+    };
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Map<String, dynamic>>> enviar_solicitud({
+    required int id_mascota,
+    required int id_dueno,
+    required int id_persona,
+    required String tipo_relacion,
+  }) async {
+    final url = Uri.parse("$baseUrl/enviar_solicitud");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id_mascota, "id_dueno": id_dueno, "id_persona": id_persona, "tipo_relacion": tipo_relacion}),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerSolicitudes({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/obtener_solicitudes");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List solicitudes = data["solicitudes"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return solicitudes.map<Map<String, dynamic>>((m) => Map<String, dynamic>.from(m)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+Future<bool> CancelarSolicitud({
+    required int id_solicitud
+  }) async {
+  
+    final url = Uri.parse("$baseUrl/cancelar_solicitud");
+
+    final body = {
+      "id_solicitud": id_solicitud,
+    };
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> AceptarSolicitud({
+    required int id_solicitud,
+    required int id_mascota,
+    required int id_dueno,
+  }) async {
+  
+    final url = Uri.parse("$baseUrl/aceptar_solicitud");
+    final body = {
+      "id_solicitud": id_solicitud,
+      "id_mascota": id_mascota,
+      "id_dueno": id_dueno,
+    };
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerMascotasCompartidas({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/obtener_mascotas_compartidas");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List mascotas = data["mascotas"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return mascotas.map<Map<String, dynamic>>((m) => Map<String, dynamic>.from(m)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerPaseos_dueno({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/paseos_dueno");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List citas = data["paseos"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return citas.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerCitas_dueno({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/citas_dueno");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List citas = data["citas"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return citas.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> registrarReserva({
+    required int idDueno,
+    required int idProducto,
+    required int idTienda,
+    required int cantidad,
+    required String fechaReserva,
+    required String fechaVencimiento,
+    required int total,
+    required String metodoPago,
+  }) async {
+    final url = Uri.parse("$baseUrl/registrarReserva");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "id_dueno": idDueno,
+          "id_producto": idProducto,
+          "id_tienda": idTienda,
+          "cantidad": cantidad,
+          "fecha_reserva": fechaReserva,
+          "fecha_finalizado": fechaVencimiento,
+          "total": total,
+          "metodopago": metodoPago,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        print("Error API: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error conexión: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> registrarPedido({
+    required int idDueno,
+    required int idTienda,
+    required int total,
+    required String metodoPago,
+    required List<Map<String, dynamic>> productos, // 👈 LISTA de productos
+  }) async {
+    final url = Uri.parse("$baseUrl/registrarPedido");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "id_dueno": idDueno,
+          "id_tienda": idTienda,
+          "total": total,
+          "metodopago": metodoPago,
+          "productos": productos, // 👈 SE ENVÍA TODO EL CARRITO
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      } else {
+        print("Error API: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error conexión: $e");
+      return false;
+    }
+  }
+} 
 
 
 

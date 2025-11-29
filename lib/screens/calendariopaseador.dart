@@ -1155,6 +1155,28 @@ void mostrarConfirmacion(
                                             ],
                                           ),
                                           const SizedBox(height: 3),
+
+                                          Row(
+                                            children: [
+                                              Image.asset("assets/precio.png", width: 16, height: 16),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                              "Precio: ${NumberFormat('#,###', 'es_CO').format(double.tryParse(cita['total'].toString()) ?? 0)}",
+                                            ),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 3),
+
+                                          Row(
+                                            children: [
+                                              Image.asset("assets/huellitas.png", width: 16, height: 16),
+                                              const SizedBox(width: 4),
+                                              Text("Comportamiento: ${cita["comportamiento"] ?? "N/A"}"),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 3),
                                           Row(
                                             children: [
                                               getImagenEstado(cita["estado"] ?? ""),

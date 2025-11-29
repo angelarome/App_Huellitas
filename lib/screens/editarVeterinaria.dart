@@ -205,10 +205,34 @@ class _Editarveterinaria extends State<Editarveterinaria> {
     }
   }
 
-
+  bool camposVaciosVeterinaria() {
+    return _nombreTienda.text.trim().isEmpty ||
+        _cedulaUsuario.text.trim().isEmpty ||
+        _tarifa.text.trim().isEmpty ||
+        _experiencia.text.trim().isEmpty ||
+        _direccion.text.trim().isEmpty ||
+        _telefono.text.trim().isEmpty ||
+        _domicilioSeleccionado == null || _domicilioSeleccionado!.trim().isEmpty ||
+        _horariolunesviernes.text.trim().isEmpty ||
+        _cierrelunesviernes.text.trim().isEmpty ||
+        _horariosabado.text.trim().isEmpty ||
+        _cierresabado.text.trim().isEmpty ||
+        (_abreDomingo && _horariodomingo.text.trim().isEmpty) ||
+        (_abreDomingo && _cierredomingo.text.trim().isEmpty) ||
+        _tipoPagoSeleccionado.isEmpty ||
+        (_imagenBase64 == null || _imagenBase64!.isEmpty);
+  }
 
   Future<void> actualizarVeterinaria() async {
-    // 🔧 Función para formatear cualquier tipo de hora (con o sin AM/PM)
+    if (camposVaciosVeterinaria()) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor completa todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
     String formatearHoraFlexible(String horaTexto) {
       try {
         // Si ya tiene segundos → la devolvemos igual
@@ -283,10 +307,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
         
     String textoTarifa = _tarifa.text.replaceAll('.', '');
     double tarifaDecimal = double.parse(textoTarifa);
-    // 🖨️ Verificación antes de enviar
-    print("🕐 Lunes-Viernes: $horaAperturaLV → $horaCierreLV");
-    print("🕐 Sábado: $horaAperturaSab → $horaCierreSab");
-    print("🕐 Domingo: $horaAperturaDom → $horaCierreDom");
+
 
     final url = Uri.parse("http://localhost:5000/actualizarVeterinaria");
 
@@ -316,9 +337,6 @@ class _Editarveterinaria extends State<Editarveterinaria> {
         "certificado": _certificadoBytes != null ? base64Encode(_certificadoBytes!) : "",
       }),
     );
-
-    print("🛰️ Código: ${response.statusCode}");
-    print("📦 Respuesta: ${response.body}");
 
     if (response.statusCode == 200) {
       mostrarMensajeFlotante(

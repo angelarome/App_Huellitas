@@ -392,12 +392,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                           // 🔹 PERFIL
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => listvaciacompartirScreen(),
-                                ),
-                              );
+                              
                            
                             },
                             child: SizedBox(
@@ -531,7 +526,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                               ),
                               nombreController,
                               tipo: 'letras',
-                              hintText: "Digite nombre de la mascota",
+                              hintText: "ej: Max",
                             ),
                             _campoTextoConEtiqueta(
                               "Apellido",
@@ -541,7 +536,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                               ),
                               apellidoController,
                               tipo: 'letras',
-                              hintText: "Digite apellido de la mascota",
+                              hintText: "ej: Pérez",
                             ),
                             _dropdownConEtiqueta(
                               "Especie",
@@ -597,7 +592,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                               ),
                               razaController,
                               tipo: 'letras',
-                              hintText: "Digite la raza",
+                              hintText: "ej: Labrador / Persa / Loro Amazónico",
                             ),
                             _campoPeso("Peso", "assets/Peso.png", pesoController),
                             _campoFechaNacimiento(context),
@@ -793,7 +788,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
           FilteringTextInputFormatter.digitsOnly, // solo números
         ],
         decoration: InputDecoration(
-          hintText: "Digite el peso",
+          hintText: "Ej: 23",
           hintStyle: TextStyle(color: Colors.grey[800]),
           prefixIcon: Padding(
             padding: const EdgeInsets.all(8.0), // margen para que no se vea aplastado

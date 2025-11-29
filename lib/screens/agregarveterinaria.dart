@@ -265,37 +265,42 @@ class _AgregarVeterinariaScreenState extends State<AgregarVeterinariaScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // ❌ Botón "No"
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
                           },
+                          icon: Image.asset(
+                            "assets/cancelar.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('No', style: TextStyle(color: Colors.white, fontSize: 16)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 202, 65, 65),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'No',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
                         ),
                         // ✅ Botón "Sí"
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
                             registrarVeterinaria(); // 👉 Llama a la función que hace el registro
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          icon: Image.asset(
+                            "assets/Correcto.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('Sí', style: TextStyle(color: Colors.white, fontSize: 16)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: const Text(
-                            'Sí',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          
                         ),
                       ],
                     ),

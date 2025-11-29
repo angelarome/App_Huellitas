@@ -130,7 +130,24 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
     }
   }
 
-  Future<void> actualizarProducto() async { 
+  bool camposVaciosProducto() {
+    return nombreController.text.trim().isEmpty ||
+        tarifaController.text.trim().isEmpty ||
+        cantidadController.text.trim().isEmpty ||
+        (_imagenBase64 == null || _imagenBase64!.isEmpty);
+  }
+
+  // ✅ Función principal para actualizar producto
+  Future<void> actualizarProducto() async {
+    if (camposVaciosProducto()) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor completa todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
       String textoTarifa = tarifaController.text.replaceAll('.', '');
       double tarifaDecimal = double.parse(textoTarifa);
 
@@ -540,7 +557,12 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
                       
                       ElevatedButton.icon(
                         onPressed: () {
-                          // TODO: Cancelar
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PerfilTiendaScreen(idtienda: widget.idtienda),
+                            ),
+                          );
                         },
                         icon: SizedBox(width: 24,height: 24, child: Image.asset('assets/cancelar.png'), // icono de eliminar
                         ),

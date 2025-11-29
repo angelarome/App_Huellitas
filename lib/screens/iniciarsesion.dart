@@ -241,11 +241,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 320,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 251, 81, 81).withOpacity(0.95),
+                      color: const Color.fromARGB(255, 205, 192, 192).withOpacity(0.6),
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color.fromARGB(255, 189, 27, 27).withOpacity(0.4),
+                          color: const Color.fromARGB(255, 142, 131, 131).withOpacity(0.4),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -368,8 +368,8 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
       Text(
         label,
         style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 255, 255, 255),
+          fontWeight: FontWeight.w900,
           fontSize: 16,
           shadows: [
             Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
@@ -402,7 +402,7 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          hintText: "Ingrese su $label",
+          hintText: "ej: romero@gmail.com",
           prefixIcon: Padding(
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(width: 24, height: 24, child: icono),
@@ -457,7 +457,7 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900,
             fontSize: 16,
           ),
         ),
@@ -468,7 +468,7 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            hintText: "Ingrese su $label",
+            hintText: "ej: familia5577",
             prefixIcon: Padding(
               padding: const EdgeInsets.all(8.0),
               child: SizedBox(width: 24, height: 24, child: icono),

@@ -466,32 +466,33 @@ class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
 
                           infoItem(
                             "assets/Nombre.png",
-                            "Nombre: ${nombreMascota.isNotEmpty 
-                                ? nombreMascota[0].toUpperCase() + nombreMascota.substring(1).toLowerCase() 
-                                : ''}",
+                            "Nombre", // label
+                            nombreMascota.isNotEmpty
+                                ? nombreMascota[0].toUpperCase() + nombreMascota.substring(1).toLowerCase()
+                                : "", // value
                           ),
-                          infoItem("assets/Etiqueta.png", "Tipo: ${widget.tipo}"),
+                          infoItem("assets/Etiqueta.png", "Tipo", widget.tipo),
                           infoItem(
-                            obtenerImagenSegunUnidad(widget.unidad),
-                            "Dosis: ${widget.dosis} ${widget.unidad}",
+                            obtenerImagenSegunUnidad(widget.unidad), // icono
+                            "Dosis", // label
+                            "${widget.dosis} ${widget.unidad}", // valor
                           ),
-                          infoItem("assets/Calendario.png", "Fecha: ${widget.fecha}"),
-                          infoItem("assets/Hora.png", "Hora: ${widget.hora}"),
+                          infoItem("assets/Calendario.png", "Fecha", widget.fecha),
+                          infoItem("assets/Hora.png", "Hora", widget.hora),
                           Column(
                             children: [
-                              infoItem("assets/Frecuencia.png", "Frecuencia: ${widget.frecuencia}"),
+                              infoItem("assets/Frecuencia.png", "Frecuencia", widget.frecuencia),
 
                               if (widget.frecuencia == "Personalizada" &&
                                   widget.dias_personalizados != null &&
                                   widget.dias_personalizados!.isNotEmpty)
                                 infoItem(
                                   "assets/evaluacion.png",
-                                  "Días: ${widget.dias_personalizados}",
+                                  "Días", widget.dias_personalizados,
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          infoItem("assets/Notas.png", "Notas: ${widget.notas}", isNote: true),
+                          infoItem("assets/Notas.png", "Notas", widget.notas, isNote: true),
 
                           const SizedBox(height: 20),
 
@@ -547,7 +548,7 @@ class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
   }
 
   // Widget para mostrar ítem con ícono
-  Widget infoItem(String iconPath, String text, {bool isNote = false}) {
+  Widget infoItem(String iconPath, String label, String value, {bool isNote = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -556,11 +557,26 @@ class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
           Image.asset(iconPath, width: 24, height: 24),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: isNote ? 14 : 16,
-                color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "$label: ", // la etiqueta en negrita
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, 
+                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value, // el valor normal
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: isNote ? 14 : 16,
+                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

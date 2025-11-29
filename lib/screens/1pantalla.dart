@@ -16,6 +16,7 @@ import "mascota.dart";
 import 'buscarVeterinaria.dart';
 import 'buscarTienda.dart';
 import 'buscarpaseador.dart';
+import 'mascotasCompartidas.dart';
 
 class Pantalla1 extends StatefulWidget {
   final int id;
@@ -262,7 +263,7 @@ class _Pantalla1State extends State<Pantalla1> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => listvaciacompartirScreen(),
+                                  builder: (context) => listvaciacompartirScreen(id_dueno: widget.id),
                                 ),
                               );
                             },

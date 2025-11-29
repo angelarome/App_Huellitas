@@ -160,8 +160,38 @@ class _EditartiendaState extends State<Editartienda> {
 
 
 
+  bool camposVaciosTienda() {
+    if (widget.idtienda == null) return true;
+    if (_nombreTienda.text.trim().isEmpty) return true;
+    if (_cedula.text.trim().isEmpty) return true;
+    if (_direccion.text.trim().isEmpty) return true;
+    if (_telefono.text.trim().isEmpty) return true;
+    if (_domicilioSeleccionado == null || _domicilioSeleccionado!.trim().isEmpty) return true;
+
+    // Validar horas usando los TextEditingController
+    if (_horariolunesviernes.text.trim().isEmpty) return true;
+    if (_cierrelunesviernes.text.trim().isEmpty) return true;
+    if (_horariosabado.text.trim().isEmpty) return true;
+    if (_cierresabado.text.trim().isEmpty) return true;
+    if (_abreDomingo && _horariodomingo.text.trim().isEmpty) return true;
+    if (_abreDomingo && _cierredomingo.text.trim().isEmpty) return true;
+
+    if (_tipoPagoSeleccionado.isEmpty) return true;
+    if (_imagenBase64 == null || _imagenBase64!.isEmpty) return true;
+
+    return false;
+  }
+
   Future<void> actualizarTienda() async {
-    // 🔧 Función para formatear cualquier tipo de hora (con o sin AM/PM)
+    if (camposVaciosTienda()) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor completa todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
     String formatearHoraFlexible(String horaTexto) {
       try {
         // Si ya tiene segundos → la devolvemos igual
@@ -234,11 +264,6 @@ class _EditartiendaState extends State<Editartienda> {
                 : null))
         : null;
 
-    // 🖨️ Verificación antes de enviar
-    print("🕐 Lunes-Viernes: $horaAperturaLV → $horaCierreLV");
-    print("🕐 Sábado: $horaAperturaSab → $horaCierreSab");
-    print("🕐 Domingo: $horaAperturaDom → $horaCierreDom");
-
     final url = Uri.parse("http://localhost:5000/actualizarTienda");
 
     final response = await http.put(
@@ -264,9 +289,6 @@ class _EditartiendaState extends State<Editartienda> {
         "metodopago": _tipoPagoSeleccionado.join(", "),
       }),
     );
-
-    print("🛰️ Código: ${response.statusCode}");
-    print("📦 Respuesta: ${response.body}");
 
     if (response.statusCode == 200) {
       mostrarMensajeFlotante(
@@ -295,8 +317,6 @@ class _EditartiendaState extends State<Editartienda> {
       );
     }
   }
-
-
 
 
   void mostrarConfirmacionRegistro(BuildContext context) {
@@ -472,7 +492,7 @@ class _EditartiendaState extends State<Editartienda> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/descarga.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),

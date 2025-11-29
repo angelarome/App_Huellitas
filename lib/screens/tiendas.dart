@@ -10,8 +10,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:ui';
-import 'editartienda.dart';
-import 'editarProducto.dart';
+import 'canasta.dart';
+import 'realizar_reserva.dart';
 
 class TiendaScreen extends StatefulWidget {
   final int id_dueno;
@@ -29,7 +29,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
   List<Map<String, dynamic>> _calificacion = [];
   List<Map<String, dynamic>> _producto = [];
   int _seccionActiva = 1; // 0: Comentarios, 1: Perfil, 2: Catálogo
-
+  List<Map<String, dynamic>> carrito = [];
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
   String? _imagenBase64; // imagen lista para enviar al backend
@@ -633,7 +633,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/descarga.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -814,7 +814,16 @@ class _TiendaScreenState extends State<TiendaScreen> {
                               if (_seccionActiva == 2)
                                 ElevatedButton.icon(
                                   onPressed: () {
-                                    
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AgregarPedidoScreen(
+                                          id_dueno: widget.id_dueno,
+                                          idtienda: widget.idtienda,
+                                          carrito: carrito, // aquí pasamos la lista actualizada
+                                        ),
+                                      ),
+                                    );
                                   },
                                   icon: Image.asset(
                                     'assets/catalogo.png', // 🐾 tu imagen personalizada
@@ -1300,9 +1309,30 @@ Widget _tarjetaComentarios() {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton.icon(
-                  onPressed: () {
-                    
-                  },  
+                    onPressed: () {
+                      // 1️⃣ Crear el producto seleccionado
+                      final productoSeleccionado = {
+                        "idproducto": producto["idproducto"],
+                        "nombre": producto["nombre"],
+                        "descripcion": producto["descripcion"],
+                        "precio": (producto["precio"] is num)
+                            ? (producto["precio"] as num).toDouble()
+                            : double.tryParse(producto["precio"]?.toString() ?? "0") ?? 0.0,
+                        "cantidad_disponible": producto["cantidad_disponible"], // la cantidad seleccionada
+                      };
+
+                      // 2️⃣ Agregarlo al carrito
+                      setState(() {
+                        carrito.add(productoSeleccionado);
+                      });
+
+                      // 3️⃣ Mostrar un mensaje
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("${producto["nombre"]} agregado al carrito")),
+                      );
+
+                      
+                    },
                     icon: Image.asset('assets/catalogo.png', width: 20),
                     label: const Text(
                       "Canasta",
@@ -1317,17 +1347,22 @@ Widget _tarjetaComentarios() {
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AgregarReservaScreen(id_dueno: widget.id_dueno, idtienda: widget.idtienda, idProducto: producto["idproducto"], foto: foto, nombre: producto["nombre"], descripcion: producto["descripcion"], precio: (producto["precio"] is num)
+              ? (producto["precio"] as num).toDouble()
+              : double.tryParse(producto["precio"]?.toString() ?? "0") ?? 0.0, cantidad_disponible: producto["cantidad_disponible"])),
+                    ); 
                     },
                     icon: Image.asset('assets/reserva.png', width: 20),
                     label: const Text("Reservar"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  ),
+                    )
                 ],
               ),
             ],

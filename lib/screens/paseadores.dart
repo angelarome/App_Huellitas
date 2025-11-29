@@ -269,8 +269,8 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
 
     try {
       // 💰 Procesar tarifa (quitar puntos y convertir a double)
-      String textoTarifa = _tarifa.text.replaceAll('.', '');
-      double tarifaDecimal = double.parse(textoTarifa);
+      String totalTexto = _total.text.replaceAll('.', '');
+      double totalDecimal = double.tryParse(totalTexto) ?? 0;
 
       String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
                   "${_fecha!.month.toString().padLeft(2, '0')}-"
@@ -290,7 +290,7 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
         "horarioInicio": horaInicio,
         "cierrefin": cierreFin,
         "metodopago": _tipoPago,
-        "tarifa": tarifaDecimal.toString(),
+        "tarifa": totalDecimal.toString(),
         "fecha": fecha,
       };
       

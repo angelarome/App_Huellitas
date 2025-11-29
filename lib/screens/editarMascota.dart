@@ -564,39 +564,58 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
 
                           infoItem(
                             "assets/Nombre.png",
-                            "Nombre: ${nombreMascota.isNotEmpty 
+                            "Nombre",
+                            nombreMascota.isNotEmpty 
                                 ? nombreMascota[0].toUpperCase() + nombreMascota.substring(1).toLowerCase() 
-                                : ''}",
+                                : '',
                           ),
-                          infoItem("assets/Apellido.png", "Apellido: ${apellidoMascota.isNotEmpty 
+                          infoItem(
+                            "assets/Apellido.png",
+                            "Apellido",
+                            apellidoMascota.isNotEmpty 
                                 ? apellidoMascota[0].toUpperCase() + apellidoMascota.substring(1).toLowerCase() 
-                                : ''}"),
+                                : '',
+                          ),
                           infoItem(
                             getIconoEspecie(especieMascota),
-                            "Especie: ${especieMascota.isNotEmpty 
+                            "Especie",
+                            especieMascota.isNotEmpty 
                                 ? especieMascota[0].toUpperCase() + especieMascota.substring(1).toLowerCase() 
-                                : ''}",
+                                : '',
                           ),
                           infoItem(
                             getIconoSexo(generoMascota),
-                            "Género: ${generoMascota[0].toUpperCase() + generoMascota.substring(1).toLowerCase()}",
+                            "Género",
+                            generoMascota.isNotEmpty 
+                                ? generoMascota[0].toUpperCase() + generoMascota.substring(1).toLowerCase() 
+                                : '',
                           ),
-                          infoItem("assets/Raza.png", "Raza: ${razaMascota.isNotEmpty 
+                          infoItem(
+                            "assets/Raza.png",
+                            "Raza",
+                            razaMascota.isNotEmpty 
                                 ? razaMascota[0].toUpperCase() + razaMascota.substring(1).toLowerCase() 
-                                : ''}"),
+                                : '',
+                          ),
                           infoItem(
                             "assets/Peso.png",
-                            "Peso: $pesoMascota"
+                            "Peso",
+                            pesoMascota.toString(),
                           ),
                           infoItem(
                             "assets/Calendario.png",
-                            "Fecha de nacimiento: ${fechaNacimientoMascota != null
-                              ? formatearFecha(fechaNacimientoMascota!)
-                              : "Sin fecha"}"
+                            "Fecha de nacimiento",
+                            fechaNacimientoMascota != null
+                                ? formatearFecha(fechaNacimientoMascota!)
+                                : "Sin fecha",
                           ),
-                          infoItem("assets/carpeta.png", "Esterilizado: ${esterilizadoMascota.isNotEmpty 
+                          infoItem(
+                            "assets/carpeta.png",
+                            "Esterilizado",
+                            esterilizadoMascota.isNotEmpty 
                                 ? esterilizadoMascota[0].toUpperCase() + esterilizadoMascota.substring(1).toLowerCase() 
-                                : ''}"),
+                                : '',
+                          ),
                           const SizedBox(height: 20),
 
                           Row(
@@ -649,7 +668,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
   }
 
   // Widget para mostrar ítem con ícono
-  Widget infoItem(String iconPath, String text, {bool isNote = false}) {
+  Widget infoItem(String iconPath, String label, String value, {bool isNote = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -658,11 +677,26 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
           Image.asset(iconPath, width: 24, height: 24),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: isNote ? 14 : 16,
-                color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "$label: ", // la etiqueta en negrita
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, 
+                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value, // el valor normal
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: isNote ? 14 : 16,
+                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

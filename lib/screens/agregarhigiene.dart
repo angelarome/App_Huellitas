@@ -20,7 +20,17 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
   String? _tipoSeleccionado;
   String? _frecuenciaSeleccionada;
 
-  
+  Map<String, bool> diasSemana = {
+    "Lun": false,
+    "Mar": false,
+    "Mié": false,
+    "Jue": false,
+    "Vie": false,
+    "Sáb": false,
+    "Dom": false,
+  };
+
+  final TextEditingController frecuenciaPersonalizadaController = TextEditingController();
   final notasController = TextEditingController();
   TextEditingController _nombreMascotaController = TextEditingController();
 
@@ -254,6 +264,8 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     String hora = _horaSeleccionada!.hour.toString().padLeft(2, '0') + ":" +
                   _horaSeleccionada!.minute.toString().padLeft(2, '0') + ":00";
 
+    String dias = frecuenciaPersonalizadaController.text;  
+
     final url = Uri.parse("http://localhost:5000/registrarHigiene");
     print("📤 Enviando datos a servidor:");
     try {
@@ -262,7 +274,10 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "id_mascota": widget.idMascota,
-          "frecuencia": _frecuenciaSeleccionada,
+          "frecuencia": _frecuenciaSeleccionada == "Personalizada"
+            ? "Personalizada"
+            : _frecuenciaSeleccionada,
+          "dias_personalizados": dias.isNotEmpty ? dias : "",
           "notas": notas,
           "tipo": _tipoSeleccionado,
           "fecha": fecha,
@@ -380,7 +395,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                           _dropdownConEtiqueta(
                             "Tipo",
                             _icono("assets/Etiqueta.png"),
-                            ["Baño", "Manicure", "Cambio de arenero", "Peluquería"],
+                            ["Baño", "Manicure", "Cambio de arenero", "Peluquería", "Cuidado de orejas", "Cuidado dental"],
                             "Seleccione tipo de cuidado",
                             _tipoSeleccionado,
                             (val) => setState(() => _tipoSeleccionado = val),
@@ -392,13 +407,16 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                           _dropdownConEtiqueta(
                             "Frecuencia",
                             _icono("assets/Frecuencia.png"),
-                            ["Diario", "Semanal", "Mensual", "Otro"],
+                            ["Diario", "Semanal", "Quincenal", "Mensual", "Cada 3 meses", "Una sola vez", "Personalizada"],
                             "Seleccione frecuencia",
                             _frecuenciaSeleccionada,
                             (val) => setState(() => _frecuenciaSeleccionada = val),
                           ),
-
-
+                          if (_frecuenciaSeleccionada == "Personalizada") ...[
+                            const SizedBox(height: 10),
+                            _seleccionarDias(),   // ⬅️ Llamas al widget que muestra los días
+                          ],
+                          const SizedBox(height: 10),
                           _campoNotas("Notas", "assets/Notas.png", notasController),
                         ],
                       ),
@@ -410,7 +428,12 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Cancelar
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HigieneScreen(id: widget.idMascota),
+                            ),
+                          );
                         },
                         icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/cancelar.png')),
                         label: const Text("Cancelar"),
@@ -506,27 +529,44 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Fecha",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        Row(
+          children: [
+      
+            const SizedBox(width: 6),
+            const Text(
+              "Fecha",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 252, 252, 252)),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         GestureDetector(
           onTap: () async {
             final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              builder: (context, child) {
-                return Theme(
-                  data: ThemeData.dark().copyWith(
-                    colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+            builder: (context, child) {
+              return Theme(
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.light(
+                    primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                    onPrimary: Colors.white,      // Texto dentro de los botones
+                    surface: Colors.white,        // Fondo del calendario
+                    onSurface: Colors.black87,    // Texto general
                   ),
-                  child: child!,
-                );
-              },
-            );
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                    ),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
             if (picked != null) {
               setState(() {
                 _fecha = picked;
@@ -599,9 +639,16 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        "Hora",
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      Row(
+        children: [
+          const Text(
+            "Hora",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+          ),
+        ],
       ),
       const SizedBox(height: 4),
       GestureDetector(
@@ -611,13 +658,16 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
             initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  timePickerTheme: TimePickerThemeData(
-                    backgroundColor: Colors.blue[700],
-                    hourMinuteTextColor: Colors.white,
-                    dialHandColor: Colors.white,
-                    dialTextColor: Colors.white,
-                    entryModeIconColor: Colors.white,
+                data: ThemeData(
+                  useMaterial3: true, // Material 3 más moderno
+                  colorScheme: ColorScheme.light(
+                    primary: const Color(0xFF3A97F5), // color del círculo del reloj
+                    onPrimary: Colors.white, // color del texto dentro del círculo
+                    surface: Colors.white, // fondo del diálogo
+                    onSurface: Colors.black87, // color del texto fuera del círculo
+                  ),
+                  textTheme: const TextTheme(
+                    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ),
                 child: child!,
@@ -661,4 +711,44 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     ],
   );
 }
+
+Widget _seleccionarDias() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Seleccione los días",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        const SizedBox(height: 10),
+
+        Wrap(
+          runSpacing: 12, 
+          spacing: 10,
+          children: diasSemana.keys.map((dia) {
+            final bool seleccionado = diasSemana[dia]!;
+
+            return ChoiceChip(
+              label: Text(dia),
+              selected: seleccionado,
+              selectedColor: Colors.green.shade300,
+              onSelected: (val) {
+                setState(() {
+                  diasSemana[dia] = val;
+
+                  // Guardar en controller
+                  List<String> seleccionados = diasSemana.entries
+                      .where((e) => e.value)
+                      .map((e) => e.key)
+                      .toList();
+
+                  frecuenciaPersonalizadaController.text = seleccionados.join(", ");
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 }

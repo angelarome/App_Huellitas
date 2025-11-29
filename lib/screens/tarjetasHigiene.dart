@@ -11,12 +11,13 @@ class RecordatorioBanioScreen extends StatefulWidget {
   final int idMascota;
   final int id_higiene;
   final String frecuencia;
+  final String dias_personalizados;
   final String notas;
   final String tipo;
   final String hora;
   final String fecha;
 
-  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha});
 
   @override
   State<RecordatorioBanioScreen> createState() => _RecordatorioBanioScreenState();
@@ -264,31 +265,39 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
 
   Color _getColorHigiene(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade300;       // azul para baño
-      case "Peluquería":
-        return const Color.fromARGB(255, 169, 160, 255);    // morado para peluquería
-      case "Manicure":
-        return const Color.fromARGB(255, 252, 156, 235);    // naranja para manicure
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 204, 181, 107);     // verde para arenero
-      default:
-        return Colors.grey.shade300;      // color por defecto
+    case "Baño":
+    return const Color.fromARGB(255, 135, 206, 250); // azul claro
+    case "Peluquería":
+    return const Color.fromARGB(255, 170, 128, 255); // morado pastel
+    case "Manicure":
+    return const Color.fromARGB(255, 255, 182, 193); // rosa pastel
+    case "Cambio de arenero":
+    return const Color.fromARGB(255, 144, 238, 144); // verde claro
+    case "Cuidado dental":
+    return const Color.fromARGB(255, 176, 224, 230); // celeste
+    case "Cuidado de orejas":
+    return const Color.fromARGB(255, 255, 255, 153); // amarillo pastel
+    default:
+    return Colors.grey.shade300; // color por defecto
     }
   }
 
   Color _getBorderColorHigiene(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade700;
-      case "Peluquería":
-        return const Color.fromARGB(255, 103, 46, 172);
-      case "Manicure":
-        return const Color.fromARGB(255, 175, 25, 194);
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 140, 112, 41);
-      default:
-        return Colors.grey.shade700;
+    case "Baño":
+    return const Color.fromARGB(255, 70, 130, 180); // azul más intenso
+    case "Peluquería":
+    return const Color.fromARGB(255, 128, 0, 128); // morado intenso
+    case "Manicure":
+    return const Color.fromARGB(255, 255, 105, 180); // rosa más intenso
+    case "Cambio de arenero":
+    return const Color.fromARGB(255, 34, 139, 34); // verde más intenso
+    case "Cuidado dental":
+    return const Color.fromARGB(255, 0, 191, 255); // azul intenso
+    case "Cuidado de orejas":
+    return const Color.fromARGB(255, 255, 215, 0); // amarillo intenso
+    default:
+    return Colors.grey.shade700; // borde por defecto
     }
   }
 
@@ -402,16 +411,34 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Center(
-                            child: Text(
-                              "Mascota",
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                          Center(
+                            child: Stack(
+                            children: [
+                            // Texto delineado negro
+                            Text(
+                            "Mascota",
+                            style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 3
+                            ..color = Colors.black,
                             ),
-                          ),
+                            ),
+                            // Texto blanco encima
+                            Text(
+                            "Mascota",
+                            style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            ),
+                            ),
+                            ],
+                            ),
+                            ),
+
                           const SizedBox(height: 16),
 
                           Center(
@@ -426,16 +453,27 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
 
                           infoItem(
                             "assets/Nombre.png",
-                            "Nombre: ${nombreMascota.isNotEmpty 
+                            "Nombre", nombreMascota.isNotEmpty 
                                 ? nombreMascota[0].toUpperCase() + nombreMascota.substring(1).toLowerCase() 
-                                : ''}",
+                                : '',
                           ),
-                          infoItem("assets/Etiqueta.png", "Tipo: ${widget.tipo}"),
-                          infoItem("assets/Calendario.png", "Fecha: ${widget.fecha}"),
-                          infoItem("assets/Hora.png", "Hora: ${widget.hora}"),
-                          infoItem("assets/Frecuencia.png", "Frecuencia: ${widget.frecuencia}"),
-                          const SizedBox(height: 8),
-                          infoItem("assets/Notas.png", "Notas: ${widget.notas}", isNote: true),
+                          infoItem("assets/Etiqueta.png", "Tipo",widget.tipo),
+                          infoItem("assets/Calendario.png", "Fecha", widget.fecha),
+                          infoItem("assets/Hora.png", "Hora", widget.hora),
+                          Column(
+                            children: [
+                              infoItem("assets/Frecuencia.png", "Frecuencia", widget.frecuencia),
+
+                              if (widget.frecuencia == "Personalizada" &&
+                                  widget.dias_personalizados != null &&
+                                  widget.dias_personalizados!.isNotEmpty)
+                                infoItem(
+                                  "assets/evaluacion.png",
+                                  "Días", widget.dias_personalizados,
+                                ),
+                            ],
+                          ),
+                          infoItem("assets/Notas.png", "Notas", widget.notas, isNote: true),
 
                           const SizedBox(height: 20),
 
@@ -465,6 +503,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                                         id_higiene: widget.id_higiene,
                                         nombreMascota: nombreMascota,
                                         frecuencia: widget.frecuencia,
+                                        dias_personalizados: widget.dias_personalizados,
                                         notas: widget.notas,
                                         tipo: widget.tipo,
                                         hora: widget.hora,
@@ -505,7 +544,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
   }
 
   // Widget para mostrar ítem con ícono
-  Widget infoItem(String iconPath, String text, {bool isNote = false}) {
+  Widget infoItem(String iconPath, String label, String value, {bool isNote = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -514,11 +553,26 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
           Image.asset(iconPath, width: 24, height: 24),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: isNote ? 14 : 16,
-                color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "$label: ", // la etiqueta en negrita
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, 
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                  TextSpan(
+                    text: value, // el valor normal
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: isNote ? 14 : 16,
+                      color:  Color.fromARGB(255, 37, 36, 36),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

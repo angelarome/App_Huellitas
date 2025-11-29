@@ -261,6 +261,48 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
 
 
   Future<void> _editarMedicamento() async {
+    List<String> camposFaltantes = [];
+
+    // Dosis
+    if (dosisController.text.isEmpty && (widget.dosis == null || widget.dosis.toString().isEmpty)) {
+      camposFaltantes.add("Dosis");
+    }
+
+    // Frecuencia
+    if (_frecuenciaSeleccionada == null && (widget.frecuencia?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Frecuencia");
+    }
+
+    // Tipo
+    if (_tipoSeleccionado == null && (widget.tipo?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Tipo");
+    }
+
+    // Unidad
+    if (unidadSeleccionada == null && (widget.unidad?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Unidad");
+    }
+
+    // Fecha
+    if (_fecha == null && (widget.fecha?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Fecha");
+    }
+
+    // Hora
+    if (_horaSeleccionada == null && (widget.hora?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Hora");
+    }
+
+    // Mostrar mensaje si hay campos faltantes
+    if (camposFaltantes.isNotEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Faltan campos: ${camposFaltantes.join(", ")}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
     // Evita errores con el controlador
     String? notas = notasController.text.isEmpty ? null : notasController.text;
 
@@ -746,8 +788,19 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
               lastDate: DateTime(2100),
               builder: (context, child) {
                 return Theme(
-                  data: ThemeData.dark().copyWith(
-                    colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+                  data: ThemeData(
+                    useMaterial3: true,
+                    colorScheme: ColorScheme.light(
+                      primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                      onPrimary: Colors.white,      // Texto dentro de los botones
+                      surface: Colors.white,        // Fondo del calendario
+                      onSurface: Colors.black87,    // Texto general
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                      ),
+                    ),
                   ),
                   child: child!,
                 );
@@ -837,13 +890,16 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
             initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  timePickerTheme: TimePickerThemeData(
-                    backgroundColor: Colors.blue[700],
-                    hourMinuteTextColor: Colors.white,
-                    dialHandColor: Colors.white,
-                    dialTextColor: Colors.white,
-                    entryModeIconColor: Colors.white,
+                data: ThemeData(
+                  useMaterial3: true, // Material 3 más moderno
+                  colorScheme: ColorScheme.light(
+                    primary: const Color(0xFF3A97F5), // color del círculo del reloj
+                    onPrimary: Colors.white, // color del texto dentro del círculo
+                    surface: Colors.white, // fondo del diálogo
+                    onSurface: Colors.black87, // color del texto fuera del círculo
+                  ),
+                  textTheme: const TextTheme(
+                    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ),
                 child: child!,

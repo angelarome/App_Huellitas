@@ -10,11 +10,13 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:ui' show ImageFilter;
 import 'veterinaria2.dart';
+import 'verhistorial_clinico.dart';
 
 class CalendarioScreen extends StatefulWidget {
   final int id_veterinaria;
+  final String nombreVeterinaria;
 
-  const CalendarioScreen({super.key, required this.id_veterinaria});
+  const CalendarioScreen({super.key, required this.id_veterinaria, required this.nombreVeterinaria});
 
   @override
   _CalendarioScreenState createState() => _CalendarioScreenState();
@@ -739,7 +741,6 @@ void mostrarConfirmacion(
         } catch (e) {
           return false; // formato inválido
         }
-         print("Cita fecha parseada: $citaFecha");
         // comparar solo el día, mes y año
         return citaFecha.year == fecha.year &&
               citaFecha.month == fecha.month &&
@@ -1069,11 +1070,14 @@ void mostrarConfirmacion(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                   if (cita["estado"].toString().toLowerCase() == "aceptada")
-                                  
                                     ElevatedButton.icon(
                                       onPressed: () {
-                                        // Aquí abres pantalla o API
-                                        
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => VerHistorialclinico(id: cita["id_mascota"], id_veterinaria: widget.id_veterinaria, nombreVeterinaria: widget.nombreVeterinaria),
+                                          ),
+                                        );
                                       },
                                       icon: Image.asset("assets/carpeta.png", width: 20, height: 20),
                                       label: const Text(

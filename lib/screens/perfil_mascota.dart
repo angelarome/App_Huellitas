@@ -13,6 +13,10 @@ import 'buscarTienda.dart';
 import 'buscarVeterinaria.dart';
 import 'editarMascota.dart';
 import 'medicamentos.dart';
+import 'historialClinico.dart';
+import 'comida.dart';
+import 'documentos.dart';
+import 'ubicacion.dart';
 
 class ServiciosScreen extends StatefulWidget {
   final int id_dueno;
@@ -178,12 +182,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         Row(
           children: [
             _iconoTop("assets/Perfil.png", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => listvaciacompartirScreen(),
-                ),
-              );
+              
             }),
             const SizedBox(width: 10),
             _iconoTop("assets/Calendr.png", () {}),
@@ -307,16 +306,18 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
 
             InkWell(
               onTap: () {
-                // Acción para Emergencia
-                print("Emergencia presionado");
               },
               child: _iconoAccion("Emergencia", "assets/Medicina.png"),
             ),
 
             InkWell(
               onTap: () {
-                // Acción para Ver ubicación
-                print("Ver ubicación presionado");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UbicacionMascota(idMascota: widget.idMascota),
+                  ),
+                );
               },
               child: _iconoAccion("Ver ubicación", "assets/Mapa.png"),
             ),
@@ -377,22 +378,21 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
       },
       {
         "label": "BIENESTAR DIARIO",
-        "icons": ["assets/salud.png", "assets/Conejo.png"],
-        "color": Colors.purple,
-        "borderColor": Colors.deepPurple,
-        
+        "icons": ["assets/comida-de-perro.png", "assets/comida.png"],
+        "color": const Color.fromARGB(255, 255, 165, 0), // naranja cálido
+        "borderColor": const Color.fromARGB(255, 200, 100, 0),
       },
       {
         "label": "MEDICINA",
         "icons": ["assets/Gatoinyeccion.png", "assets/medicamento.png"],
-        "color": Colors.yellow.shade700,
-        "borderColor": const Color.fromARGB(255, 206, 139, 51),
+        "color": const Color.fromARGB(255, 102, 255, 178), // verde menta fresco
+        "borderColor": const Color.fromARGB(255, 0, 153, 102),
       },
       {
         "label": "DOCUMENTOS",
         "icons": ["assets/documentos.png", "assets/archivo.png"],
-        "color": const Color.fromARGB(255, 209, 211, 187),
-        "borderColor": const Color.fromARGB(255, 106, 103, 100),
+        "color": const Color.fromARGB(255, 180, 175, 158), // amarillo suave, armoniza con naranja y azul
+        "borderColor": const Color.fromARGB(255, 143, 142, 134),
       },
       {
         "label": "HISTORIAL CLÍNICO",
@@ -514,6 +514,10 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         );
         break;
       case 'BIENESTAR DIARIO':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SimpleFoodWaterCalendar(idMascota: widget.idMascota)),
+        );
         break;
       case 'MEDICINA':
         Navigator.push(
@@ -522,8 +526,16 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         );
         break;
       case 'DOCUMENTOS':
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AgregarDocumentosScreen(id: widget.idMascota)),
+        );
         break;
       case 'HISTORIAL CLÍNICO':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => Historialclinico(id: widget.idMascota)),
+        );
         break;
       default:
         ScaffoldMessenger.of(context).showSnackBar(

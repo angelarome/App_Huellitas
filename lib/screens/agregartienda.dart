@@ -292,7 +292,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/descarga.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),

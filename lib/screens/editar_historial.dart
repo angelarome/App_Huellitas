@@ -4,39 +4,42 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'higiene.dart';  
 import 'package:flutter/services.dart';
-import 'medicamentos.dart';
+import 'historialClinico.dart';
+import 'verhistorial_clinico.dart';
 
-class AgregarCuidadoScreen extends StatefulWidget {
+class EditarHistorialScreen extends StatefulWidget {
   final int idMascota;
-  const AgregarCuidadoScreen({super.key, required this.idMascota});
+  final int id_historial;
+  final int? id_veterinaria;
+  final String nombre_veterinaria;
+  final double peso;
+  final String hora;
+  final String fecha;
+  final String motivo;
+  final String diagnostico;
+  final String tratamiento;
+  final String observaciones;
+  const EditarHistorialScreen({super.key, required this.idMascota, required this.id_historial, this.id_veterinaria, required this.nombre_veterinaria, required this.peso, required this.hora, required this.fecha, required this.motivo, required this.diagnostico, required this.tratamiento, required this.observaciones});
 
 
   @override
-  State<AgregarCuidadoScreen> createState() => _AgregarCuidadoScreenState();
+  State<EditarHistorialScreen> createState() => _EditarHistorialScreenState();
 }
 
-class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
+class _EditarHistorialScreenState extends State<EditarHistorialScreen> {
   DateTime? _fecha;
   TimeOfDay? _horaSeleccionada;
-
-  String? _tipoSeleccionado;
-  String? _frecuenciaSeleccionada;
-  String? unidadSeleccionada;
-
-  Map<String, bool> diasSemana = {
-    "Lun": false,
-    "Mar": false,
-    "Mié": false,
-    "Jue": false,
-    "Vie": false,
-    "Sáb": false,
-    "Dom": false,
-  };
   
-  final notasController = TextEditingController();
   TextEditingController _nombreMascotaController = TextEditingController();
-  final TextEditingController frecuenciaPersonalizadaController = TextEditingController();
-  final TextEditingController dosisController = TextEditingController();
+  TextEditingController nombre_veterinariaController = TextEditingController();
+  TextEditingController pesoController = TextEditingController();
+  TextEditingController motivoController = TextEditingController();
+  TextEditingController diagnosticoController = TextEditingController();
+  TextEditingController tratamientoController = TextEditingController();
+  TextEditingController observacionesController = TextEditingController();
+  TextEditingController _horaController = TextEditingController();
+  TextEditingController _fechaController = TextEditingController();
+
   List<Map<String, dynamic>> mascotas = [];
 
   bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
@@ -82,7 +85,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                     const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
                     const SizedBox(height: 12),
                     Text(
-                      '¿Deseas registrar ${_tipoSeleccionado}?',
+                      '¿Deseas editar este historial clínico?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.black87,
@@ -116,7 +119,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                         ElevatedButton.icon(
                           onPressed: () {
                             overlayEntry?.remove();
-                            _registrarMedicamento(); // 👉 Llama a la función que hace el registro
+                            _editarHistorial(); // 👉 Llama a la función que hace el registro
                           },
                           icon: Image.asset(
                             "assets/Correcto.png", // tu icono
@@ -214,7 +217,42 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
   @override
   void initState() {
     super.initState();
-    obtenerMascotasPorId(); // Llamamos a la API apenas se abre la pantalla
+    obtenerMascotasPorId();
+    nombre_veterinariaController = TextEditingController(text: widget.nombre_veterinaria);
+    pesoController = TextEditingController(text: widget.peso.toString());
+    motivoController = TextEditingController(text: widget.motivo);
+    diagnosticoController = TextEditingController(text: widget.diagnostico);
+    tratamientoController = TextEditingController(text: widget.tratamiento);
+    observacionesController = TextEditingController(text: widget.observaciones);
+    _horaController = TextEditingController(text: widget.hora ?? "");
+    _fechaController = TextEditingController(text: widget.fecha ?? "");
+    if (widget.fecha != null && widget.fecha!.trim().isNotEmpty) {
+      try {
+        _fecha = DateTime.parse(widget.fecha!);
+        _fechaController.text =
+            "${_fecha!.day}/${_fecha!.month}/${_fecha!.year}";
+      } catch (e) {
+        print("❌ Error al convertir fecha: $e");
+      }
+    }
+
+    if (widget.hora != null && widget.hora!.trim().isNotEmpty) {
+      try {
+        final parts = widget.hora!.split(":");
+        _horaSeleccionada = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+
+        _horaController.text = _horaSeleccionada!.format(context);
+      } catch (e) {
+        print("❌ Error al convertir hora: $e");
+      }
+    }
+
+    if (widget.nombre_veterinaria != null) {
+      nombre_veterinariaController.text = widget.nombre_veterinaria!;
+    }
   }
 
   Future<void> obtenerMascotasPorId() async {
@@ -238,17 +276,19 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     }
   }
 
-  Future<void> _registrarMedicamento() async {
-    // Evita errores con el controlador
-    String? notas = notasController.text.isEmpty ? null : notasController.text;
 
+  Future<void> _editarHistorial() async {
     // Validación de campos requeridos
-    if (
-        _horaSeleccionada == null ||
-        _tipoSeleccionado == null ||
-        _fecha == null  ||
-        unidadSeleccionada == null 
-        ) {
+    if (_horaSeleccionada == null ||
+        _fecha == null ||
+        ((nombre_veterinariaController.text.trim().isEmpty) &&
+        (widget.nombre_veterinaria == null || widget.nombre_veterinaria!.trim().isEmpty)) ||
+        (pesoController.text.isEmpty && (widget.peso?.toString().trim() ?? '').isEmpty) ||
+        (motivoController.text.isEmpty && (widget.motivo?.trim() ?? '').isEmpty) ||
+        (diagnosticoController.text.isEmpty && (widget.diagnostico?.trim() ?? '').isEmpty) ||
+        (tratamientoController.text.isEmpty && (widget.tratamiento?.trim() ?? '').isEmpty) ||
+        (observacionesController.text.isEmpty && (widget.observaciones?.trim() ?? '').isEmpty)
+    ) {
       mostrarMensajeFlotante(
         context,
         "❌ Por favor completa todos los campos obligatorios.",
@@ -267,48 +307,50 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     String hora = _horaSeleccionada!.hour.toString().padLeft(2, '0') + ":" +
                   _horaSeleccionada!.minute.toString().padLeft(2, '0') + ":00";
 
-    String dias = frecuenciaPersonalizadaController.text;  
 
-    final url = Uri.parse("http://localhost:5000/registrarMedicamento");
+    final url = Uri.parse("http://localhost:5000/editarHistorial");
 
     try {
-      final response = await http.post(
+      final response = await http.put(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "id_mascota": widget.idMascota,
-          "frecuencia": _frecuenciaSeleccionada == "Personalizada"
-            ? "Personalizada"
-            : _frecuenciaSeleccionada,
-          "dosis": double.tryParse(dosisController.text),
-          "unidad": unidadSeleccionada,
-          "notas": notas,
-          "tipo": _tipoSeleccionado,
-          "dias_personalizados": dias.isNotEmpty ? dias : "",
-          "fecha": fecha,
-          "hora": hora,
-
-          if (_frecuenciaSeleccionada == "Personalizada")
-            "dias_personalizados": dias,
-
+          "id_historial": widget.id_historial,
+          "fecha": fecha.isNotEmpty ? fecha : widget.fecha,
+          "hora": hora.isNotEmpty ? hora : widget.hora,
+          "nombre_veterinaria": nombre_veterinariaController.text.isNotEmpty ? nombre_veterinariaController.text : widget.nombre_veterinaria,
+          "peso": pesoController.text.isNotEmpty ? pesoController.text : widget.peso.toString(),
+          "motivo": motivoController.text.isNotEmpty ? motivoController.text : widget.motivo,
+          "diagnostico": diagnosticoController.text.isNotEmpty ? diagnosticoController.text : widget.diagnostico,
+          "tratamiento": tratamientoController.text.isNotEmpty ? tratamientoController.text : widget.tratamiento,
+          "observaciones": observacionesController.text.isNotEmpty ? observacionesController.text : widget.observaciones,
         }),
       );
 
       if (response.statusCode == 201) {
         mostrarMensajeFlotante(
           context,
-          "✅ Medicamento registrado correctamente",
+          "✅ Historial clínico editado correctamente",
           colorFondo: const Color.fromARGB(255, 186, 237, 150), // verde bonito
           colorTexto: const Color.fromARGB(255, 0, 0, 0),
         );
-
-        // Redirigir a la pantalla principal de higiene
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MedicamentosScreen(id: widget.idMascota),
-          ),
-        );
+        if (widget.id_veterinaria != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerHistorialclinico(id: widget.idMascota, id_veterinaria: widget.id_veterinaria, nombreVeterinaria: widget.nombre_veterinaria),
+            ),
+          );
+          
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Historialclinico(id: widget.idMascota),
+            ),
+          );
+        }
       } else {
         final error = jsonDecode(response.body)["error"];
         mostrarMensajeFlotante(
@@ -326,16 +368,6 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
       );
     }
   }
-
-  final Map<String, String> iconosEspecie = {
-    "ml": "assets/gotass.png",
-    "mg": "assets/frasco-de-pastillas.png",
-    "g": "assets/escala-de-justicia.png",
-    "gotas": "assets/gotero-de-tinta.png",
-    "pasta": "assets/pasta.png",
-    "spray": "assets/rociar.png",
-    "cucharada": "assets/cuchara.png",
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +418,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                   const SizedBox(height: 20),
                   const Center(
                     child: Text(
-                      "Añadir medicamento",
+                      "Añadir Historial Clínico",
                       style: TextStyle(
                         fontSize: 28,
                         color: Colors.white,
@@ -410,77 +442,53 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                         children: [
                           _campoTextoConEtiqueta("Mascota", _icono("assets/Nombre.png"), controller: _nombreMascotaController,),
 
-                          _dropdownConEtiqueta(
-                            "Tipo",
-                            _icono("assets/Etiqueta.png"),
-                            ["Vacuna", "Inyección", "Antipulgas", "Medicamentos", "Desparasitación", "Vitaminas y suplementos"],
-                            "Seleccione tipo de medicamento",
-                            _tipoSeleccionado,
-                            (val) => setState(() => _tipoSeleccionado = val),
-                          ),
-
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _campoTextoConEtiquetaa(
-                                  "Dosis",
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(width: 24, height: 24, child: Image.asset('assets/grafico.png')),
-                                  ),
-                                  dosisController,
-                                  tipo: 'num',
-                                  hintText: "Digite la dosis",
-                                ),
-                              ),
-
-                              const SizedBox(width: 10), // espacio entre los dos
-
-                              Expanded(
-                                child: _dropdownConEtiquetaa(
-                                  "Unidad",
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(
-                                      width: 15,
-                                      height: 15,
-                                      child: Image.asset(
-                                        unidadSeleccionada != null
-                                            ? iconosEspecie[unidadSeleccionada!]!
-                                            : 'assets/medicamentoss.png',
-                                      ),
-                                    ),
-                                  ),
-                                  ["ml", "mg", "g", "gotas", "pasta", "spray", "cucharada"],
-                                  "Seleccione",
-                                  valorInicial: unidadSeleccionada,
-                                  onChanged: (valor) {
-                                    setState(() {
-                                      unidadSeleccionada = valor;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
                           _campoFecha(context),
                           _campoHora(context),
 
-                          _dropdownConEtiqueta(
-                            "Frecuencia",
-                            _icono("assets/Frecuencia.png"),
-                            ["Diario", "Semanal", "Quincenal", "Mensual", "Cada 3 meses", "Una sola vez", "Personalizada"],
-                            "Seleccione frecuencia",
-                            _frecuenciaSeleccionada,
-                            (val) => setState(() => _frecuenciaSeleccionada = val),
+                          _campoTextoConEtiquetaa(
+                            "Nombre de la Veterinaria",
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/veterinaria.png')),
+                            ),
+                            nombre_veterinariaController,
+                            tipo: 'letras',
+                            hintText: "ej: Veterinaria Huellitas",
+                            enabled: nombre_veterinariaController.text.isEmpty
                           ),
-                          if (_frecuenciaSeleccionada == "Personalizada") ...[
-                            const SizedBox(height: 10),
-                            _seleccionarDias(),   // ⬅️ Llamas al widget que muestra los días
-                          ],
-                          const SizedBox(height: 10),
-                          _campoNotas("Notas", "assets/Notas.png", notasController),
+                          _campoPeso("Peso", "assets/Peso.png", pesoController),
+
+                          _campoTextoConEtiquetaa(
+                            "Motivo",
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/huellitas.png')),
+                            ),
+                            motivoController,
+                            tipo: 'letras',
+                            hintText: "ej: Se rasca mucho",
+                          ),
+
+                          _campoTextoGrande(
+                            "Diagnóstico",
+                            SizedBox(width: 24, height: 24, child: Image.asset("assets/estetoscopio.png")),
+                            diagnosticoController,
+                            hintText: "ej: Dermatitis alérgica",
+                          ),
+                          _campoTextoGrande(
+                            "Tratamiento",
+                            SizedBox(width: 24, height: 24, child: Image.asset("assets/medicamentoss.png")),
+                            tratamientoController,
+                            hintText: "ej: Antibiótico cada 12 horas por 7 días",
+                          ),
+
+                          _campoTextoGrande(
+                            "Observaciones",
+                            SizedBox(width: 24, height: 24, child: Image.asset("assets/documentos.png")),
+                            observacionesController,
+                            hintText: "ej: Se recomienda baños medicados una vez por semana.",
+                          ),
+
                         ],
                       ),
                     ),
@@ -491,12 +499,22 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MedicamentosScreen(id: widget.idMascota),
-                            ),
-                          );
+                          if (widget.id_veterinaria != null) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VerHistorialclinico(id: widget.idMascota, id_veterinaria: widget.id_veterinaria, nombreVeterinaria: widget.nombre_veterinaria),
+                              ),
+                            );
+                            
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Historialclinico(id: widget.idMascota),
+                              ),
+                            );
+                          }
                         },
                         icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/cancelar.png')),
                         label: const Text("Cancelar"),
@@ -510,12 +528,12 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
                       const SizedBox(width: 20),
                       ElevatedButton.icon(
                         onPressed: () {
-                          mostrarConfirmacionRegistro(context, _registrarMedicamento); // 👈 Muestra el mensaje en lugar de registrar directo
+                          mostrarConfirmacionRegistro(context, _editarHistorial); // 👈 Muestra el mensaje en lugar de registrar directo
                         },
-                        icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Correcto.png')),
-                        label: const Text("Añadir"),
+                        icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Editar.png')),
+                        label: const Text("Editar"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: Colors.amber,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -536,46 +554,6 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
-    );
-  }
-
-  Widget _seleccionarDias() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Seleccione los días",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        const SizedBox(height: 10),
-
-        Wrap(
-          runSpacing: 12, 
-          spacing: 10,
-          children: diasSemana.keys.map((dia) {
-            final bool seleccionado = diasSemana[dia]!;
-
-            return ChoiceChip(
-              label: Text(dia),
-              selected: seleccionado,
-              selectedColor: Colors.green.shade300,
-              onSelected: (val) {
-                setState(() {
-                  diasSemana[dia] = val;
-
-                  // Guardar en controller
-                  List<String> seleccionados = diasSemana.entries
-                      .where((e) => e.value)
-                      .map((e) => e.key)
-                      .toList();
-
-                  frecuenciaPersonalizadaController.text = seleccionados.join(", ");
-                });
-              },
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 
@@ -611,12 +589,106 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     );
   }
 
+  Widget _campoTextoGrande(
+    String titulo,
+    Widget icono,
+    TextEditingController controller, {
+    String hintText = "",
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        TextField(
+          controller: controller,
+          minLines: 4,
+          maxLines: 8,
+          keyboardType: TextInputType.multiline,
+          style: const TextStyle(color: Colors.black),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r"[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\s]"),
+            ),
+          ],
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            prefixIcon: Transform.translate(
+              offset: const Offset(0, -40),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(width: 24, height: 24, child: icono),
+              ),
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 40,
+              minHeight: 40,
+            ),
+            hintText: hintText,
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _campoPeso(String etiqueta, String imagePath, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          etiqueta,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly, // solo números
+          ],
+          decoration: InputDecoration(
+            hintText: "Digite el peso",
+            hintStyle: TextStyle(color: Colors.grey[800]),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(8.0), // margen para que no se vea aplastado
+              child: Image.asset(
+                imagePath,
+                width: 24,
+                height: 24,
+              ),
+            ),
+            suffixText: "Kg",
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
   Widget _campoTextoConEtiquetaa(
     String etiqueta, 
     Widget iconoWidget, 
     TextEditingController controller, {
     String hintText = '',
     String tipo = 'texto', // 'texto', 'num' o 'letras'
+    bool enabled = true, 
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -625,6 +697,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
+          enabled: enabled,
           keyboardType: tipo == 'num' ? TextInputType.number : TextInputType.text,
           inputFormatters: [
             if (tipo == 'num') FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
@@ -760,6 +833,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
           },
           child: AbsorbPointer(
             child: TextField(
+              controller: _fechaController,
               decoration: InputDecoration(
                 hintText: _fecha == null
                     ? "Seleccione la fecha"
@@ -867,6 +941,7 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
         },
         child: AbsorbPointer(
           child: TextField(
+            controller: _horaController,
             decoration: InputDecoration(
               hintText: _horaSeleccionada == null
                   ? "Seleccione la hora"

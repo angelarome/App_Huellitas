@@ -9,12 +9,13 @@ class EditarCuidadoScreen extends StatefulWidget {
   final int id_higiene;
   final String nombreMascota;
   final String frecuencia;
+  final String dias_personalizados;
   final String notas;
   final String tipo;
   final String hora;
   final String fecha;
 
-  const EditarCuidadoScreen({super.key, required this.idMascota, required this.id_higiene, required this.nombreMascota, required this.frecuencia, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const EditarCuidadoScreen({super.key, required this.idMascota, required this.id_higiene, required this.nombreMascota, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha});
 
 
   @override
@@ -25,29 +26,52 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
   DateTime? _fecha;
   TimeOfDay? _horaSeleccionada;
 
+  Map<String, bool> diasSemana = {
+    "Lun": false,
+    "Mar": false,
+    "Mié": false,
+    "Jue": false,
+    "Vie": false,
+    "Sáb": false,
+    "Dom": false,
+  };
+
   String? _tipoSeleccionado;
   String? _frecuenciaSeleccionada;
 
   TextEditingController _nombreMascotaController = TextEditingController();
-  TextEditingController _frecuenciaController = TextEditingController();
   TextEditingController _notasController = TextEditingController();
   TextEditingController _tipoController = TextEditingController();
   TextEditingController _horaController = TextEditingController();
   TextEditingController _fechaController = TextEditingController();
+  final TextEditingController frecuenciaPersonalizadaController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     // 👇 Inicializamos el controlador con el nombre que vino desde la otra pantalla
     _nombreMascotaController = TextEditingController(text: widget.nombreMascota);
-    _frecuenciaController = TextEditingController(text: widget.frecuencia);
+    frecuenciaPersonalizadaController.text = widget.dias_personalizados;
+    _frecuenciaSeleccionada = widget.frecuencia;
     _notasController = TextEditingController(text: widget.notas);
     _tipoController = TextEditingController(text: widget.tipo);
     _horaController = TextEditingController(text: widget.hora);
     _fechaController = TextEditingController(text: widget.fecha);
     // Inicializar las variables para los Dropdown con los valores actuales
     _tipoSeleccionado = _tipoController.text.isNotEmpty ? _tipoController.text : null;
-    _frecuenciaSeleccionada = _frecuenciaController.text.isNotEmpty ? _frecuenciaController.text : null;
+    _frecuenciaSeleccionada = widget.frecuencia;
+
+    if (widget.dias_personalizados.isNotEmpty) {
+      final dias = widget.dias_personalizados.split(",");
+
+      for (var dia in dias) {
+        final diaLimpio = dia.trim(); // <-- esto limpia espacios
+
+        if (diasSemana.containsKey(diaLimpio)) {
+          diasSemana[diaLimpio] = true;
+        }
+      }
+    }
 
   }
 
@@ -216,7 +240,32 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
   }
 
   Future<void> actualizar_higiene() async {
-    // 🗓️ FECHA — siempre se formatea (aunque no se cambie)
+    List<String> camposFaltantes = [];
+
+    if (_frecuenciaSeleccionada == null && (widget.frecuencia?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Frecuencia");
+    }
+    if (_tipoSeleccionado == null && (widget.tipo?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Tipo");
+    }
+    if (_fecha == null && (widget.fecha?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Fecha");
+    }
+
+    if (_horaSeleccionada == null && (widget.hora?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Hora");
+    }
+
+    if (camposFaltantes.isNotEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Faltan campos: ${camposFaltantes.join(", ")}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
+      // 🗓️ FECHA — siempre se formatea (aunque no se cambie)
     String fecha;
     if (_fecha != null) {
       // Si el usuario elige nueva fecha
@@ -263,6 +312,8 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
       }
     }
 
+    String dias = frecuenciaPersonalizadaController.text;  
+
     final url = Uri.parse("http://localhost:5000/actualizar_higiene");
 
     try {
@@ -272,11 +323,18 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
         
         body: jsonEncode({
           "id_higiene": widget.id_higiene,
-          "frecuencia": _frecuenciaSeleccionada ?? widget.frecuencia,
+          "frecuencia": _frecuenciaSeleccionada == "Personalizada"
+            ? "Personalizada"
+            : _frecuenciaSeleccionada,
+          "dias_personalizados": dias.isNotEmpty ? dias : "",
           "notas": _notasController.text.isNotEmpty ? _notasController.text : widget.notas,
           "tipo": _tipoSeleccionado ?? widget.tipo,
           "fecha": fecha.isNotEmpty ? fecha : widget.fecha,
           "hora": hora.isNotEmpty ? hora : widget.hora,
+
+          if (_frecuenciaSeleccionada == "Personalizada")
+            "dias_personalizados": dias,
+
         }),
       );
       if (response.statusCode == 200) {
@@ -411,11 +469,16 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
                           _dropdownConEtiqueta(
                             "Frecuencia",
                             _icono("assets/Frecuencia.png"),
-                            ["Diario", "Semanal", "Mensual", "Anual"],
+                            ["Diario", "Semanal", "Quincenal", "Mensual", "Cada 3 meses", "Una sola vez", "Personalizada"],
                             "Seleccione frecuencia",
                             _frecuenciaSeleccionada,
                             (val) => setState(() => _frecuenciaSeleccionada = val),
                           ),
+                          if (_frecuenciaSeleccionada == "Personalizada") ...[
+                            const SizedBox(height: 10),
+                            _seleccionarDias(),   // ⬅️ Llamas al widget que muestra los días
+                          ],
+                          const SizedBox(height: 10),
 
 
                           _campoNotas("Notas", "assets/Notas.png", controller: _notasController),
@@ -469,6 +532,47 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
       child: SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
     );
   }
+
+  Widget _seleccionarDias() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Seleccione los días",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        const SizedBox(height: 10),
+
+        Wrap(
+          runSpacing: 12, 
+          spacing: 10,
+          children: diasSemana.keys.map((dia) {
+            final bool seleccionado = diasSemana[dia]!;
+
+            return ChoiceChip(
+              label: Text(dia),
+              selected: seleccionado,
+              selectedColor: Colors.green.shade300,
+              onSelected: (val) {
+                setState(() {
+                  diasSemana[dia] = val;
+
+                  // Guardar en controller
+                  List<String> seleccionados = diasSemana.entries
+                      .where((e) => e.value)
+                      .map((e) => e.key)
+                      .toList();
+
+                  frecuenciaPersonalizadaController.text = seleccionados.join(", ");
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
 
   Widget _campoTextoConEtiqueta(String etiqueta, Widget icono, {TextEditingController? controller, String? hintText}) {
     return Column(
@@ -552,6 +656,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
           },
           child: AbsorbPointer(
             child: TextField(
+              controller: _fechaController,
               decoration: InputDecoration(
                 hintText: _fecha == null
                     ? "Seleccione la fecha"
@@ -600,7 +705,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
         maxLines: 4,
         keyboardType: TextInputType.multiline,
         decoration: InputDecoration(
-          hintText: "Edite la nota",
+          hintText: "Ej: Jabón especial",
           hintStyle: TextStyle(color: Colors.grey[800]),
           filled: true,
           fillColor: Colors.white,
@@ -650,6 +755,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
         },
         child: AbsorbPointer(
           child: TextField(
+            controller: _horaController,
             decoration: InputDecoration(
               hintText: _horaSeleccionada == null
                   ? "Seleccione la hora"

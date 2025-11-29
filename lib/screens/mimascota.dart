@@ -142,12 +142,8 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                           // 🔹 PERFIL
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => listvaciacompartirScreen(),
-                                ),
-                              );
+                              
+                              
                             },
                             child: SizedBox(
                               width: 24,

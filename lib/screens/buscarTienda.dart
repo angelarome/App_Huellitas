@@ -19,6 +19,8 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
   List<Map<String, dynamic>> _tienda = [];
   List<dynamic> tiendasFiltradas = [];
   bool _cargando = true;
+  TextEditingController _buscarController = TextEditingController();
+  bool get mostrarLista => _buscarController.text.isNotEmpty && tiendasFiltradas.isNotEmpty;
   
   @override
   void initState() {
@@ -77,7 +79,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/descarga.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -175,7 +177,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Contenido desplazable
+                 // Contenido desplazable
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -188,9 +190,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(187, 255, 255, 255),
                               borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(blurRadius: 6, color: Colors.black26)
-                              ],
+                              boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,117 +205,149 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
                                       fit: BoxFit.contain,
                                     ),
                                     const SizedBox(width: 10),
+                                    // Buscador
                                     Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.9),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: Row(
-                                          children: const [
-                                            Expanded(
-                                              child: TextField(
-                                                decoration: InputDecoration(
-                                                  hintText: "Buscar tienda",
-                                                  border: InputBorder.none,
-                                                ),
-                                              ),
+                                        child: TextField(
+                                          controller: _buscarController,
+                                          decoration: InputDecoration(
+                                            hintText: "Buscar tienda o zona",
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                            suffixIcon: Padding(
+                                              padding: EdgeInsets.only(right: 4),
+                                              child: Image.asset("assets/buscar.png", width: 20, height: 20),
                                             ),
-                                            Icon(Icons.search),
-                                          ],
+                                          ),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              final query = value.toLowerCase().trim();
+
+                                              if (query.isEmpty) {
+                                                tiendasFiltradas = [];
+                                                return;
+                                              }
+
+                                              // Dividir la búsqueda por espacios
+                                              final palabras = query.split(' ');
+
+                                              tiendasFiltradas = _tienda.where((p) {
+                                                final nombre = (p['nombre_negocio'] ?? '').toLowerCase();
+                                                final zona = (p['direccion'] ?? '').toLowerCase();
+
+                                                // Retorna true si alguna palabra coincide con nombre, apellido o zona
+                                                return palabras.any((palabra) =>
+                                                    nombre.contains(palabra) ||
+                                                    zona.contains(palabra));
+                                              }).toList();
+                                            });
+                                          },
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
 
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 10),
 
-                                // Tarjeta café "Mis pedidos"
-                                Container(
-                                  height: 100,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(
-                                        255, 163, 145, 124),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: const Color.fromARGB(
-                                          255, 131, 123, 99),
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.asset(
-                                          "assets/Calendario.png",
-                                          width: 50,
-                                          height: 50,
-                                          fit: BoxFit.cover,
+                                // 🔹 Lista de paseadores filtrados
+                                if (mostrarLista)
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: tiendasFiltradas.length,
+                                    itemBuilder: (context, index) {
+                                      final tienda = tiendasFiltradas[index];
+                                      return InkWell(
+                                        onTap: () {
+                                          
+                                        },
+                                        child: ListTile(
+                                          leading: tienda['foto'] != null
+                                              ? CircleAvatar(
+                                                  radius: 20, // la mitad del tamaño que quieras (40px)
+                                                  backgroundImage: MemoryImage(tienda['foto']),
+                                                )
+                                              : CircleAvatar(
+                                                  radius: 20,
+                                                  child: Icon(Icons.person),
+                                                ),
+                                          title: Text("${tienda['nombre_negocio']}"),
+                                          subtitle: Text(tienda['direccion'] ?? ''),
                                         ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      const Expanded(
-                                        child: Text(
-                                          "Mis pedidos",
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(height: 20),
-
-                                _tarjetaComentarios(),
-
-                                const SizedBox(height: 30),
-                                // Botón "Mis reservas"
-                                Center(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {},
-                                    icon: Image.asset('assets/estrella.png',
-                                        width: 20, height: 20),
-                                    label: const Text(
-                                      "Mis reservas",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 163, 145, 124),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 30),
+                                      );
+                                    },
+                                  )
+                                else
+                                  SizedBox.shrink(), // No muestra nada si no hay resultados
                               ],
                             ),
                           ),
+
+                          const SizedBox(height: 10),
+                        
+                          Container(
+                            height: 70,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(
+                                  255, 163, 145, 124),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color.fromARGB(
+                                    255, 131, 123, 99),
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    "assets/Calendario.png",
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                const Expanded(
+                                  child: Text(
+                                    "Mis pedidos",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          _tarjetaComentarios(),
+
+
+                          const SizedBox(height: 10),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  )],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+      
   }
 
 
@@ -340,13 +372,10 @@ Widget _tarjetaComentarios() {
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color:  const Color.fromARGB(255, 241, 110, 154),
-          border: Border.all(
-            color: const Color.fromARGB(255, 247, 84, 138), // Aquí va el color del borde
-            width: 2, // Ancho del borde
+          color: const Color.fromARGB(187, 255, 255, 255),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
           ),
-          borderRadius: BorderRadius.circular(20),
-        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -369,7 +398,7 @@ Widget _tarjetaComentarios() {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Color.fromARGB(255, 37, 36, 36),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -380,7 +409,7 @@ Widget _tarjetaComentarios() {
                       Expanded(
                         child: Text(
                           direccion,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -393,7 +422,7 @@ Widget _tarjetaComentarios() {
                       const SizedBox(width: 4),
                       Text(
                         telefono,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                       ),
                     ],
                   ),
@@ -412,7 +441,7 @@ Widget _tarjetaComentarios() {
                 );
               },
               icon: Image.asset(
-                'assets/lupa.png',
+                'assets/buscar.png',
                 width: 40,
                 height: 40,
               ),

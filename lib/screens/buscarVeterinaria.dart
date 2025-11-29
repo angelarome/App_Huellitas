@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';  
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'veterinarias.dart';
+import 'miscitas.dart';
 
 class BuscarvMascotaScreen extends StatefulWidget {
   final int id_dueno;
@@ -16,8 +17,10 @@ class BuscarvMascotaScreen extends StatefulWidget {
 class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
   final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> _veterinarias = [];
-  List<dynamic> tiendasFiltradas = [];
+  List<dynamic> veterinariaFiltradas = [];
   bool _cargando = true;
+  TextEditingController _buscarController = TextEditingController();
+  bool get mostrarLista => _buscarController.text.isNotEmpty && veterinariaFiltradas.isNotEmpty;
 
   @override
   void initState() {
@@ -73,7 +76,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/bosque.jpeg"),
+                image: AssetImage("assets/vete.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -162,79 +165,156 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                           children: [
                             Image.asset(
                               'assets/veterinaria22.png',
-                              width: 60,
-                              height: 60,
+                              width: 40,
+                              height: 40,
                               fit: BoxFit.contain,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.9),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: "Buscar veterinaria",
-                                    border: InputBorder.none,
-                                    suffixIcon: Padding(
-                                      padding: EdgeInsets.only(right: 8),
-                                      child: Image.asset("assets/lupa.png", width: 24, height: 24),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                      
-                          ],
-                        ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.9),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: TextField(
+                                        controller: _buscarController,
+                                        decoration: InputDecoration(
+                                          hintText: "Buscar veterinaria o zona",
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                          suffixIcon: Padding(
+                                            padding: EdgeInsets.only(right: 2),
+                                            child: SizedBox(
+                                              width: 10, // ancho del icono
+                                              height: 10, // alto del icono
+                                              child: Image.asset(
+                                                "assets/buscar.png",
+                                                fit: BoxFit.contain, // mantiene proporción
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            final query = value.toLowerCase().trim();
 
-                        const SizedBox(height: 20),
+                                            veterinariaFiltradas = _veterinarias.where((p) {
+                                              final nombre = (p["nombre_veterinaria"] ?? '').toLowerCase();
+                                              final direccion = (p["direccion"] ?? '').toLowerCase();
 
-                        // Tarjeta café "Mis citas"
-                        Container(
-                          height: 100,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 163, 145, 124),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  "assets/Calendario.png",
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Text(
-                                      "Mis citas",
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                              // Retorna true si el query coincide en el nombre o en la dirección
+                                              return nombre.contains(query) || direccion.contains(query);
+                                            }).toList();
+                                          });
+                                        },
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
+
+                              const SizedBox(height: 10),
+
+                              if (mostrarLista)
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: veterinariaFiltradas.length,
+                                  itemBuilder: (context, index) {
+                                    final veterinaria = veterinariaFiltradas[index];
+                                    return InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PerfilVeterinariaScreen(id_dueno: widget.id_dueno, id_veterinaria: veterinaria['id_veterinaria']),
+                                          ),
+                                        );
+                                      },
+                                      child: ListTile(
+                                        leading: veterinaria['foto'] != null
+                                          ? CircleAvatar(
+                                              radius: 20, // la mitad del tamaño que quieras (40px)
+                                              backgroundImage: MemoryImage(veterinaria['foto']),
+                                            )
+                                          : CircleAvatar(
+                                              radius: 20,
+                                              child: Icon(Icons.person),
+                                            ),
+                                        title: Text("${veterinaria['nombre_veterinaria']} "),
+                                        subtitle: Text(veterinaria['direccion'] ?? ''),
+                                      ),
+                                    );
+                                  },
+                                )
+                          
+                              else
+                                SizedBox.shrink(), // no muestra nada
                             ],
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
+
+                        // Tarjeta café "Mis citas"
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CalendarioScreen(id_dueno: widget.id_dueno), // <-- tu pantalla destino
+                              ),
+                            );
+                          },
+                          child: Container(
+                            height: 70,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 163, 145, 124),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: const Color.fromARGB(255, 131, 123, 99),
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    "assets/Calendario.png",
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Mis citas",
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+
+                        const SizedBox(height: 10),
 
                         _tarjetaComentarios(),
                
@@ -244,9 +324,10 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
               ),
             ),
           
+          ),
         ],
-      )
-    ))]));
+      ),
+    );
     
   }
 
@@ -271,12 +352,9 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color:  const Color.fromARGB(255, 93, 187, 96),
-            border: Border.all(
-              color: Colors.greenAccent.shade700, // Aquí va el color del borde
-              width: 2, // Ancho del borde
-            ),
-            borderRadius: BorderRadius.circular(20),
+            color: const Color.fromARGB(187, 255, 255, 255),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -300,7 +378,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Color.fromARGB(255, 37, 36, 36)
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -311,7 +389,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                         Expanded(
                           child: Text(
                             direccion,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -324,7 +402,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                         const SizedBox(width: 4),
                         Text(
                           telefono,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                         ),
                       ],
                     ),
@@ -343,7 +421,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                 );
                 },
                 icon: Image.asset(
-                  'assets/lupa.png',
+                  'assets/buscar.png',
                   width: 40,
                   height: 40,
                 ),

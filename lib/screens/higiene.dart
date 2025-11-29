@@ -64,6 +64,10 @@ class _HigieneScreenState extends State<HigieneScreen> {
         return "assets/unas.png";
       case "Peluquería":
         return "assets/peluqueria.png";
+      case "Cuidado de orejas":
+        return "assets/rejas.png";
+      case "Cuidado dental":
+        return "assets/dientes.png";
       default:
         return "assets/usuario.png"; // Imagen por defecto si no coincide
     }
@@ -71,33 +75,42 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
   Color _getColorHigiene(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return const Color.fromARGB(255, 36, 129, 206);       // azul para baño
-      case "Peluquería":
-        return const Color.fromARGB(255, 98, 82, 237);    // morado para peluquería
-      case "Manicure":
-        return const Color.fromARGB(255, 244, 76, 213);    // naranja para manicure
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 200, 167, 58);     // verde para arenero
-      default:
-        return Colors.grey.shade300;      // color por defecto
+    case "Baño":
+    return const Color.fromARGB(255, 135, 206, 250); // azul claro
+    case "Peluquería":
+    return const Color.fromARGB(255, 170, 128, 255); // morado pastel
+    case "Manicure":
+    return const Color.fromARGB(255, 255, 182, 193); // rosa pastel
+    case "Cambio de arenero":
+    return const Color.fromARGB(255, 144, 238, 144); // verde claro
+    case "Cuidado dental":
+    return const Color.fromARGB(255, 176, 224, 230); // celeste
+    case "Cuidado de orejas":
+    return const Color.fromARGB(255, 255, 255, 153); // amarillo pastel
+    default:
+    return Colors.grey.shade300; // color por defecto
     }
   }
 
   Color _getBorderColorHigiene(String? tipo) {
     switch (tipo) {
-      case "Baño":
-        return Colors.blue.shade700;
-      case "Peluquería":
-        return const Color.fromARGB(255, 103, 46, 172);
-      case "Manicure":
-        return const Color.fromARGB(255, 175, 25, 194);
-      case "Cambio de arenero":
-        return const Color.fromARGB(255, 140, 112, 41);
-      default:
-        return Colors.grey.shade700;
+    case "Baño":
+    return const Color.fromARGB(255, 70, 130, 180); // azul más intenso
+    case "Peluquería":
+    return const Color.fromARGB(255, 128, 0, 128); // morado intenso
+    case "Manicure":
+    return const Color.fromARGB(255, 255, 105, 180); // rosa más intenso
+    case "Cambio de arenero":
+    return const Color.fromARGB(255, 34, 139, 34); // verde más intenso
+    case "Cuidado dental":
+    return const Color.fromARGB(255, 0, 191, 255); // azul intenso
+    case "Cuidado de orejas":
+    return const Color.fromARGB(255, 255, 215, 0); // amarillo intenso
+    default:
+    return Colors.grey.shade700; // borde por defecto
     }
   }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,7 +196,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                       child: IconButton(
                         icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
                         onPressed: () {
-                          Navigator.pop(context);
+                          
                         },
                       ),
                     ),
@@ -252,6 +265,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                     idMascota: widget.id,
                                     id_higiene: item["id_higiene"],
                                     frecuencia: item["frecuencia"],
+                                    dias_personalizados: item["dias_personalizados"],
                                     notas: item["notas"] ?? "",
                                     tipo: item["tipo"],
                                     hora: item["hora"],
@@ -329,7 +343,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                               const SizedBox(width: 8),
                                               Text(
                                                 item['hora'] ?? "Sin hora",
-                                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                                                style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 37, 36, 36)),
                                               ),
                                             ],
                                           ),
@@ -341,7 +355,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                               const SizedBox(width: 8),
                                               Text(
                                                 item['fecha'] ?? "Sin fecha",
-                                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                                                style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 37, 36, 36)),
                                               ),
                                             ],
                                           ),
@@ -349,16 +363,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Checkbox(
-                                      value: _confirmado,
-                                      onChanged: (bool? nuevoValor) {
-                                        setState(() {
-                                          _confirmado = nuevoValor!;
-                                        });
-                                      },
-                                      activeColor: Colors.blue,
-                                      checkColor: Colors.white,
-                                    ),
+                                    
                                   ],
                                 ),
                               ),

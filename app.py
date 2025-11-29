@@ -14,7 +14,7 @@ import bcrypt
 import requests
 from correorecuperacion import enviar_correo_recuperacion
 import random
-
+from decimal import Decimal
 
 app = Flask(__name__)
 CORS(app)
@@ -25,11 +25,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def get_connection():
     try:
         db = mysql.connector.connect(
-            host="localhost",
-            port=3307,
-            user="root",
-            password="nico",
-            database="huellitas_app (4)"
+            host="https://xwhmdjixftodirsdjkmh.supabase.co",
+            port="5432", 
+            user="angelarome",
+            password="Famili@5577",
+            database="huellitas_app"
         )
         return db
     except Error as e:
@@ -542,16 +542,12 @@ def mascotas():
             m["fecha_nacimiento"] = m["fecha_nacimiento"].strftime("%Y-%m-%d")
         imagen = m.get("imagen_perfil")
         if imagen:
-            # Si viene en bytes, codificamos
             if isinstance(imagen, (bytes, bytearray)):
                 m["imagen_perfil"] = base64.b64encode(imagen).decode("utf-8")
             # Si ya es texto (por ejemplo, un path o un base64), lo dejamos igual
             elif isinstance(imagen, str):
                 m["imagen_perfil"] = imagen
 
-    print("➡️ Mascotas enviadas (solo id y nombre):")
-    for m in mascotas:
-        print(f"- ID: {m['id_mascotas']} | Nombre: {m['nombre']}")
     return jsonify({"mascotas": mascotas}), 200
 
 @app.route("/higiene", methods=["POST"])
@@ -568,7 +564,7 @@ def higiene():
 
     cursor = db.cursor(dictionary=True)
     sql = """
-        SELECT h.id_higiene, h.frecuencia, h.notas, h.tipo, h.hora, h.fecha
+        SELECT h.id_higiene, h.frecuencia, h.dias_personalizados, h.notas, h.tipo, h.hora, h.fecha
         FROM higiene h
         WHERE h.id_mascota = %s
     """
@@ -631,6 +627,7 @@ def registrar_higiene():
     data = request.get_json()
 
     frecuencia = data.get("frecuencia")
+    dias_personalizados = data.get("dias_personalizados")
     notas = data.get("notas")
     tipo = data.get("tipo")
     fecha = data.get("fecha")
@@ -648,10 +645,10 @@ def registrar_higiene():
 
     # Insertar higiene
     sql = """
-        INSERT INTO higiene (id_mascota, frecuencia, notas, tipo, fecha, hora)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO higiene (id_mascota, frecuencia, dias_personalizados, notas, tipo, fecha, hora)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
-    valores = (id_mascota, frecuencia, notas, tipo, fecha, hora)
+    valores = (id_mascota, frecuencia, dias_personalizados, notas, tipo, fecha, hora)
     cursor.execute(sql, valores)
     db.commit()
 
@@ -813,6 +810,7 @@ def actualizar_higiene():
     data = request.get_json()
     id_higiene = data.get("id_higiene")
     frecuencia = data.get("frecuencia")
+    dias_personalizados = data.get("dias_personalizados")
     notas = data.get("notas")
     tipo = data.get("tipo")
     fecha = data.get("fecha")
@@ -828,8 +826,8 @@ def actualizar_higiene():
         return jsonify({"error": "No hay conexión a la base de datos"}), 500
 
     cursor = db.cursor()
-    sql = "UPDATE higiene SET frecuencia = %s, notas = %s, tipo = %s, fecha = %s, hora = %s WHERE id_higiene = %s"
-    cursor.execute(sql, (frecuencia, notas, tipo, fecha, hora, id_higiene))
+    sql = "UPDATE higiene SET frecuencia = %s, dias_personalizados = %s, notas = %s, tipo = %s, fecha = %s, hora = %s WHERE id_higiene = %s"
+    cursor.execute(sql, (frecuencia, dias_personalizados, notas, tipo, fecha, hora, id_higiene))
     db.commit()
     cursor.close()
     db.close()
@@ -2082,7 +2080,7 @@ def obtenerCitas_Paseador():
         return jsonify({"error": "No hay conexión a la base de datos"}), 500
 
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT idpaseo, id_mascota, id_dueno, metodo_pago, fecha, hora_inicio, hora_fin, punto_encuentro, estado FROM `paseo` WHERE id_paseador = %s;", (id_paseador,))
+    cursor.execute("SELECT idpaseo, id_mascota, id_dueno, metodo_pago, fecha, hora_inicio, hora_fin, punto_encuentro, total, comportamiento, estado FROM `paseo` WHERE id_paseador = %s;", (id_paseador,))
     resultados = cursor.fetchall()
     cursor.close()
     db.close()
@@ -2374,10 +2372,10 @@ def registrarPaseo():
     try:
         # 1️⃣ Insertar en usuarios
         sql_usuario = """
-            INSERT INTO paseo (id_paseador, id_mascota, id_dueno, metodo_pago, fecha, hora_inicio, hora_fin, punto_encuentro, estado)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO paseo (id_paseador, id_mascota, id_dueno, metodo_pago, fecha, hora_inicio, hora_fin, total, punto_encuentro, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(sql_usuario, (id_paseador, id_mascota, id_dueno, metodopago, fecha, horarioInicio, cierrefin, direccion, 'pendiente'))
+        cursor.execute(sql_usuario, (id_paseador, id_mascota, id_dueno, metodopago, fecha, horarioInicio, cierrefin, tarifa, direccion, 'pendiente'))
         db.commit()
 
         cursor.close()
@@ -2503,6 +2501,876 @@ def finalizado_cita():
     db.close()
 
     return jsonify({"mensaje": "Cita finalizada correctamente"}), 200
+
+@app.route("/historialClinico", methods=["POST"])
+def historialClinico():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+
+    if not id_mascota:
+        return jsonify({"error": "Falta el ID de la mascota"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        SELECT 
+            h.idhistorial_medico,
+            h.id_mascota,
+            h.id_veterinaria,
+            h.nombre_veterinaria,
+            h.peso,
+            h.fecha,
+            h.hora,
+            h.motivo_consulta,
+            h.diagnostico,
+            h.tratamiento,
+            h.observaciones,
+            v.nombre_veterinaria AS nombre_vet_bd
+        FROM historial_medico h
+        LEFT JOIN veterinaria v ON v.id_veterinaria = h.id_veterinaria
+        WHERE h.id_mascota = %s;
+    """
+    cursor.execute(sql, (id_mascota,))
+    historia = cursor.fetchall()
+    cursor.close()
+    db.close()
+    for h in historia:
+        if isinstance(h.get("hora"), timedelta):
+            total_seconds = int(h["hora"].total_seconds())
+            horas = total_seconds // 3600
+            minutos = (total_seconds % 3600) // 60
+            h["hora"] = f"{horas:02d}:{minutos:02d}"
+        elif isinstance(h.get("hora"), time):
+            h["hora"] = h["hora"].strftime("%H:%M")
+        
+        if isinstance(h.get("fecha"), date):
+            h["fecha"] = h["fecha"].strftime("%Y-%m-%d")
+
+    return jsonify({"historia": historia}), 200
+
+@app.route('/eliminar_historial', methods=['DELETE'])
+def eliminar_historial():
+    data = request.get_json()
+    id_historial = data.get("id_historial")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    # Aquí haces la lógica para eliminar el registro de higiene
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("DELETE FROM historial_medico WHERE idhistorial_medico = %s", (id_historial,))
+    db.commit()
+
+    return jsonify({"mensaje": "Historial eliminado correctamente"}), 200
+
+@app.route("/registrarHistorial", methods=["POST"])
+def registrar_historial():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    id_veterinaria = data.get("id_veterinaria")
+    fecha = data.get("fecha")
+    hora = data.get("hora")
+    nombre_veterinaria = data.get("nombre_veterinaria")
+    peso = data.get("peso")
+    motivo = data.get("motivo")
+    diagnostico = data.get("diagnostico")
+    tratamiento = data.get("tratamiento")
+    observaciones = data.get("observaciones")
+
+    if not all([fecha, hora, nombre_veterinaria, peso, motivo, diagnostico, tratamiento, observaciones, id_mascota]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar higiene
+    sql = """
+        INSERT INTO historial_medico (id_mascota, id_veterinaria, nombre_veterinaria, peso, fecha, hora, motivo_consulta, diagnostico, tratamiento, observaciones)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    valores = (id_mascota, id_veterinaria, nombre_veterinaria, peso, fecha, hora, motivo, diagnostico, tratamiento, observaciones)
+    cursor.execute(sql, valores)
+    db.commit()
+    
+    cursor.close()
+    db.close()
+    return jsonify({
+        "mensaje": "Historial clínico registrada correctamente",
+    }), 201
+    
+@app.route("/editarHistorial", methods=["PUT"])
+def editar_historial():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    id_historial = data.get("id_historial")
+    fecha = data.get("fecha")
+    hora = data.get("hora")
+    nombre_veterinaria = data.get("nombre_veterinaria")
+    peso = data.get("peso")
+    motivo = data.get("motivo")
+    diagnostico = data.get("diagnostico")
+    tratamiento = data.get("tratamiento")
+    observaciones = data.get("observaciones")
+
+    if not all([fecha, hora, nombre_veterinaria, peso, motivo, diagnostico, tratamiento, observaciones, id_mascota]):
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar higiene
+    sql = """
+       UPDATE historial_medico
+    SET 
+        id_mascota = %s,
+        nombre_veterinaria = %s,
+        peso = %s,
+        fecha = %s,
+        hora = %s,
+        motivo_consulta = %s,
+        diagnostico = %s,
+        tratamiento = %s,
+        observaciones = %s
+    WHERE idhistorial_medico = %s
+    """
+    valores = (
+        id_mascota,
+        nombre_veterinaria,
+        peso,
+        fecha,
+        hora,
+        motivo,
+        diagnostico,
+        tratamiento,
+        observaciones,
+        id_historial
+    )
+    cursor.execute(sql, valores)
+    db.commit()
+    
+    cursor.close()
+    db.close()
+    return jsonify({
+        "mensaje": "Historial clínico registrada correctamente",
+    }), 201
+    
+@app.route("/documentos", methods=["POST"])
+def documentos():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+
+    if not id_mascota:
+        return jsonify({"error": "Falta el ID de la mascota"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        SELECT *
+        FROM documentos
+        WHERE id_mascotas = %s;
+    """
+    cursor.execute(sql, (id_mascota,))
+    documentos = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return jsonify({"documentos": documentos}), 200
+
+
+@app.route("/registrarDocumento", methods=["POST"])
+def registraDocumentos():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    nombre_documento = data.get("nombre_documento")
+    certificado = data.get("certificado")
+
+    if not all([id_mascota, nombre_documento, certificado]):
+        return jsonify({"error": "⚠️ Faltan campos obligatorios"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "❌ No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    try:
+        # 1️⃣ Insertar en usuarios
+        sql_usuario = """
+            INSERT INTO documentos (id_mascotas, nombre, imagen)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql_usuario, (id_mascota, nombre_documento, certificado))
+        db.commit()
+
+        cursor.close()
+        db.close()
+
+        return jsonify({
+            "mensaje": "✅ Documento registrado correctamente",
+        }), 201
+
+    except Exception as e:
+        cursor.close()
+        db.close()
+        return jsonify({"error": f"❌ Error al registrar: {str(e)}"}), 500
+    
+@app.route('/eliminar_documento', methods=['DELETE'])
+def eliminar_documento():
+    data = request.get_json()
+    id_documento = data.get("id_documento")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    # Aquí haces la lógica para eliminar el registro de higiene
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("DELETE FROM documentos WHERE id_documento = %s", (id_documento,))
+    db.commit()
+
+    return jsonify({"mensaje": "Documento eliminado correctamente"}), 200
+
+@app.route("/enviar_solicitud", methods=["POST"])
+def enviar_solicitud():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    id_dueno = data.get("id_dueno")
+    id_persona = data.get("id_persona")
+    tipo_relacion = data.get("tipo_relacion")
+    if not id_mascota:
+        return jsonify({"error": "Falta el ID de la mascota"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        INSERT INTO solicitudes (id_remitente, id_destinatario, id_mascota, parentesco, estado) VALUES (%s, %s, %s, %s, %s)
+    """
+    cursor.execute(sql, (id_dueno, id_persona, id_mascota, tipo_relacion, "pendiente"))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"msg": "Solicitud enviada"}), 200
+
+
+@app.route("/Comida", methods=["POST"])
+def obtener_comida():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+
+    if not id_mascota:
+        return jsonify({"error": "Falta el id"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    sql = """
+        SELECT *
+        FROM comidas_diarias
+        WHERE id_mascota = %s;
+    """
+    cursor.execute(sql, (id_mascota,))
+    comida = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    for m in comida:
+        
+        if m["fecha"]:
+            m["fecha"] = m["fecha"].strftime("%Y-%m-%d")
+    return jsonify({"comida": comida}), 200
+
+@app.route("/GuardarComida", methods=["POST"])
+def guardar_comida():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    gramos_totales_dia = data.get("gramos_totales_dia")
+    agua_total_dia = data.get("agua_total_dia")
+
+    if not id_mascota:
+        return jsonify({"error": "Falta el id"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Insertar un nuevo registro
+    sql_insert = """
+        INSERT INTO comidas_diarias (id_mascota, gramos_totales_dia, agua_total_dia, fecha)
+        VALUES (%s, %s, %s, NOW());
+    """
+    cursor.execute(sql_insert, (id_mascota, gramos_totales_dia, agua_total_dia))
+    db.commit()
+
+    # Consultar todos los registros de la mascota
+    sql_select = """
+        SELECT *
+        FROM comidas_diarias
+        WHERE id_mascota = %s
+        ORDER BY fecha DESC;
+    """
+    cursor.execute(sql_select, (id_mascota,))
+    comida = cursor.fetchall()
+
+    # Formatear fecha
+    for m in comida:
+        if m.get("fecha"):
+            m["fecha"] = m["fecha"].strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"comida": comida}), 200
+
+@app.route("/ActualizarComida", methods=["PUT"])
+def modificar_comida():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    gramos_totales_dia = data.get("gramos_totales_dia")
+    agua_total_dia = data.get("agua_total_dia")
+
+    if not id_mascota or gramos_totales_dia is None or agua_total_dia is None:
+        return jsonify({"error": "Faltan datos obligatorios"}), 400
+
+    try:
+        gramos_totales_dia = int(gramos_totales_dia)
+        agua_total_dia = int(agua_total_dia)
+    except ValueError:
+        return jsonify({"error": "Los totales deben ser números enteros"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Actualizar el registro más reciente de la mascota
+    sql_update = """
+        UPDATE comidas_diarias
+        SET gramos_totales_dia = %s, agua_total_dia = %s
+        WHERE id_mascota = %s
+        ORDER BY fecha DESC
+        LIMIT 1;
+    """
+    cursor.execute(sql_update, (gramos_totales_dia, agua_total_dia, id_mascota))
+    db.commit()
+
+    # Consultar todos los registros de la mascota (opcional)
+    sql_select = """
+        SELECT *
+        FROM comidas_diarias
+        WHERE id_mascota = %s
+        ORDER BY fecha DESC;
+    """
+    cursor.execute(sql_select, (id_mascota,))
+    comida = cursor.fetchall()
+
+    # Formatear fecha
+    for m in comida:
+        if m.get("fecha"):
+            m["fecha"] = m["fecha"].strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"comida": comida}), 200
+
+
+@app.route("/EditarComida", methods=["PUT"])
+def editar_comida():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    fecha = data.get("fecha")  # formato: YYYY-MM-DD
+    gramos = data.get("gramos", 0)
+
+    if not id_mascota or not fecha:
+        return jsonify({"error": "Faltan datos"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Verificar si ya existe registro para esa fecha y mascota
+    sql_check = """
+        SELECT * FROM comidas_diarias
+        WHERE id_mascota = %s AND DATE(fecha) = %s
+    """
+    cursor.execute(sql_check, (id_mascota, fecha))
+    existing = cursor.fetchone()
+
+    if existing:
+        # Si existe, actualizar sumando
+        sql_update = """
+            UPDATE comidas_diarias
+            SET gramos_consumidos = gramos_consumidos + %s
+            WHERE id_mascota = %s AND DATE(fecha) = %s
+        """
+        cursor.execute(sql_update, (gramos, id_mascota, fecha))
+    else:
+        # Si no existe, insertar nuevo
+        sql_insert = """
+            INSERT INTO comidas_diarias (id_mascota, fecha, gramos_consumidos)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql_insert, (id_mascota, fecha, gramos))
+
+    db.commit()
+
+    # Consultar registro actualizado
+    sql_select = """
+        SELECT * FROM comidas_diarias
+        WHERE id_mascota = %s AND DATE(fecha) = %s
+    """
+    cursor.execute(sql_select, (id_mascota, fecha))
+    comida = cursor.fetchone()
+    if comida and comida.get("fecha"):
+        comida["fecha"] = comida["fecha"].strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"comida": comida}), 200
+
+@app.route("/EditarAgua", methods=["PUT"])
+def editar_agua():
+    data = request.get_json()
+    id_mascota = data.get("id_mascota")
+    fecha = data.get("fecha")  # formato: YYYY-MM-DD
+    agua = data.get("agua", 0)
+
+    if not id_mascota or not fecha:
+        return jsonify({"error": "Faltan datos"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    # Verificar si ya existe registro para esa fecha y mascota
+    sql_check = """
+        SELECT * FROM comidas_diarias
+        WHERE id_mascota = %s AND DATE(fecha) = %s
+    """
+    cursor.execute(sql_check, (id_mascota, fecha))
+    existing = cursor.fetchone()
+
+    if existing:
+        # Si existe, actualizar sumando
+        sql_update = """
+            UPDATE comidas_diarias
+            SET agua_consumidos = agua_consumidos + %s
+            WHERE id_mascota = %s AND DATE(fecha) = %s
+        """
+        cursor.execute(sql_update, (agua, id_mascota, fecha))
+    else:
+        # Si no existe, insertar nuevo
+        sql_insert = """
+            INSERT INTO comidas_diarias (id_mascota, fecha, agua_consumidos)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(sql_insert, (id_mascota, fecha, agua))
+
+    db.commit()
+
+    # Consultar registro actualizado
+    sql_select = """
+        SELECT * FROM comidas_diarias
+        WHERE id_mascota = %s AND DATE(fecha) = %s
+    """
+    cursor.execute(sql_select, (id_mascota, fecha))
+    comida = cursor.fetchone()
+    if comida and comida.get("fecha"):
+        comida["fecha"] = comida["fecha"].strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"comida": comida}), 200
+
+
+@app.route("/obtener_solicitudes", methods=["POST"])
+def obtener_solicitudes():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+    
+    if not id_dueno:
+        return jsonify({"error": "Falta el ID del dueño"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    query = """
+        SELECT 
+        s.id_solicitud,
+        s.id_mascota,
+        s.parentesco,
+        s.estado,
+        s.id_remitente,
+        m.nombre AS nombre_mascota,
+        p.nombre AS nombre,
+        p.apellido AS apellido,
+        m.imagen_perfil
+    FROM solicitudes s
+    JOIN dueno_mascotas p 
+        ON p.id_dueno = 
+            CASE 
+                WHEN s.id_remitente = %s THEN s.id_destinatario
+                ELSE s.id_remitente
+            END
+    JOIN mascotas m 
+        ON m.id_mascotas = s.id_mascota
+    WHERE s.id_remitente = %s OR s.id_destinatario = %s;
+    """
+    cursor.execute(query, (id_dueno, id_dueno, id_dueno))
+
+    # Obligatorio: leer resultados
+    solicitudes = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return jsonify({"solicitudes": solicitudes}), 200
+
+@app.route("/cancelar_solicitud", methods=["PUT"])
+def cancelar_solicitud():
+    data = request.get_json()
+    id_solicitud = data.get("id_solicitud")
+
+    if not id_solicitud:
+        return jsonify({"error": "Falta el ID de la solicitud"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    sql = """
+       UPDATE solicitudes
+    SET 
+        estado = %s
+    WHERE id_solicitud = %s
+    """
+    valores = (
+        "cancelada",
+        id_solicitud
+    )
+    cursor.execute(sql, valores)
+    db.commit()
+    
+    cursor.close()
+    db.close()
+    return jsonify({
+        "mensaje": "Solicitud cancelada correctamente",
+    }), 200
+    
+@app.route("/aceptar_solicitud", methods=["PUT"])
+def aceptar_solicitud():
+    data = request.get_json()
+    
+    id_solicitud = data.get("id_solicitud")
+    id_mascota = data.get("id_mascota")
+    id_dueno = data.get("id_dueno")  # ← NECESARIO
+
+    # Validaciones
+    if not id_solicitud:
+        return jsonify({"error": "Falta el ID de la solicitud"}), 400
+    if not id_mascota:
+        return jsonify({"error": "Falta el ID de la mascota"}), 400
+    if not id_dueno:
+        return jsonify({"error": "Falta el ID del dueño"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    try:
+        # 1. Cambiar estado de la solicitud
+        sql = """
+        UPDATE solicitudes
+        SET estado = %s
+        WHERE id_solicitud = %s
+        """
+        cursor.execute(sql, ("aceptada", id_solicitud))
+        db.commit()
+
+        # 2. Registrar relación dueño–mascota
+        cursor.execute(
+            "INSERT INTO duenosymascotas (id_mascota, id_dueno) VALUES (%s, %s)",
+            (id_mascota, id_dueno)
+        )
+        db.commit()
+    
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        db.close()
+
+    return jsonify({
+        "mensaje": "Solicitud aceptada correctamente"
+    }), 200
+
+@app.route("/obtener_mascotas_compartidas", methods=["POST"])
+def obtener_mascotas_compartidas():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+
+    if not id_dueno:
+        return jsonify({"error": "Falta el ID del dueño"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+
+    sql = """
+        SELECT 
+            d2.id_dueno AS id_otro_dueno,
+            d2.nombre AS nombre_otro_dueno,
+            d2.apellido AS apellido_otro_dueno,
+
+            m.id_mascotas,
+            m.nombre AS nombre_mascota,
+            m.imagen_perfil AS foto_mascota,
+
+            s.parentesco,
+            s.estado AS estado_solicitud
+
+        FROM duenosymascotas dm1
+
+        INNER JOIN duenosymascotas dm2 
+            ON dm1.id_mascota = dm2.id_mascota
+            AND dm2.id_dueno != %s
+
+        INNER JOIN dueno_mascotas d2
+            ON dm2.id_dueno = d2.id_dueno
+
+        INNER JOIN mascotas m
+            ON dm1.id_mascota = m.id_mascotas
+
+        LEFT JOIN solicitudes s
+            ON (
+                (s.id_remitente = dm1.id_dueno AND s.id_destinatario = dm2.id_dueno)
+                OR
+                (s.id_remitente = dm2.id_dueno AND s.id_destinatario = dm1.id_dueno)
+            )
+            AND s.id_mascota = dm1.id_mascota
+
+        WHERE dm1.id_dueno = %s;
+    """
+
+    cursor.execute(sql, (id_dueno, id_dueno))
+    mascotas = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"mascotas": mascotas}), 200
+
+@app.route("/paseos_dueno", methods=["POST"])
+def obtenerPaseos_usuario():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+
+    if not id_dueno:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+        p.idpaseo,
+        p.id_mascota,
+        p.id_paseador,
+        p.metodo_pago,
+        p.fecha,
+        p.hora_inicio,
+        p.hora_fin,
+        p.punto_encuentro,
+        p.estado,
+        p.total,
+        p.comportamiento,
+
+        pa.telefono AS telefono_paseador,
+        pa.nombre AS nombre_paseador,
+        pa.apellido AS apellido_paseador,
+        pa.imagen AS foto_paseador,
+
+        -- Datos de la mascota
+        m.nombre AS nombre_mascota
+
+    FROM paseo p
+    INNER JOIN paseador pa 
+        ON p.id_paseador = pa.id_paseador
+
+    INNER JOIN mascotas m
+        ON p.id_mascota = m.id_mascotas
+
+    WHERE p.id_dueno = %s;
+    """, (id_dueno,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha'] = r['fecha'].isoformat() if isinstance(r['fecha'], datetime) else str(r['fecha'])
+        r['hora_inicio'] = r['hora_inicio'].strftime('%H:%M:%S') if isinstance(r['hora_inicio'], datetime) else str(r['hora_inicio'])
+        r['hora_fin'] = r['hora_fin'].strftime('%H:%M:%S') if isinstance(r['hora_fin'], datetime) else (str(r['hora_fin']) if r['hora_fin'] else "N/A")
+
+        # Convertir timedelta a int (minutos)
+        if r['hora_fin'] != "N/A":
+            hi = datetime.strptime(r['hora_inicio'], "%H:%M:%S")
+            hf = datetime.strptime(r['hora_fin'], "%H:%M:%S")
+            duracion = hf - hi
+            r['duracion_minutos'] = int(duracion.total_seconds() // 60)  # <-- ya no es timedelta
+        else:
+            r['duracion_minutos'] = None
+
+        resultados_serializables.append(r)
+
+    return jsonify({"paseos": resultados_serializables})
+
+@app.route("/citas_dueno", methods=["POST"])
+def obtenerCitas_usuario():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+
+    if not id_dueno:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+        c.id_cita_veterinaria,
+        c.id_mascota,
+        c.id_dueno,
+        c.fecha,
+        c.hora,
+        c.motivo,
+        c.estado,
+        c.id_veterinaria,
+        c.metodo_pago,
+        v.nombre_veterinaria,
+        v.telefono AS telefono_veterinaria,
+        v.imagen AS imagen_veterinaria,
+
+        m.nombre AS nombre_mascota
+
+    FROM cita_veterinaria c
+    LEFT JOIN veterinaria v
+        ON c.id_veterinaria = v.id_veterinaria
+    LEFT JOIN mascotas m
+        ON c.id_mascota = m.id_mascotas
+
+    WHERE c.id_dueno = %s;
+    """, (id_dueno,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha'] = r['fecha'].isoformat() if isinstance(r['fecha'], datetime) else str(r['fecha'])
+        r['hora'] = r['hora'].strftime('%H:%M:%S') if isinstance(r['hora'], datetime) else str(r['hora'])
+
+        resultados_serializables.append(r)
+
+    return jsonify({"citas": resultados_serializables})
+
+@app.route("/registrarReserva", methods=["POST"])
+def registrar_reserva():
+    data = request.get_json()
+
+    required_fields = ["id_dueno", "id_producto", "id_tienda", "cantidad", "fecha_reserva", "fecha_finalizado", "total", "metodopago"]
+    for field in required_fields:
+        if field not in data or data[field] in (None, ""):
+            return jsonify({"error": f"Falta el campo {field}"}), 400
+
+    # Parsear fechas y convertir a string
+    try:
+        fecha_reserva_str = datetime.strptime(data["fecha_reserva"], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+        fecha_finalizado_str = datetime.strptime(data["fecha_finalizado"], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return jsonify({"error": "Formato de fecha inválido. Use yyyy-MM-dd HH:mm:ss"}), 400
+
+    # Convertir total a float
+    try:
+        total_float = float(data["total"])
+    except Exception:
+        return jsonify({"error": "Total inválido, debe ser un número"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    try:
+        cursor = db.cursor()
+        query = """
+            INSERT INTO reserva (id_cliente, id_producto, id_tienda, cantidad, fecha_reserva, fecha_vencimiento, estado, total, tipo_pago)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data["id_dueno"],
+            data["id_producto"],
+            data["id_tienda"],
+            int(data["cantidad"]),
+            fecha_reserva_str,  # enviar como string
+            fecha_finalizado_str,  # enviar como string
+            "pendiente",
+            total_float,  # enviar como float
+            data["metodopago"]
+        ))
+        db.commit()
+        cursor.close()
+        db.close()
+
+        return jsonify({"message": "Reserva registrada correctamente"}), 201
+
+    except Exception as e:
+        db.rollback()
+        cursor.close()
+        db.close()
+        print("Error SQL:", e)  # <-- imprime el error real
+        return jsonify({"error": str(e)}), 500
+    
+
 
 
 if __name__ == "__main__":

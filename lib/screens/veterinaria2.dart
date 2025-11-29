@@ -1122,7 +1122,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  CalendarioScreen(id_veterinaria: widget.id_veterinaria),
+                  CalendarioScreen(id_veterinaria: widget.id_veterinaria, nombreVeterinaria: _veterinaria[0]["nombre_veterinaria"]),
             ),
           );
         },
@@ -1143,7 +1143,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
               Stack(
                 children: [
                   Text(
-                    "Calendario de pedidos",
+                    "Calendario de citas",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1154,7 +1154,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
                     ),
                   ),
                   const Text(
-                    "Calendario de pedidos",
+                    "Calendario de citas",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'paseadores.dart';
 import 'package:intl/intl.dart';
+import 'mispaseos.dart';
 
 class BuscarPaseador extends StatefulWidget {
   final int id_dueno;
@@ -17,8 +18,10 @@ class BuscarPaseador extends StatefulWidget {
 class _BuscarPaseador extends State<BuscarPaseador> {
   final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> _paseador = [];
-  List<dynamic> tiendasFiltradas = [];
+  List<Map<String, dynamic>> _paseadorFiltrado = [];
   bool _cargando = true;
+  TextEditingController _buscarController = TextEditingController();
+  bool get mostrarLista => _buscarController.text.isNotEmpty && _paseadorFiltrado.isNotEmpty;
 
   @override
   void initState() {
@@ -164,105 +167,185 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Ícono compartirm + barra de búsqueda con lupa a la derecha
+                        // 🔹 Ícono compartir + barra de búsqueda con lupa a la derecha
                         Row(
                           children: [
                             Image.asset(
                               'assets/compartirm.png',
-                              width: 60,
-                              height: 60,
+                              width: 40,
+                              height: 40,
                               fit: BoxFit.contain,
                             ),
                             const SizedBox(width: 10),
+
+                            // Buscador
                             Expanded(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.9),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: TextField(
+                                  controller: _buscarController,
                                   decoration: InputDecoration(
-                                    hintText: "Buscar zona",
+                                    hintText: "Buscar paseador o zona",
                                     border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 12),
                                     suffixIcon: Padding(
-                                      padding: EdgeInsets.only(right: 8),
-                                      child: Image.asset("assets/lupa.png", width: 24, height: 24),
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Image.asset("assets/buscar.png", width: 20, height: 20),
                                     ),
                                   ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      final query = value.toLowerCase().trim();
+
+                                      if (query.isEmpty) {
+                                        _paseadorFiltrado = [];
+                                        return;
+                                      }
+
+                                      // Dividir la búsqueda por espacios
+                                      final palabras = query.split(' ');
+
+                                      _paseadorFiltrado = _paseador.where((p) {
+                                        final nombre = (p['nombre'] ?? '').toLowerCase();
+                                        final apellido = (p['apellido'] ?? '').toLowerCase();
+                                        final zona = (p['zona_servicio'] ?? '').toLowerCase();
+
+                                        // Retorna true si alguna palabra coincide con nombre, apellido o zona
+                                        return palabras.any((palabra) =>
+                                            nombre.contains(palabra) ||
+                                            apellido.contains(palabra) ||
+                                            zona.contains(palabra));
+                                      }).toList();
+                                    });
+                                  },
                                 ),
                               ),
                             ),
-                      
                           ],
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
 
-                        // Tarjeta café "Mis citas"
-                        Container(
-                          height: 100,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 163, 145, 124),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  "assets/Calendario.png",
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Text(
-                                      "Mis citas",
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                        // 🔹 Lista de paseadores filtrados
+                        if (mostrarLista)
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _paseadorFiltrado.length,
+                            itemBuilder: (context, index) {
+                              final paseador = _paseadorFiltrado[index];
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PerfilPaseadorScreen(
+                                        id_dueno: widget.id_dueno,
+                                        id_paseador: paseador["id_paseador"],
                                       ),
                                     ),
-                                  ],
+                                  );
+                                },
+                                child: ListTile(
+                                  leading: paseador['foto'] != null
+                                    ? CircleAvatar(
+                                        radius: 20, // la mitad del tamaño que quieras (40px)
+                                        backgroundImage: MemoryImage(paseador['foto']),
+                                      )
+                                    : CircleAvatar(
+                                        radius: 20,
+                                        child: Icon(Icons.person),
+                                      ),
+                                  title: Text("${paseador['nombre']} ${paseador['apellido']}"),
+                                  subtitle: Text(paseador['zona_servicio'] ?? ''),
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          SizedBox.shrink(), // No muestra nada si no hay resultados
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Tarjeta café "Mis citas"
+                 GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CalendarioScreen(id_dueno: widget.id_dueno),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 70,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 163, 145, 124),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            "assets/Calendario.png",
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                "Mis citas",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                        const SizedBox(height: 20),
+                  const SizedBox(height: 10),
 
-                        _tarjetaComentarios(),
-               
-                  // Botón "Mis citas"
-                  
+                  // Tarjeta de comentarios
+                  _tarjetaComentarios(),
                 ],
               ),
             ),
-          
+          ),
         ],
-      )
-    ))]));
-    
+      ),
+    );
   }
 
   Widget _tarjetaComentarios() {
     if (_paseador.isEmpty) {
       return const Center(
         child: Text(
-          "No hay tiendas disponibles",
-          style: TextStyle(color: Colors.white),
+          "No hay paseadores disponibles",
+          style: TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
         ),
       );
     }
@@ -288,12 +371,9 @@ class _BuscarPaseador extends State<BuscarPaseador> {
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color:  const Color.fromARGB(255, 222, 80, 80),
-            border: Border.all(
-              color: const Color.fromARGB(255, 222, 44, 32), // Aquí va el color del borde
-              width: 2, // Ancho del borde
-            ),
-            borderRadius: BorderRadius.circular(20),
+            color: const Color.fromARGB(187, 255, 255, 255),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -317,7 +397,7 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Color.fromARGB(255, 37, 36, 36),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -328,7 +408,7 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                         Expanded(
                           child: Text(
                             direccion,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -341,14 +421,14 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                         const SizedBox(width: 4),
                         Text(
                           telefono,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                         ),
                         const SizedBox(width: 10),
                         Image.asset('assets/precio.png', width: 16, height: 16),
                         const SizedBox(width: 4),
                         Text(
                           tarifaFormateada,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
                         ),
                       ],
                     ),
@@ -367,7 +447,7 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                 );
                 },
                 icon: Image.asset(
-                  'assets/lupa.png',
+                  'assets/buscar.png',
                   width: 40,
                   height: 40,
                 ),

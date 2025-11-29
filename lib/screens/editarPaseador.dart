@@ -205,8 +205,33 @@ class _EditarPaseador extends State<EditarPaseador> {
   }
 
 
+  bool camposVacios() {
+    return _nombrePaseador.text.trim().isEmpty ||
+      _apellidoPaseador.text.trim().isEmpty ||
+      _cedula.text.trim().isEmpty ||
+      _tarifa.text.trim().isEmpty ||
+      _experiencia.text.trim().isEmpty ||
+      _direccion.text.trim().isEmpty ||
+      _telefono.text.trim().isEmpty ||
+      _horariolunesviernes.text.trim().isEmpty ||
+      _cierrelunesviernes.text.trim().isEmpty ||
+      _horariosabado.text.trim().isEmpty ||
+      _cierresabado.text.trim().isEmpty ||
+      (_abreDomingo && _horariodomingo.text.trim().isEmpty) ||
+      (_abreDomingo && _cierredomingo.text.trim().isEmpty) ||
+      _tipoPagoSeleccionado.isEmpty;
+  }
 
   Future<void> actualizarVeterinaria() async {
+    if (camposVacios()) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor completa todos los campos obligatorios.",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
     // 🔧 Función para formatear cualquier tipo de hora (con o sin AM/PM)
     String formatearHoraFlexible(String horaTexto) {
       try {
@@ -282,10 +307,6 @@ class _EditarPaseador extends State<EditarPaseador> {
         
     String textoTarifa = _tarifa.text.replaceAll('.', '');
     double tarifaDecimal = double.parse(textoTarifa);
-    // 🖨️ Verificación antes de enviar
-    print("🕐 Lunes-Viernes: $horaAperturaLV → $horaCierreLV");
-    print("🕐 Sábado: $horaAperturaSab → $horaCierreSab");
-    print("🕐 Domingo: $horaAperturaDom → $horaCierreDom");
 
     final url = Uri.parse("http://localhost:5000/actualizarPaseador");
 
@@ -314,8 +335,6 @@ class _EditarPaseador extends State<EditarPaseador> {
       }),
     );
 
-    print("🛰️ Código: ${response.statusCode}");
-    print("📦 Respuesta: ${response.body}");
 
     if (response.statusCode == 200) {
       mostrarMensajeFlotante(
@@ -334,7 +353,7 @@ class _EditarPaseador extends State<EditarPaseador> {
     } else {
       mostrarMensajeFlotante(
         context,
-        "❌ Error: No se pudo editar lel perfil de paseador",
+        "❌ Error: No se pudo editar del perfil de paseador",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
