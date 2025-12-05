@@ -21,14 +21,14 @@ CORS(app)
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-# Conexión a MySQL
 def get_connection():
     try:
         db = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="huellitas_app"
+            host=os.environ.get("DB_HOST"),
+            port=int(os.environ.get("DB_PORT", 10512)),
+            user=os.environ.get("DB_USER"),
+            password=os.environ.get("DB_PASS"),
+            database=os.environ.get("DB_NAME")
         )
         return db
     except Error as e:
@@ -3845,6 +3845,6 @@ if __name__ == "__main__":
     else:
         print("Fallo en la conexión a MySQL")
     
-    # Ejecutar Flask
-    app.run(host="0.0.0.0", port=5000, debug=True)
+
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
     
