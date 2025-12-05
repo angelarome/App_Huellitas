@@ -110,7 +110,8 @@ class _AgregarReservaScreenState extends State<AgregarReservaScreen> {
       return; // Salir de la función si no hay pago seleccionado
     }
     try {
-      final total = double.tryParse(_totalController.text) ?? 0.0;
+      String totalText = _totalController.text.replaceAll(',', '').replaceAll('.', '');
+      final total = double.tryParse(totalText) ?? 0.0;
       final fechaReserva = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(_fechaHoraController.text));
       final fechaVencimiento = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(_fechaHoraVencimientoController.text));
       final url = Uri.parse("http://localhost:5000/registrarReserva");

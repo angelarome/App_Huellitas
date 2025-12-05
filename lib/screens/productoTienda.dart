@@ -120,18 +120,34 @@ class _ProductoMascotaScreenState extends State<ProductoMascotaScreen> {
   }
 
   Future<void> registrarProducto() async {
-    // 🧩 Validación de campos obligatorios
-    if (nombreController.text.isEmpty ||
-        tarifaController.text.isEmpty ||
-        cantidadController.text.isEmpty ) {
-        mostrarMensajeFlotante(
-          context,
-          "❌ Por favor completa todos los campos obligatorios.",
-          colorFondo: Colors.white,
-          colorTexto: Colors.redAccent,
-        );
+    List<String> camposFaltantes = [];
+
+    // Nombre del producto
+    if (nombreController.text.trim().isEmpty) {
+      camposFaltantes.add("Nombre del producto");
+    }
+
+    // Tarifa
+    if (tarifaController.text.trim().isEmpty) {
+      camposFaltantes.add("Precio");
+    }
+
+    // Cantidad
+    if (cantidadController.text.trim().isEmpty) {
+      camposFaltantes.add("Cantidad disponible");
+    }
+
+    // Mostrar mensaje si faltan campos
+    if (camposFaltantes.isNotEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
       return;
     }
+
     try {
       String textoTarifa = tarifaController.text.replaceAll('.', '');
       double tarifaDecimal = double.parse(textoTarifa);

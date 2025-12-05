@@ -11,6 +11,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'mipaseador2.dart';
+import 'iniciarsesion.dart';
 
 class _MilesFormatter extends TextInputFormatter {
   final NumberFormat _formatter = NumberFormat.decimalPattern('es_CO');
@@ -75,6 +76,143 @@ class _Agregarpaseador extends State<Agregarpaseador> {
   Uint8List? _webImagen; // para web
   String? _imagenBase64; // imagen lista para enviar al backend
 
+  String? departamentoSeleccionado;
+  String? ciudadSeleccionada;
+
+  final Map<String, List<String>> ciudadesPorDepartamento = {
+    "Cundinamarca": [
+      "Bogotá",
+      "Soacha",
+      "Zipaquirá",
+      "Chía",
+      "Fusagasugá",
+      "Girardot",
+      "Facatativá",
+      "Madrid",
+      "Mosquera",
+      "Cajicá",
+    ],
+
+    "Antioquia": [
+      "Medellín",
+      "Bello",
+      "Envigado",
+      "Itagüí",
+      "Rionegro",
+      "La Ceja",
+      "Sabaneta",
+      "Apartadó",
+      "Turbo",
+      "Caucasia",
+    ],
+
+    "Valle del Cauca": [
+      "Cali",
+      "Palmira",
+      "Buenaventura",
+      "Tuluá",
+      "Buga",
+      "Cartago",
+      "Jamundí",
+      "Yumbo",
+      "Sevilla",      
+      "Caicedonia",  
+    ],
+
+    "Atlántico": [
+      "Barranquilla",
+      "Soledad",
+      "Malambo",
+      "Galapa",
+      "Sabanalarga",
+      "Baranoa",
+      "Puerto Colombia",
+    ],
+
+    "Santander": [
+      "Bucaramanga",
+      "Floridablanca",
+      "Girón",
+      "Piedecuesta",
+      "Barrancabermeja",
+      "San Gil",
+      "Socorro",
+    ],
+
+    "Nariño": [
+      "Pasto",
+      "Ipiales",
+      "Tumaco",
+      "Túquerres",
+      "Sandoná",
+    ],
+
+    "Bolívar": [
+      "Cartagena",
+      "Magangué",
+      "Turbaco",
+      "Arjona",
+      "Mompox",
+    ],
+
+    "Tolima": [
+      "Ibagué",
+      "Espinal",
+      "Melgar",
+      "Honda",
+      "Chaparral",
+    ],
+
+    "Cesar": [
+      "Valledupar",
+      "Aguachica",
+      "Bosconia",
+      "Curumaní",
+    ],
+
+    "Huila": [
+      "Neiva",
+      "Pitalito",
+      "Garzón",
+      "La Plata",
+    ],
+
+    "Boyacá": [
+      "Tunja",
+      "Duitama",
+      "Sogamoso",
+      "Chiquinquirá",
+      "Paipa",
+    ],
+
+    "Meta": [
+      "Villavicencio",
+      "Acacías",
+      "Granada",
+      "Puerto López",
+    ],
+
+    "Risaralda": [
+      "Pereira",
+      "Dosquebradas",
+      "Santa Rosa de Cabal",
+    ],
+
+    "Caldas": [
+      "Manizales",
+      "Chinchiná",
+      "La Dorada",
+      "Villamaría",
+    ],
+
+    "Quindío": [
+      "Armenia",
+      "Calarcá",
+      "Quimbaya",
+      "Montenegro",
+    ],
+  };
+  
   @override
   void initState() {
     super.initState();
@@ -107,24 +245,44 @@ class _Agregarpaseador extends State<Agregarpaseador> {
         );
       return;
     }
-    if (_nombreTienda.text.isEmpty ||
-        _apellido.text.isEmpty ||
-        _tarifa.text.isEmpty ||
-        _telefono.text.isEmpty ||
-        _direccion.text.isEmpty ||
-        _experiencia.text.isEmpty ||
-        _horaApertura == null ||
-        _horaCierre == null ||
-        _horaAperturaSabado == null ||
-        _horaCierreSabado == null ||
-        _tipoPagoSeleccionado.isEmpty ||
-        _cedula.text.isEmpty ||
-        correoController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmarController.text.isEmpty) {
+    List<String> camposFaltantes = [];
+
+    if (_nombreTienda.text.isEmpty) camposFaltantes.add("Nombre");
+    if (_apellido.text.isEmpty) camposFaltantes.add("Apellido");
+    if (_tarifa.text.isEmpty) camposFaltantes.add("Tarifa por hora");
+    if (_telefono.text.isEmpty) camposFaltantes.add("Teléfono");
+    if (_direccion.text.isEmpty) camposFaltantes.add("Dirección");
+    if (_experiencia.text.isEmpty) camposFaltantes.add("Experiencia");
+    if (_cedula.text.isEmpty) camposFaltantes.add("Cédula");
+
+    if (correoController.text.isEmpty) camposFaltantes.add("Correo");
+    if (passwordController.text.isEmpty) camposFaltantes.add("Contraseña");
+    if (confirmarController.text.isEmpty) camposFaltantes.add("Confirmar contraseña");
+
+    // Horarios
+    if (_horaApertura == null) camposFaltantes.add("Hora de apertura");
+    if (_horaCierre == null) camposFaltantes.add("Hora de cierre");
+    if (_horaAperturaSabado == null) camposFaltantes.add("Apertura sábado");
+    if (_horaCierreSabado == null) camposFaltantes.add("Cierre sábado");
+
+    // Tipo de pago
+    if (_tipoPagoSeleccionado.isEmpty) camposFaltantes.add("Tipo de pago");
+
+    // Departamento y ciudad
+    if (departamentoSeleccionado == null || departamentoSeleccionado!.isEmpty) {
+      camposFaltantes.add("Departamento");
+    }
+    if (ciudadSeleccionada == null || ciudadSeleccionada!.isEmpty) {
+      camposFaltantes.add("Ciudad");
+    }
+
+    // ---------------------------
+    // SI HAY CAMPOS FALTANTES → MOSTRAR MENSAJE
+    // ---------------------------
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "⚠️ Por favor complete todos los campos obligatorios.",
+        "⚠️ Faltan los siguientes campos:\n• ${camposFaltantes.join("\n• ")}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
@@ -149,6 +307,7 @@ class _Agregarpaseador extends State<Agregarpaseador> {
           ? "${_horaCierreDomingo!.hour.toString().padLeft(2, '0')}:${_horaCierreDomingo!.minute.toString().padLeft(2, '0')}:00"
           : null;
 
+      mostrarLoading(context);
       // 🌐 URL del backend
       final url = Uri.parse("http://localhost:5000/registrarPaseador");
 
@@ -173,9 +332,9 @@ class _Agregarpaseador extends State<Agregarpaseador> {
         "tarifa": tarifaDecimal.toString(),
         "correo": correoController.text,
         "contrasena": confirmarController.text,
+        "departamento": departamentoSeleccionado,
+        "ciudad": ciudadSeleccionada,
       };
-      
-      print("🧠 Datos a enviar: ${jsonEncode(body)}");
 
       // 📤 Enviar solicitud al backend
       final response = await http.post(
@@ -184,10 +343,7 @@ class _Agregarpaseador extends State<Agregarpaseador> {
         body: jsonEncode(body),
       );
 
-      print("Respuesta del servidor: ${response.statusCode}");
-      print("Body: ${response.body}");
-
-      // ✅ Respuesta correcta
+      ocultarLoading(context);
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final paseador = data["mipaseador"];
@@ -203,10 +359,20 @@ class _Agregarpaseador extends State<Agregarpaseador> {
           context,
           MaterialPageRoute(builder: (context) => PerfilPaseadorScreen(id_paseador: id_paseador)),
         );
-      } else {
+      } else if (response.statusCode == 409) {
         mostrarMensajeFlotante(
           context,
-          "❌ Error al registrar el perfil de paseador (${response.statusCode})",
+          "⚠️ Este usuario ya está registrado.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.orangeAccent,
+        );
+      }
+
+      // 🔹 Otros errores
+      else {
+        mostrarMensajeFlotante(
+          context,
+          "❌ Error al registrar el perfil (${response.statusCode})",
           colorFondo: Colors.white,
           colorTexto: Colors.redAccent,
         );
@@ -221,108 +387,23 @@ class _Agregarpaseador extends State<Agregarpaseador> {
     }
   }
 
-  void mostrarConfirmacionRegistro(BuildContext context) {
-    OverlayEntry? overlayEntry;
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          // Fondo semitransparente
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {}, // Evita que se cierre al tocar fuera
-              child: Container(
-                color: Colors.black.withOpacity(0.4),
-              ),
-            ),
-          ),
-
-          // Cuadro del mensaje
-          Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.pets, color: Color(0xFF4CAF50), size: 50),
-                    const SizedBox(height: 12),
-                    Text(
-                      '¿Deseas registrar este perfil de paseador?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // ❌ Botón "No"
-                        ElevatedButton(
-                          onPressed: () {
-                            overlayEntry?.remove();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 202, 65, 65),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'No',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                        // ✅ Botón "Sí"
-                        ElevatedButton(
-                          onPressed: () {
-                            overlayEntry?.remove();
-                            registrarPaseador(); // 👉 Llama a la función que hace el registro
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Sí',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    // 👇 Muestra el mensaje en pantalla
-    Overlay.of(context).insert(overlayEntry);
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
   }
 
 
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+  
   void mostrarMensajeFlotante(
     BuildContext context,
     String mensaje, {
@@ -495,53 +576,7 @@ Widget build(BuildContext context) {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // 🔹 Barra superior
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Image.asset('assets/Menu.png'),
-                      ),
-                      onPressed: () {},
-                    ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {},
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Perfil.png'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () {},
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Calendr.png'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () {},
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Campana.png'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
                 const SizedBox(height: 20),
-
                 const Center(
                   child: Text(
                     "Mi perfil de paseador",
@@ -637,18 +672,34 @@ Widget build(BuildContext context) {
                               soloLetras: true,  
                             ),
                             _campoTextoSimple("Cédula", "assets/cedula11.png", _cedula, "Ej: 1115574887", soloNumeros: true),
-                            _campoHoraApertura(context),
-                            _campoHoraCierre(context),
-                            _campoHoraAperturaSabado(context),
-                            _campoHoraCierreSabado(context),
+                            Row(
+                              children: [
+                                Expanded(child: _campoHoraApertura(context)),
+                                SizedBox(width: 12),
+                                Expanded(child: _campoHoraCierre(context)),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(child: _campoHoraAperturaSabado(context)),
+                                SizedBox(width: 12),
+                                Expanded(child: _campoHoraCierreSabado(context)),
+                              ],
+                            ),
                             _switchDiaCerrado(
                               "¿Tiene disponibilidad los domingos?",
                               _abreDomingo,
                               (val) => setState(() => _abreDomingo = val),
                             ),
+
                             if (_abreDomingo) ...[
-                              _campoHoraAperturaDomingo(context),
-                              _campoHoraCierreDomingo(context),
+                              Row(
+                                children: [
+                                  Expanded(child: _campoHoraAperturaDomingo(context)),
+                                  SizedBox(width: 12),
+                                  Expanded(child: _campoHoraCierreDomingo(context)),
+                                ],
+                              ),
                             ],
                             _campoTextoSimple(
                               "Teléfono",
@@ -658,26 +709,151 @@ Widget build(BuildContext context) {
                               soloNumeros: true,
                             ),
                             
+                            Row(
+                              children: [
+                                // Departamento
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Departamento",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          shadows: [
+                                            Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      DropdownButtonFormField<String>(
+                                        value: departamentoSeleccionado,
+                                        decoration: InputDecoration(
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          prefixIcon: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: Image.asset("assets/mapa-de-colombia.png"),
+                                            ),
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
+                                        hint: const Text("Seleccione"),
+                                        items: ciudadesPorDepartamento.keys.map((departamento) {
+                                          return DropdownMenuItem(
+                                            value: departamento,
+                                            child: Text(departamento),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            departamentoSeleccionado = value;
+                                            ciudadSeleccionada = null; // reset ciudad
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 10), // Espacio entre los campos
+
+                                // Ciudad
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Ciudad",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          shadows: [
+                                            Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      DropdownButtonFormField<String>(
+                                        value: ciudadSeleccionada,
+                                        decoration: InputDecoration(
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          prefixIcon: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: Image.asset("assets/alfiler.png"),
+                                            ),
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
+                                        hint: const Text("Seleccione"),
+                                        items: (departamentoSeleccionado == null)
+                                            ? []
+                                            : ciudadesPorDepartamento[departamentoSeleccionado]!
+                                                .map((ciudad) => DropdownMenuItem(
+                                                      value: ciudad,
+                                                      child: Text(ciudad),
+                                                    ))
+                                                .toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            ciudadSeleccionada = value;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                                
+
+                            const SizedBox(height: 10),
                             _campoTextoSimple(
                               "Zona de servicio",
                               "assets/Ubicacion.png",
                               _direccion,
-                              "Ej: Sevilla Valle, Caicedonia Valle",
+                              "Ej: Calle 123 #45-67",
                               esDireccion: true,
                             ),
-                            _campoTextoSimple(
-                              "Experiencia",
-                              "assets/sombrero.png",
-                              _experiencia,
-                              "Ej: 5 años de servicio",
-                              esDireccion: true,
-                            ),
-                            _campoTextoSimple(
-                              "Tarifa por hora",
-                              "assets/precio.png",
-                              _tarifa,
-                              "Ej: 10.000",
-                              formatoMiles: true,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _campoTextoSimple(
+                                    "Experiencia",
+                                    "assets/sombrero.png",
+                                    _experiencia,
+                                    "Ej: 5 años ",
+                                    esDireccion: true,
+                                  ),
+                                ),
+                                SizedBox(width: 12), // separación
+                                Expanded(
+                                  child: _campoTextoSimple(
+                                    "Tarifa por hora",
+                                    "assets/precio.png",
+                                    _tarifa,
+                                    "Ej: 10.000",
+                                    formatoMiles: true,
+                                  ),
+                                ),
+                              ],
                             ),
                             _campoMultiSeleccion(
                               "Tipo de pago",
@@ -698,24 +874,34 @@ Widget build(BuildContext context) {
                                 esCorreo: true,
                               ),
 
-                            _campoPassword(
-                              "Contraseña",
-                              controller: passwordController,
-                              ocultar: _ocultarPassword,
-                              onToggle: () {
-                                setState(() => _ocultarPassword = !_ocultarPassword);
-                              },
-                              icono: Image.asset('assets/candado.png'),
-                            ),
-                  
-                            _campoPassword(
-                              "Confirmar contraseña",
-                              controller: confirmarController, 
-                              ocultar: _ocultarConfirmar,
-                              onToggle: () {
-                                setState(() => _ocultarConfirmar = !_ocultarConfirmar);
-                              },
-                              icono: Image.asset('assets/candado.png'),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _campoPassword(
+                                    "Contraseña",
+                                    controller: passwordController,
+                                    ocultar: _ocultarPassword,
+                                    onToggle: () {
+                                      setState(() => _ocultarPassword = !_ocultarPassword);
+                                    },
+                                    icono: Image.asset('assets/candado.png'),
+                                  ),
+                                ),
+
+                                SizedBox(width: 16), // espacio entre los campos
+
+                                Expanded(
+                                  child: _campoPassword(
+                                    "Confirmar contraseña",
+                                    controller: confirmarController,
+                                    ocultar: _ocultarConfirmar,
+                                    onToggle: () {
+                                      setState(() => _ocultarConfirmar = !_ocultarConfirmar);
+                                    },
+                                    icono: Image.asset('assets/candado.png'),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 12),
 
@@ -826,48 +1012,70 @@ Widget build(BuildContext context) {
                 ),
 
                 const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    registrarPaseador();
 
-                // 🔹 Botones
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: lógica para cancelar
-                      },
-                      icon: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Image.asset('assets/cancelar.png'),
-                      ),
-                      label: const Text("Cancelar"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                },
+                  icon: SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: Image.asset('assets/agregar 1.png'),
+                  ),
+                  label: const Text(
+                    'Registrarse',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1.5, 1.5),
+                          color: Colors.black,
+                          blurRadius: 2,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 20),
-                    ElevatedButton.icon(
-                      onPressed: () => mostrarConfirmacionRegistro(context), 
-                      icon: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Image.asset('assets/Correcto.png'),
-                      ),
-                      label: const Text("Añadir"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                  ],
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
+                    elevation: 6,
+                  ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 5),
+
+                // 🔹 Texto para ir al login
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    },
+                    child: const Text(
+                      "¿Ya tienes una cuenta? Iniciar sesión",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(1.5, 1.5),
+                            color: Colors.black,
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -915,7 +1123,7 @@ Widget build(BuildContext context) {
       filtros.add(FilteringTextInputFormatter.digitsOnly);
     } else if (esDireccion) {
       // ✅ Letras, números, espacios y caracteres comunes en direcciones
-      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s#\-\.,]')));
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9\s\#\.,\-]")));
     } else if (formatoMiles) {
       // ✅ Formatear con puntos de miles automáticamente
       filtros.add(_MilesFormatter());
@@ -960,34 +1168,39 @@ Widget build(BuildContext context) {
   }
 
   
-  Widget _campoDescripcion(String etiqueta, String assetPath, TextEditingController controller,) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
-            const SizedBox(width: 8),
-            Text(etiqueta, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          maxLines: 4,
-          keyboardType: TextInputType.multiline,
-          decoration: InputDecoration(
-            hintText: "Digite descripción...",
-            hintStyle: TextStyle(color: Colors.grey[800]),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _campoDescripcion(String etiqueta, String assetPath, TextEditingController controller) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          SizedBox(width: 24, height: 24, child: Image.asset(assetPath)),
+          const SizedBox(width: 8),
+          Text(etiqueta, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        ],
+      ),
+      const SizedBox(height: 4),
+      TextField(
+        controller: controller,
+        maxLines: 4,
+        keyboardType: TextInputType.multiline,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(
+            RegExp(r"[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ.,()\-_/º°!?\s]"),
           ),
+        ],
+        decoration: InputDecoration(
+          hintText: "Ej: Paseador responsable con experiencia en manejo de perros pequeños y grandes.",
+          hintStyle: TextStyle(color: Colors.grey[800]),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
+      ),
+      const SizedBox(height: 12),
+    ],
+  );
+}
 
   Widget _switchDiaCerrado(String texto, bool valor, Function(bool) onChanged) {
     return Row(
@@ -1057,7 +1270,7 @@ Widget build(BuildContext context) {
 
   Widget _campoHoraApertura(BuildContext context) => _campoHora(
         context,
-        "Hora disponibilidad Lunes-Viernes",
+        "Hora disponible Lunes-Viernes",
         _horaApertura,
         (picked) => setState(() => _horaApertura = picked),
         "assets/Calendario.png",
@@ -1075,7 +1288,7 @@ Widget build(BuildContext context) {
 
   Widget _campoHoraAperturaSabado(BuildContext context) => _campoHora(
         context,
-        "Hora disponibilidad sábado",
+        "Hora disponible sábado",
         _horaAperturaSabado,
         (picked) => setState(() => _horaAperturaSabado = picked),
         "assets/Calendario.png",
@@ -1093,7 +1306,7 @@ Widget build(BuildContext context) {
 
   Widget _campoHoraAperturaDomingo(BuildContext context) => _campoHora(
         context,
-        "Hora disponibilidad Domingo",
+        "Hora disponible Domingo",
         _horaAperturaDomingo,
         (picked) => setState(() => _horaAperturaDomingo = picked),
         "assets/Calendario.png",
@@ -1178,13 +1391,35 @@ Widget build(BuildContext context) {
                     },
                   ),
                   actions: [
-                    TextButton(
+                    TextButton.icon(
                       onPressed: () => Navigator.pop(context, null),
-                      child: const Text("Cancelar"),
+                      icon: Image.asset(
+                        "assets/icon_cancelar.png",
+                        width: 20,
+                        height: 20,
+                      ),
+                      label: const Text("Cancelar"),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: () => Navigator.pop(context, metodosTemp),
-                      child: const Text("Aceptar"),
+                      icon: Image.asset(
+                        "assets/icon_aceptar.png",
+                        width: 20,
+                        height: 20,
+                      ),
+                      label: const Text("Aceptar"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ],
                 );
@@ -1259,7 +1494,7 @@ Widget build(BuildContext context) {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            hintText: "Ingrese su $label",
+            hintText: "ej: 12345678",
             prefixIcon: Padding(
               padding: const EdgeInsets.all(8.0),
               child: SizedBox(width: 24, height: 24, child: icono),
@@ -1278,7 +1513,7 @@ Widget build(BuildContext context) {
           ),
           validator: (valor) {
             if (valor == null || valor.isEmpty) {
-              return 'Por favor ingresa $label';
+              return "ej: 12345678";
             }
             if (valor.length < 6) {
               return 'La contraseña debe tener al menos 6 caracteres';

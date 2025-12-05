@@ -202,10 +202,13 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
 
                                             veterinariaFiltradas = _veterinarias.where((p) {
                                               final nombre = (p["nombre_veterinaria"] ?? '').toLowerCase();
-                                              final direccion = (p["direccion"] ?? '').toLowerCase();
-
+                                              final zona = (p['departamento'] ?? '').toLowerCase();
+                                              final ciudad = (p['ciudad'] ?? '').toLowerCase();
                                               // Retorna true si el query coincide en el nombre o en la dirección
-                                              return nombre.contains(query) || direccion.contains(query);
+                                              return nombre.contains(query) || 
+                                              zona.contains(query) ||
+                                              ciudad.contains(query);
+                        
                                             }).toList();
                                           });
                                         },
@@ -244,7 +247,8 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                                               child: Icon(Icons.person),
                                             ),
                                         title: Text("${veterinaria['nombre_veterinaria']} "),
-                                        subtitle: Text(veterinaria['direccion'] ?? ''),
+                                        subtitle: Text(
+                                        "${veterinaria['ciudad'] ?? ''} - ${veterinaria['departamento'] ?? ''}")
                                       ),
                                     );
                                   },
@@ -345,6 +349,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
       children: _veterinarias.map<Widget>((veterinaria) {
         final String nombre = veterinaria['nombre_veterinaria'] ?? 'Sin nombre';
         final String direccion = veterinaria['direccion'] ?? 'Sin dirección';
+        final String ciudad = veterinaria['ciudad'] ?? 'Sin ciudad';
         final String telefono = veterinaria['telefono']?.toString() ?? 'No disponible';
         final String? imagenBase64 = veterinaria['imagen']; // ✅ campo correcto del backend
 
@@ -383,10 +388,25 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                     ),
                     const SizedBox(height: 4),
                     Row(
-                      children: [
+                        children: [
+                        Image.asset('assets/mapa-de-colombia.png', width: 16, height: 16),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            ciudad,
+                            style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12), // Espacio pequeño entre ciudad y dirección
+
+                        // 📌 Icono dirección
                         Image.asset('assets/Ubicacion.png', width: 16, height: 16),
                         const SizedBox(width: 4),
-                        Expanded(
+
+                        // 🏠 Dirección
+                        Flexible(
                           child: Text(
                             direccion,
                             style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),

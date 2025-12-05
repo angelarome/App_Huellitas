@@ -458,8 +458,21 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 }
 
 
+  bool camposVaciosCita() {
+    return _fecha == null ||
+    _horaSeleccionada == null;
+  }
+
   Future<void> aceptar_cita_medica(idCita) async {
-    // 🗓️ FECHA — siempre se formatea (aunque no se cambie)
+    if (camposVaciosCita()) {
+      mostrarMensajeFlotante(
+      context,
+      "⚠️ Debes seleccionar la fecha y la hora.",
+      colorFondo: Colors.white,
+      colorTexto: Colors.redAccent,
+      );
+      return;
+    }
     String fecha = "";
     if (_fecha != null) {
       // Si el usuario elige nueva fecha
@@ -622,7 +635,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Editarveterinaria(idveterinaria: widget.id_veterinaria, imagen: _veterinaria[0]["imagen"], cedulaUsuario: _veterinaria[0]["cedula_usuario"], nombre_veterinaria: _veterinaria[0]["nombre_veterinaria"], tarifa: _veterinaria[0]["tarifa"], descripcion: _veterinaria[0]["descripcion"], experiencia: _veterinaria[0]["experiencia"], certificados: _veterinaria[0]["certificados"], direccion: _veterinaria[0]["direccion"], telefono: _veterinaria[0]["telefono"], domicilio: _veterinaria[0]["domicilio"], horariolunesviernes: _veterinaria[0]["horariolunesviernes"], cierrelunesviernes: _veterinaria[0]["cierrelunesviernes"], horariosabado: _veterinaria[0]["horariosabado"], cierresabado: _veterinaria[0]["cierresabado"], horariodomingo: _veterinaria[0]["horariodomingo"], cierredomingo: _veterinaria[0]["horariodomingo"], metodopago: _veterinaria[0]["tipo_pago"]), // tu pantalla destino
+                              builder: (context) => Editarveterinaria(idveterinaria: widget.id_veterinaria, imagen: _veterinaria[0]["imagen"], cedulaUsuario: _veterinaria[0]["cedula_usuario"], nombre_veterinaria: _veterinaria[0]["nombre_veterinaria"], tarifa: _veterinaria[0]["tarifa"], descripcion: _veterinaria[0]["descripcion"], experiencia: _veterinaria[0]["experiencia"], certificados: _veterinaria[0]["certificados"], direccion: _veterinaria[0]["direccion"], telefono: _veterinaria[0]["telefono"], domicilio: _veterinaria[0]["domicilio"], horariolunesviernes: _veterinaria[0]["horariolunesviernes"], cierrelunesviernes: _veterinaria[0]["cierrelunesviernes"], horariosabado: _veterinaria[0]["horariosabado"], cierresabado: _veterinaria[0]["cierresabado"], horariodomingo: _veterinaria[0]["horariodomingo"], cierredomingo: _veterinaria[0]["horariodomingo"], metodopago: _veterinaria[0]["tipo_pago"], departamento: _veterinaria[0]["departamento"], ciudad: _veterinaria[0]["ciudad"]), // tu pantalla destino
                             ),
                           );
                         },
@@ -908,6 +921,16 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
           "Teléfono",
           "assets/Telefono.png",
           _veterinaria.isNotEmpty ? (_veterinaria[0]["telefono"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Departamento",
+          "assets/mapa-de-colombia.png",
+          _veterinaria.isNotEmpty ? (_veterinaria[0]["departamento"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Ciudad",
+          "assets/alfiler.png",
+          _veterinaria.isNotEmpty ? (_veterinaria[0]["ciudad"] ?? "No disponible") : "No disponible",
         ),
         _datoConIcono(
           "Dirección",

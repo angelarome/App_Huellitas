@@ -238,7 +238,6 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
         final data = jsonDecode(response.body);
         final List mascotasJson = data["mascotas"] ?? [];
         if (mascotasJson.isEmpty) {
-          print("No hay datos de mascota");
           setState(() => isLoading = false);
           return; // salir para no acceder al índice 0
         }
@@ -253,7 +252,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
           final fechaJson = mascotasJson[0]["fecha_nacimiento"];
 
           if (fechaJson != null && fechaJson.toString().isNotEmpty) {
-            fechaNacimientoMascota = HttpDate.parse(fechaJson);
+            fechaNacimientoMascota = DateTime.parse(fechaJson); // ✔️ Correcto
           } else {
             fechaNacimientoMascota = null;
           }
@@ -511,16 +510,33 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Center(
-                            child: Text(
-                              "Mascota",
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                          Center(
+                            child: Stack(
+                            children: [
+                            // Texto delineado negro
+                            Text(
+                            "Mascota",
+                            style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 3
+                            ..color = Colors.black,
                             ),
-                          ),
+                            ),
+                            // Texto blanco encima
+                            Text(
+                            "Mascota",
+                            style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            ),
+                            ),
+                            ],
+                            ),
+                            ),
                           const SizedBox(height: 16),
 
                           Center(
@@ -685,15 +701,15 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16, 
-                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                      color: const Color.fromARGB(255, 0, 0, 0),
                     ),
                   ),
                   TextSpan(
                     text: value, // el valor normal
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      fontSize: isNote ? 14 : 16,
-                      color: isNote ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
+                      fontSize:  16,
+                      color:   Color.fromARGB(255, 0, 0, 0),
                     ),
                   ),
                 ],

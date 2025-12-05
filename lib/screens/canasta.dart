@@ -63,7 +63,7 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
     DateTime ahora = DateTime.now();
 
     // Formatear la fecha y hora
-    String fechaHoraFormateada = DateFormat('yyyy-MM-dd HH:mm').format(ahora);
+    String fechaHoraFormateada = DateFormat('yyyy-MM-dd HH:mm:ss').format(ahora);
 
     // Asignar al TextEditingController
     _fechaHoraController.text = fechaHoraFormateada;
@@ -84,17 +84,34 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
   }
 
   Future<void> registrarPedido() async {
+      // Lista de campos a validar
+    final camposFaltantes = <String>[];
+
+    // Validar dirección
+    if (_direccion.text.trim().isEmpty) {
+      camposFaltantes.add("dirección");
+    }
+
+    // Validar método de pago
     if (_tipoPagoSeleccionado.isEmpty) {
+      camposFaltantes.add("método de pago");
+    }
+
+    if (camposFaltantes.isNotEmpty) {
+      final mensaje = "⚠️ Por favor completa: ${camposFaltantes.join(", ")}";
       mostrarMensajeFlotante(
         context,
-        "❌ Por favor selecciona un método de pago",
+        mensaje,
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
-      return; // Salir de la función si no hay pago seleccionado
+      return;
     }
+
     try {
-      final total = double.tryParse(_totalController.text) ?? 0.0;
+      String totalText = _totalController.text.replaceAll(',', '').replaceAll('.', '');
+      final total = double.tryParse(totalText) ?? 0.0;
+      final fechaReserva = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(_fechaHoraController.text));
       final url = Uri.parse("http://localhost:5000/registrarPedido");
 
       final response = await http.post(
@@ -106,6 +123,9 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
           "total": total,
           "metodopago": _tipoPagoSeleccionado.join(", "),
           "productos": carrito, 
+          "fecha": fechaReserva, 
+          "direccion": _direccion.text, 
+          
         }),
       );
 
@@ -400,7 +420,6 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
                                   _direccion,
                                   "ej: Sevilla Valle, cr 51 #56-90",
                                   esDireccion: true,
-                                  readOnly: true,
                                 ),
                               ],
                             ),
@@ -437,10 +456,10 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
                                 icon: SizedBox(
                                     width: 24,
                                     height: 24,
-                                    child: Image.asset('assets/reserva.png')),
+                                    child: Image.asset('assets/catalogo.png')),
                                 label: const Text("Pedir"),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: const Color.fromARGB(255, 57, 172, 31),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                   shape: RoundedRectangleBorder(

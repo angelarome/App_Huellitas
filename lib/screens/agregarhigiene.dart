@@ -236,25 +236,58 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     }
   }
 
+  
   Future<void> _registrarHigiene() async {
     // Evita errores con el controlador
     String? notas = notasController.text.isEmpty ? null : notasController.text;
+// --- Lista de errores ---
+    List<String> errores = [];
 
-    // Validación de campos requeridos
-    if (
-        _horaSeleccionada == null ||
-        _tipoSeleccionado == null ||
-        _frecuenciaSeleccionada == null ||
-        _fecha == null) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
-      return;
+    // Tipo
+    if (_tipoSeleccionado == null) {
+      errores.add("tipo");
     }
 
+    // Frecuencia
+    if (_frecuenciaSeleccionada == null) {
+      errores.add("frecuencia");
+    }
+
+    // Días personalizados (solo si la frecuencia es personalizada)
+    if (_frecuenciaSeleccionada == "Personalizada" &&
+        frecuenciaPersonalizadaController.text.trim().isEmpty) {
+      errores.add("días personalizados");
+    }
+
+    // Fecha
+    if (_fecha == null) {
+      errores.add("fecha");
+    }
+
+    // Hora
+    if (_horaSeleccionada == null) {
+      errores.add("hora");
+    }
+
+    // --- Mostrar errores si los hay ---
+    if (errores.isNotEmpty) {
+      if (errores.length == 1) {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Falta llenar: ${errores.first}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Faltan llenar: ${errores.join(', ')}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      }
+      return;
+    }
     // Formatear fecha (YYYY-MM-DD)
     String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
                   "${_fecha!.month.toString().padLeft(2, '0')}-"
@@ -267,7 +300,6 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
     String dias = frecuenciaPersonalizadaController.text;  
 
     final url = Uri.parse("http://localhost:5000/registrarHigiene");
-    print("📤 Enviando datos a servidor:");
     try {
       final response = await http.post(
         url,

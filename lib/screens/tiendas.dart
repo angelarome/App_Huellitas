@@ -986,6 +986,16 @@ Widget _tarjetaPerfil() {
           _tienda.isNotEmpty ? (_tienda[0]["telefono"] ?? "No disponible") : "No disponible",
         ),
         _datoConIcono(
+          "Departamento",
+          "assets/mapa-de-colombia.png",
+          _tienda.isNotEmpty ? (_tienda[0]["departamento"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Ciudad",
+          "assets/alfiler.png",
+          _tienda.isNotEmpty ? (_tienda[0]["ciudad"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
           "Dirección",
           "assets/Ubicacion.png",
           _tienda.isNotEmpty ? (_tienda[0]["direccion"] ?? "No disponible") : "No disponible",
@@ -1223,85 +1233,6 @@ Widget _tarjetaComentarios() {
                       ],
                     ),
                   ),
-              
-                  Container(
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Color.fromARGB(255, 131, 123, 99),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Botón MENOS
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              if (cantidad > 1) cantidad--;
-                            });
-                          },
-                          child: Container(
-                            width: 35,
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: const Text(
-                              "-",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-
-                        // Línea separadora
-                        Container(
-                          width: 1,
-                          height: 22,
-                          color: Color.fromARGB(255, 131, 123, 99),
-                        ),
-
-                        // Número
-                        Container(
-                          width: 40,
-                          height: double.infinity,
-                          alignment: Alignment.center,
-                          child: Text(
-                            "$cantidad",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-
-                        // Línea separadora
-                        Container(
-                          width: 1,
-                          height: 22,
-                          color: Color.fromARGB(255, 131, 123, 99),
-                        ),
-
-                        // Botón MÁS
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              if (cantidad < maxCantidad) {
-                                cantidad++;
-                              }
-                            });
-                          },
-                          child: Container(
-                            width: 35,
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: const Text(
-                              "+",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
                 ],
               ),
               const SizedBox(height: 20),
@@ -1326,11 +1257,31 @@ Widget _tarjetaComentarios() {
                         carrito.add(productoSeleccionado);
                       });
 
-                      // 3️⃣ Mostrar un mensaje
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("${producto["nombre"]} agregado al carrito")),
-                      );
-
+                     ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: Colors.white,
+                        behavior: SnackBarBehavior.fixed,   // Igual al SnackBar normal
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,  // Igual al normal (puedes cambiarlo si quieres)
+                        ),
+                        content: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "${producto["nombre"]} agregado al carrito",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                       
                     },
                     icon: Image.asset('assets/catalogo.png', width: 20),

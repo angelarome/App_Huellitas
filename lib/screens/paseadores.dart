@@ -251,16 +251,41 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
   }
 
   Future<void> registrarPaseo() async {
-    if (_nombreMascota == null ||
-      _nombreMascota == "Cargando..." ||
-      _tipoPago == null ||
-      _tipoPago!.isEmpty ||
-      _horaInicio == null ||
-      _horaFin == null ||
-      _direccion.text.isEmpty) {
+    // --- Lista de campos faltantes ---
+    List<String> camposFaltantes = [];
+
+    // Nombre de la mascota
+    if (_nombreMascota == null || 
+        _nombreMascota!.trim().isEmpty || 
+        _nombreMascota == "Cargando...") {
+      camposFaltantes.add("Nombre de la mascota");
+    }
+
+    // Tipo de pago
+    if (_tipoPago == null || _tipoPago!.trim().isEmpty) {
+      camposFaltantes.add("Tipo de pago");
+    }
+
+    // Hora de inicio
+    if (_horaInicio == null) {
+      camposFaltantes.add("Hora de inicio");
+    }
+
+    // Hora de fin
+    if (_horaFin == null) {
+      camposFaltantes.add("Hora de fin");
+    }
+
+    // Dirección
+    if (_direccion.text.trim().isEmpty) {
+      camposFaltantes.add("Dirección");
+    }
+
+    // Si faltan campos, mostrar mensaje
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "⚠️ Por favor complete todos los campos obligatorios.",
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
@@ -1292,6 +1317,16 @@ Widget _tarjetaPerfil() {
               _paseador.isNotEmpty ? (_paseador[0]["telefono"] ?? "No disponible") : "No disponible",
             ),
             _datoConIcono(
+              "Departamento",
+              "assets/mapa-de-colombia.png",
+              _paseador.isNotEmpty ? (_paseador[0]["departamento"] ?? "No disponible") : "No disponible",
+            ),
+            _datoConIcono(
+              "Ciudad",
+              "assets/alfiler.png",
+              _paseador.isNotEmpty ? (_paseador[0]["ciudad"] ?? "No disponible") : "No disponible",
+            ),
+            _datoConIcono(
               "Zona de servicio",
               "assets/Ubicacion.png",
               _paseador.isNotEmpty ? (_paseador[0]["zona_servicio"] ?? "No disponible") : "No disponible",
@@ -1633,7 +1668,7 @@ Widget _tarjetaPerfil() {
                 "Zona de servicio",
                 "assets/Ubicacion.png",
                 _direccion,
-                "Ej: Sevilla Valle, Caicedonia Valle",
+                "Ej: barrio Villa Nueva",
                 esDireccion: true,
               ),
             ),
@@ -1697,8 +1732,19 @@ Widget _tarjetaPerfil() {
               lastDate: DateTime(2100),
               builder: (context, child) {
                 return Theme(
-                  data: ThemeData.dark().copyWith(
-                    colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+                  data: ThemeData(
+                    useMaterial3: true,
+                    colorScheme: ColorScheme.light(
+                      primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                      onPrimary: Colors.white,      // Texto dentro de los botones
+                      surface: Colors.white,        // Fondo del calendario
+                      onSurface: Colors.black87,    // Texto general
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                      ),
+                    ),
                   ),
                   child: child!,
                 );
@@ -1752,10 +1798,10 @@ Widget _tarjetaPerfil() {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        titulo,
-        style: const TextStyle(
+        "Hora",
+        style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Color.fromARGB(255, 43, 42, 42),
+          color: Color.fromARGB(255, 46, 45, 45),
         ),
       ),
       const SizedBox(height: 4),
@@ -1767,13 +1813,13 @@ Widget _tarjetaPerfil() {
             initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  timePickerTheme: TimePickerThemeData(
-                    backgroundColor: Colors.blue[700],
-                    hourMinuteTextColor: Colors.white,
-                    dialHandColor: Colors.white,
-                    dialTextColor: Colors.white,
-                    entryModeIconColor: Colors.white,
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: const ColorScheme.light(
+                    primary: Color(0xFF3A97F5),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black87,
                   ),
                 ),
                 child: child!,

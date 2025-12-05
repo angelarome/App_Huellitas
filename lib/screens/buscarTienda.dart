@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';  
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'tiendas.dart';
+import 'calendariomispedidos.dart';
+import 'misreservascalendario.dart';
 
 class TiendaMascotaScreen extends StatefulWidget {
   final int id_dueno;
@@ -239,11 +241,13 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
 
                                               tiendasFiltradas = _tienda.where((p) {
                                                 final nombre = (p['nombre_negocio'] ?? '').toLowerCase();
-                                                final zona = (p['direccion'] ?? '').toLowerCase();
+                                                final zona = (p['departamento'] ?? '').toLowerCase();
+                                                final ciudad = (p['ciudad'] ?? '').toLowerCase();
 
                                                 // Retorna true si alguna palabra coincide con nombre, apellido o zona
                                                 return palabras.any((palabra) =>
                                                     nombre.contains(palabra) ||
+                                                    ciudad.contains(palabra) ||
                                                     zona.contains(palabra));
                                               }).toList();
                                             });
@@ -279,7 +283,8 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
                                                   child: Icon(Icons.person),
                                                 ),
                                           title: Text("${tienda['nombre_negocio']}"),
-                                          subtitle: Text(tienda['direccion'] ?? ''),
+                                          subtitle: Text(
+                                            "${tienda['ciudad'] ?? ''} - ${tienda['departamento'] ?? ''}")
                                         ),
                                       );
                                     },
@@ -292,45 +297,107 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
 
                           const SizedBox(height: 10),
                         
-                          Container(
-                            height: 70,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(
-                                  255, 163, 145, 124),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color.fromARGB(
-                                    255, 131, 123, 99),
-                                width: 2,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.asset(
-                                    "assets/Calendario.png",
-                                    width: 40,
-                                    height: 40,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Expanded(
-                                  child: Text(
-                                    "Mis pedidos",
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CalendarioTiendaScreen(id_dueno: widget.id_dueno),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    height: 70,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color.fromARGB(255, 55, 131, 58),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.asset(
+                                            "assets/catalogo.png",
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        const Expanded(
+                                          child: Text(
+                                            "Mis pedidos",
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 16), // Espacio entre las dos tarjetas
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CalendarioReservasScreen(id_dueno: widget.id_dueno),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    height: 70,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color.fromARGB(255, 223, 168, 6),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.asset(
+                                            "assets/reserva.png", // ícono de reservas
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        const Expanded(
+                                          child: Text(
+                                            "Mis reservas",
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-
                           const SizedBox(height: 10),
 
                           _tarjetaComentarios(),
@@ -364,6 +431,7 @@ Widget _tarjetaComentarios() {
   return Column(
     children: _tienda.map<Widget>((tienda) {
       final String nombre = tienda['nombre_negocio'] ?? 'Sin nombre';
+      final String ciudad = tienda['ciudad'] ?? 'Sin ciudad';
       final String direccion = tienda['direccion'] ?? 'Sin dirección';
       final String telefono = tienda['telefono']?.toString() ?? 'No disponible';
       final String? imagenBase64 = tienda['imagen']; // ✅ campo correcto del backend
@@ -404,17 +472,32 @@ Widget _tarjetaComentarios() {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Image.asset('assets/Ubicacion.png', width: 16, height: 16),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          direccion,
-                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    Image.asset('assets/mapa-de-colombia.png', width: 16, height: 16),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        ciudad,
+                        style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(width: 12), // Espacio pequeño entre ciudad y dirección
+
+                    // 📌 Icono dirección
+                    Image.asset('assets/Ubicacion.png', width: 16, height: 16),
+                    const SizedBox(width: 4),
+
+                    // 🏠 Dirección
+                    Flexible(
+                      child: Text(
+                        direccion,
+                        style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
                   const SizedBox(height: 2),
                   Row(
                     children: [

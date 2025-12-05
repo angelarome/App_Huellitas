@@ -274,7 +274,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: const Color.fromARGB(255, 111, 178, 205),
+      backgroundColor: const Color.fromARGB(255, 36, 146, 215),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Stack(
         alignment: Alignment.center,

@@ -213,12 +213,14 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                                       _paseadorFiltrado = _paseador.where((p) {
                                         final nombre = (p['nombre'] ?? '').toLowerCase();
                                         final apellido = (p['apellido'] ?? '').toLowerCase();
-                                        final zona = (p['zona_servicio'] ?? '').toLowerCase();
+                                        final zona = (p['departamento'] ?? '').toLowerCase();
+                                        final ciudad = (p['ciudad'] ?? '').toLowerCase();
 
                                         // Retorna true si alguna palabra coincide con nombre, apellido o zona
                                         return palabras.any((palabra) =>
                                             nombre.contains(palabra) ||
                                             apellido.contains(palabra) ||
+                                            ciudad.contains(palabra) ||
                                             zona.contains(palabra));
                                       }).toList();
                                     });
@@ -262,7 +264,10 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                                         child: Icon(Icons.person),
                                       ),
                                   title: Text("${paseador['nombre']} ${paseador['apellido']}"),
-                                  subtitle: Text(paseador['zona_servicio'] ?? ''),
+                                  subtitle: Text(
+                                    "${paseador['ciudad'] ?? ''} - ${paseador['departamento'] ?? ''}"
+
+                                  ),
                                 ),
                               );
                             },
@@ -354,6 +359,7 @@ class _BuscarPaseador extends State<BuscarPaseador> {
         children: _paseador.map<Widget>((paseador) {
           final String nombre = capitalizar(paseador['nombre'] ?? 'Sin nombre');
           final String apellido = capitalizar(paseador['apellido'] ?? 'Sin apellido');
+          final String ciudad = paseador['ciudad'] ?? 'Sin ciudad';
           final String direccion = paseador['zona_servicio'] ?? 'Sin zona';
           final String telefono = paseador['telefono']?.toString() ?? 'No disponible';
 
@@ -403,17 +409,32 @@ class _BuscarPaseador extends State<BuscarPaseador> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Image.asset('assets/Ubicacion.png', width: 16, height: 16),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            direccion,
-                            style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      Image.asset('assets/mapa-de-colombia.png', width: 16, height: 16),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          ciudad,
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
+                      ),
+
+                      const SizedBox(width: 12), // Espacio pequeño entre ciudad y dirección
+
+                      // 📌 Icono dirección
+                      Image.asset('assets/Ubicacion.png', width: 16, height: 16),
+                      const SizedBox(width: 4),
+
+                      // 🏠 Dirección
+                      Flexible(
+                        child: Text(
+                          direccion,
+                          style: const TextStyle(color: Color.fromARGB(255, 37, 36, 36)),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                     const SizedBox(height: 2),
                     Row(
                       children: [

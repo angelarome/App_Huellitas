@@ -24,6 +24,8 @@ class ApiService {
     required String direccion,
     required String contrasena,
     String? imagenBase64,
+    required String departamento,
+    required String ciudad,
   }) async {
     final url = Uri.parse("$baseUrl/registrar");
 
@@ -39,6 +41,8 @@ class ApiService {
         "direccion": direccion,
         "contrasena": contrasena,
         "imagen": imagenBase64,
+        "departamento": departamento,
+        "ciudad": ciudad,
       }),
     );
 
@@ -525,6 +529,8 @@ class ApiService {
     required String metodopago,
     required String correo,
     required String contrasena,
+    required String departamento,
+    required String ciudad,
   }) async {
     final url = Uri.parse("$baseUrl/registrarTienda");
 
@@ -548,6 +554,8 @@ class ApiService {
         "metodopago": metodopago,
         "correo": correo,
         "contrasena": contrasena,
+        "departamento": departamento,
+        "ciudad": ciudad,
 
       }),
     );
@@ -829,6 +837,8 @@ class ApiService {
     required String tarifa,
     required String correo,
     required String contrasena,
+    required String departamento,
+    required String ciudad,
   }) async {
     final url = Uri.parse("$baseUrl/registrarVeterinaria");
 
@@ -855,6 +865,8 @@ class ApiService {
         "tarifa": tarifa,
         "correo": correo,
         "contrasena": contrasena,
+        "departamento": departamento,
+        "ciudad": ciudad,
 
       }),
     );
@@ -1176,6 +1188,8 @@ class ApiService {
     String? horariodomingos, // ⬅️ ahora puede ser null
     String? cierredomingos,  // ⬅️ ahora puede ser null
     required String metodopago,
+    required String departamento,
+    required String ciudad,
   }) async {
     final url = Uri.parse("$baseUrl/actualizarTienda");
 
@@ -1196,7 +1210,9 @@ class ApiService {
         "cierrehorasabado": cierrehorasabado,
         "horariodomingos": horariodomingos,
         "cierredomingos": cierredomingos,
-        "metodopago": metodopago,       
+        "metodopago": metodopago,   
+        "departamento": departamento,
+        "ciudadad": ciudad,       
       }),
 
     );
@@ -1224,6 +1240,9 @@ class ApiService {
     required String metodopago,
     required String certificado,
     required String tarifa,
+    required String departamento,
+    required String ciudad,
+
   }) async {
     final url = Uri.parse("$baseUrl/actualizarVeterinaria");
 
@@ -1249,6 +1268,8 @@ class ApiService {
         "metodopago": metodopago,
         "certificado": certificado,
         "tarifa": tarifa,      
+        "departamento": departamento,
+        "ciudad": ciudad,
       }),
 
     );
@@ -1275,7 +1296,10 @@ class ApiService {
     required String certificado,
     required String tarifa,
     required String correo,
-    required String contrasena
+    required String contrasena,
+    required String departamento,
+    required String ciudad,
+
 
   }) async {
     final url = Uri.parse("$baseUrl/registrarPaseador");
@@ -1303,6 +1327,8 @@ class ApiService {
         "tarifa": tarifa,
         "correo": correo,
         "contrasena": contrasena,
+        "departamento": departamento,
+        "ciudad": ciudad,
 
       }),
     );
@@ -1510,6 +1536,8 @@ class ApiService {
     String? cierredomingos,  // ⬅️ ahora puede ser null
     required String metodopago,
     required String certificado,
+    required String departamento,
+    required String ciudad,
 
   }) async {
     final url = Uri.parse("$baseUrl/actualizarPaseador");
@@ -1535,7 +1563,9 @@ class ApiService {
         "cierredomingos": cierredomingos,
         "metodopago": metodopago,
         "certificado": certificado,
-        "tarifa": tarifa,      
+        "tarifa": tarifa,   
+        "departamento": departamento,
+        "ciudad": ciudad,      
       }),
 
     );
@@ -2269,11 +2299,13 @@ Future<bool> CancelarSolicitud({
   }
 
   static Future<bool> registrarPedido({
-    required int idDueno,
-    required int idTienda,
+    required int id_dueno,
+    required int id_tienda,
     required int total,
     required String metodoPago,
     required List<Map<String, dynamic>> productos, // 👈 LISTA de productos
+    required String fecha,
+    required String direccion,
   }) async {
     final url = Uri.parse("$baseUrl/registrarPedido");
 
@@ -2282,11 +2314,13 @@ Future<bool> CancelarSolicitud({
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "id_dueno": idDueno,
-          "id_tienda": idTienda,
+          "id_dueno": id_dueno,
+          "id_tienda": id_tienda,
           "total": total,
           "metodopago": metodoPago,
-          "productos": productos, // 👈 SE ENVÍA TODO EL CARRITO
+          "productos": productos, 
+          "fecha": fecha, 
+          "direccion": direccion, 
         }),
       );
 
@@ -2301,6 +2335,210 @@ Future<bool> CancelarSolicitud({
       return false;
     }
   }
+
+  static Future<List<Map<String, dynamic>>> obtenerPedidos_dueno({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/mispedidos");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List pedido = data["pedido"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return pedido.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> cancelar_pedido({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/cancelar_pedido");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> recibido_pedido({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/recibido_pedido");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> Norecibido_pedido({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/norecibido_pedido");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerReserva_dueno({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/misreservas");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List reserva = data["reserva"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return reserva.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> cancelar_reserva({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/cancelar_reserva");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> completada_reserva({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/reserva_completada");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerPedidos({
+    required int id_tienda,
+  }) async {
+    final url = Uri.parse("$baseUrl/mispedidos");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_tienda": id_tienda}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List pedido = data["pedido"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return pedido.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+  static Future<bool> enviar_pedido({
+    required String id,
+    required List<Map<String, dynamic>> productos,  
+  }) async {
+    final url = Uri.parse("$baseUrl/enviado_pedido");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+        "productos": productos,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerReserva({
+    required int id_tienda,
+  }) async {
+    final url = Uri.parse("$baseUrl/reservas");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_tienda": id_tienda}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List reserva = data["reserva"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return reserva.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+   static Future<bool> aceptar_reserva({
+    required String id,
+  }) async {
+    final url = Uri.parse("$baseUrl/reserva_aceptada");
+
+    final response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": id,
+      }),
+    );
+
+    return response.statusCode == 200;
+  }
+  
+
 } 
 
 

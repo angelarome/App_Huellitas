@@ -25,6 +25,16 @@ class RecuperarCuentaPage extends StatefulWidget {
 class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
 
   Future<void> recuperarCuenta() async {
+    if (correoController.text.trim().isEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor ingresa tu correo",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+      return;
+    }
+    
     mostrarLoading(context);
     final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
 
@@ -212,11 +222,11 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
                       width: 350,
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 251, 81, 81).withOpacity(0.95),
+                        color: const Color.fromARGB(255, 170, 159, 159).withOpacity(0.6),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color.fromARGB(255, 189, 27, 27).withOpacity(0.4),
+                            color: const Color.fromARGB(255, 142, 131, 131).withOpacity(0.4),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -231,7 +241,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
                             correoController,
                             tipo: 'correo',
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 5),
                         ],
                       ),
                     ),
@@ -389,7 +399,7 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          hintText: "Ingrese su $label",
+          hintText: "ej: romero@gmail.com",
           prefixIcon: Padding(
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(width: 24, height: 24, child: icono),

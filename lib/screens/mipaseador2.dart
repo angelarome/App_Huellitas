@@ -932,6 +932,17 @@ Widget _tarjetaPerfil() {
               "assets/Telefono.png",
               _paseador.isNotEmpty ? (_paseador[0]["telefono"] ?? "No disponible") : "No disponible",
             ),
+
+            _datoConIcono(
+              "Departamento",
+              "assets/mapa-de-colombia.png",
+              _paseador.isNotEmpty ? (_paseador[0]["departamento"] ?? "No disponible") : "No disponible",
+            ),
+            _datoConIcono(
+              "Ciudad",
+              "assets/alfiler.png",
+              _paseador.isNotEmpty ? (_paseador[0]["ciudad"] ?? "No disponible") : "No disponible",
+            ),
             _datoConIcono(
               "Zona de servicio",
               "assets/Ubicacion.png",
@@ -1019,7 +1030,7 @@ Widget _tarjetaPerfil() {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => EditarPaseador(id_paseador: widget.id_paseador, imagen: _paseador[0]["imagen"], cedulaUsuario: _paseador[0]["cedula_usuario"], nombre_paseador: _paseador[0]["nombre"], apellido_paseador: _paseador[0]["apellido"], tarifa: _paseador[0]["tarifa_hora"], descripcion: _paseador[0]["descripcion"], experiencia: _paseador[0]["experiencia"], certificados: (_paseador[0]["certificadosBytes"] as List<dynamic>).map((e) => e as Uint8List).toList(), direccion: _paseador[0]["zona_servicio"], telefono: _paseador[0]["telefono"], horariolunesviernes: _paseador[0]["horariolunesviernes"], cierrelunesviernes: _paseador[0]["cierrelunesviernes"], horariosabado: _paseador[0]["horariosabado"], cierresabado: _paseador[0]["cierresabado"], horariodomingo: _paseador[0]["horariodomingo"], cierredomingo: _paseador[0]["cierredomingo"], metodopago: _paseador[0]["tipo_pago"]), // tu pantalla destino
+              builder: (context) => EditarPaseador(id_paseador: widget.id_paseador, imagen: _paseador[0]["imagen"], cedulaUsuario: _paseador[0]["cedula_usuario"], nombre_paseador: _paseador[0]["nombre"], apellido_paseador: _paseador[0]["apellido"], tarifa: _paseador[0]["tarifa_hora"], descripcion: _paseador[0]["descripcion"], experiencia: _paseador[0]["experiencia"], certificados: (_paseador[0]["certificadosBytes"] as List<dynamic>).map((e) => e as Uint8List).toList(), direccion: _paseador[0]["zona_servicio"], telefono: _paseador[0]["telefono"], horariolunesviernes: _paseador[0]["horariolunesviernes"], cierrelunesviernes: _paseador[0]["cierrelunesviernes"], horariosabado: _paseador[0]["horariosabado"], cierresabado: _paseador[0]["cierresabado"], horariodomingo: _paseador[0]["horariodomingo"], cierredomingo: _paseador[0]["cierredomingo"], metodopago: _paseador[0]["tipo_pago"], departamento: _paseador[0]["departamento"], ciudad: _paseador[0]["ciudad"]), // tu pantalla destino
             ),
           );
         },

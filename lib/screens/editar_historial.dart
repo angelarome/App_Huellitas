@@ -278,26 +278,64 @@ class _EditarHistorialScreenState extends State<EditarHistorialScreen> {
 
 
   Future<void> _editarHistorial() async {
-    // Validación de campos requeridos
-    if (_horaSeleccionada == null ||
-        _fecha == null ||
-        ((nombre_veterinariaController.text.trim().isEmpty) &&
-        (widget.nombre_veterinaria == null || widget.nombre_veterinaria!.trim().isEmpty)) ||
-        (pesoController.text.isEmpty && (widget.peso?.toString().trim() ?? '').isEmpty) ||
-        (motivoController.text.isEmpty && (widget.motivo?.trim() ?? '').isEmpty) ||
-        (diagnosticoController.text.isEmpty && (widget.diagnostico?.trim() ?? '').isEmpty) ||
-        (tratamientoController.text.isEmpty && (widget.tratamiento?.trim() ?? '').isEmpty) ||
-        (observacionesController.text.isEmpty && (widget.observaciones?.trim() ?? '').isEmpty)
-    ) {
+    List<String> camposFaltantes = [];
+
+    // Hora
+    if (_horaSeleccionada == null || (widget.hora?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Hora");
+    }
+
+    // Fecha
+    if (_fecha == null || (widget.fecha?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Fecha");
+    }
+
+    // Nombre veterinaria
+    if (nombre_veterinariaController.text.trim().isEmpty ||
+        (widget.nombre_veterinaria?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Nombre de la veterinaria");
+    }
+
+    // Peso
+    if (pesoController.text.trim().isEmpty ||
+        (widget.peso?.toString().trim() ?? '').isEmpty) {
+      camposFaltantes.add("Peso");
+    }
+
+    // Motivo
+    if (motivoController.text.trim().isEmpty ||
+        (widget.motivo?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Motivo");
+    }
+
+    // Diagnóstico
+    if (diagnosticoController.text.trim().isEmpty ||
+        (widget.diagnostico?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Diagnóstico");
+    }
+
+    // Tratamiento
+    if (tratamientoController.text.trim().isEmpty ||
+        (widget.tratamiento?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Tratamiento");
+    }
+
+    // Observaciones
+    if (observacionesController.text.trim().isEmpty ||
+        (widget.observaciones?.trim() ?? '').isEmpty) {
+      camposFaltantes.add("Observaciones");
+    }
+
+    // Mostrar mensaje si faltan campos
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "❌ Por favor completa todos los campos obligatorios.",
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
       return;
     }
-
     // Formatear fecha (YYYY-MM-DD)
     String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
                   "${_fecha!.month.toString().padLeft(2, '0')}-"

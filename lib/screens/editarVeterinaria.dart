@@ -54,7 +54,9 @@ class Editarveterinaria extends StatefulWidget {
   final String cierresabado;
   final String? horariodomingo;
   final String? cierredomingo;
-  final String metodopago; // 👈 ahora lista (si viene algo como ["Efectivo", "Nequi"])
+  final String metodopago; 
+  final String departamento;
+  final String ciudad; 
 
   const Editarveterinaria({
     super.key,
@@ -76,6 +78,8 @@ class Editarveterinaria extends StatefulWidget {
     required this.horariodomingo,
     required this.cierredomingo,
     required this.metodopago,
+    required this.departamento,
+    required this.ciudad,
   });
 
   @override
@@ -148,6 +152,8 @@ class _Editarveterinaria extends State<Editarveterinaria> {
 
     _domicilioSeleccionado = widget.domicilio;
 
+    departamentoSeleccionado = widget.departamento;
+    ciudadSeleccionada = widget.ciudad;
     _abreDomingo = widget.horariodomingo != null && widget.horariodomingo!.isNotEmpty;
 
     // ✅ Tipos de pago
@@ -159,6 +165,143 @@ class _Editarveterinaria extends State<Editarveterinaria> {
 
     _imagenBase64 = widget.imagen;
   }
+
+  String? departamentoSeleccionado;
+  String? ciudadSeleccionada;
+
+  final Map<String, List<String>> ciudadesPorDepartamento = {
+    "Cundinamarca": [
+      "Bogotá",
+      "Soacha",
+      "Zipaquirá",
+      "Chía",
+      "Fusagasugá",
+      "Girardot",
+      "Facatativá",
+      "Madrid",
+      "Mosquera",
+      "Cajicá",
+    ],
+
+    "Antioquia": [
+      "Medellín",
+      "Bello",
+      "Envigado",
+      "Itagüí",
+      "Rionegro",
+      "La Ceja",
+      "Sabaneta",
+      "Apartadó",
+      "Turbo",
+      "Caucasia",
+    ],
+
+    "Valle del Cauca": [
+      "Cali",
+      "Palmira",
+      "Buenaventura",
+      "Tuluá",
+      "Buga",
+      "Cartago",
+      "Jamundí",
+      "Yumbo",
+      "Sevilla",      
+      "Caicedonia",  
+    ],
+
+    "Atlántico": [
+      "Barranquilla",
+      "Soledad",
+      "Malambo",
+      "Galapa",
+      "Sabanalarga",
+      "Baranoa",
+      "Puerto Colombia",
+    ],
+
+    "Santander": [
+      "Bucaramanga",
+      "Floridablanca",
+      "Girón",
+      "Piedecuesta",
+      "Barrancabermeja",
+      "San Gil",
+      "Socorro",
+    ],
+
+    "Nariño": [
+      "Pasto",
+      "Ipiales",
+      "Tumaco",
+      "Túquerres",
+      "Sandoná",
+    ],
+
+    "Bolívar": [
+      "Cartagena",
+      "Magangué",
+      "Turbaco",
+      "Arjona",
+      "Mompox",
+    ],
+
+    "Tolima": [
+      "Ibagué",
+      "Espinal",
+      "Melgar",
+      "Honda",
+      "Chaparral",
+    ],
+
+    "Cesar": [
+      "Valledupar",
+      "Aguachica",
+      "Bosconia",
+      "Curumaní",
+    ],
+
+    "Huila": [
+      "Neiva",
+      "Pitalito",
+      "Garzón",
+      "La Plata",
+    ],
+
+    "Boyacá": [
+      "Tunja",
+      "Duitama",
+      "Sogamoso",
+      "Chiquinquirá",
+      "Paipa",
+    ],
+
+    "Meta": [
+      "Villavicencio",
+      "Acacías",
+      "Granada",
+      "Puerto López",
+    ],
+
+    "Risaralda": [
+      "Pereira",
+      "Dosquebradas",
+      "Santa Rosa de Cabal",
+    ],
+
+    "Caldas": [
+      "Manizales",
+      "Chinchiná",
+      "La Dorada",
+      "Villamaría",
+    ],
+
+    "Quindío": [
+      "Armenia",
+      "Calarcá",
+      "Quimbaya",
+      "Montenegro",
+    ],
+  };
 
   @override
   void dispose() {
@@ -206,31 +349,67 @@ class _Editarveterinaria extends State<Editarveterinaria> {
   }
 
   bool camposVaciosVeterinaria() {
-    return _nombreTienda.text.trim().isEmpty ||
-        _cedulaUsuario.text.trim().isEmpty ||
-        _tarifa.text.trim().isEmpty ||
-        _experiencia.text.trim().isEmpty ||
-        _direccion.text.trim().isEmpty ||
-        _telefono.text.trim().isEmpty ||
-        _domicilioSeleccionado == null || _domicilioSeleccionado!.trim().isEmpty ||
-        _horariolunesviernes.text.trim().isEmpty ||
-        _cierrelunesviernes.text.trim().isEmpty ||
-        _horariosabado.text.trim().isEmpty ||
-        _cierresabado.text.trim().isEmpty ||
-        (_abreDomingo && _horariodomingo.text.trim().isEmpty) ||
-        (_abreDomingo && _cierredomingo.text.trim().isEmpty) ||
-        _tipoPagoSeleccionado.isEmpty ||
-        (_imagenBase64 == null || _imagenBase64!.isEmpty);
+    List<String> camposFaltantes = [];
+
+    // Datos básicos
+    if (_nombreTienda.text.trim().isEmpty) camposFaltantes.add("Nombre de la tienda");
+    if (_cedulaUsuario.text.trim().isEmpty) camposFaltantes.add("Cédula");
+    if (_direccion.text.trim().isEmpty) camposFaltantes.add("Dirección");
+    if (_telefono.text.trim().isEmpty) camposFaltantes.add("Teléfono");
+
+    // Tarifa y experiencia
+    if (_tarifa.text.trim().isEmpty) camposFaltantes.add("Tarifa");
+    if (_experiencia.text.trim().isEmpty) camposFaltantes.add("Experiencia");
+
+    // Domicilio
+    if (_domicilioSeleccionado == null || _domicilioSeleccionado!.trim().isEmpty) {
+      camposFaltantes.add("Domicilio");
+    }
+
+    // Horarios Lunes a Viernes
+    if (_horariolunesviernes.text.trim().isEmpty) {
+      camposFaltantes.add("Horario Lunes a Viernes (Apertura)");
+    }
+    if (_cierrelunesviernes.text.trim().isEmpty) {
+      camposFaltantes.add("Horario Lunes a Viernes (Cierre)");
+    }
+
+    // Horarios Sábado
+    if (_horariosabado.text.trim().isEmpty) camposFaltantes.add("Horario Sábado (Apertura)");
+    if (_cierresabado.text.trim().isEmpty) camposFaltantes.add("Horario Sábado (Cierre)");
+
+    // Horarios Domingo (si aplica)
+    if (_abreDomingo && _horariodomingo.text.trim().isEmpty) {
+      camposFaltantes.add("Horario Domingo (Apertura)");
+    }
+    if (_abreDomingo && _cierredomingo.text.trim().isEmpty) {
+      camposFaltantes.add("Horario Domingo (Cierre)");
+    }
+
+    // Tipo de pago
+    if (_tipoPagoSeleccionado.isEmpty) camposFaltantes.add("Tipo de pago");
+
+    // Imagen
+    if (_imagenBase64 == null || _imagenBase64!.isEmpty) {
+      camposFaltantes.add("Imagen de la tienda / veterinaria");
+    }
+
+    // Mostrar errores si hay
+    if (camposFaltantes.isNotEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Faltan campos: ${camposFaltantes.join(', ')}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return true;
+    }
+
+    return false;
   }
 
   Future<void> actualizarVeterinaria() async {
     if (camposVaciosVeterinaria()) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
       return;
     }
     String formatearHoraFlexible(String horaTexto) {
@@ -308,7 +487,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
     String textoTarifa = _tarifa.text.replaceAll('.', '');
     double tarifaDecimal = double.parse(textoTarifa);
 
-
+    mostrarLoading(context);
     final url = Uri.parse("http://localhost:5000/actualizarVeterinaria");
 
     final response = await http.put(
@@ -335,9 +514,11 @@ class _Editarveterinaria extends State<Editarveterinaria> {
         "cierredomingos": _abreDomingo ? horaCierreDom : null,
         "metodopago": _tipoPagoSeleccionado.isNotEmpty ? _tipoPagoSeleccionado.join(", ") : "",
         "certificado": _certificadoBytes != null ? base64Encode(_certificadoBytes!) : "",
+        "departamento": departamentoSeleccionado ?? "",
+        "ciudad": ciudadSeleccionada ?? "",
       }),
     );
-
+    ocultarLoading(context);
     if (response.statusCode == 200) {
       mostrarMensajeFlotante(
         context,
@@ -364,6 +545,24 @@ class _Editarveterinaria extends State<Editarveterinaria> {
         colorTexto: Colors.redAccent,
       );
     }
+  }
+
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 
   void mostrarConfirmacionRegistro(BuildContext context) {
@@ -575,7 +774,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/paseador1.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -635,7 +834,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
                   // Título
                   const Center(
                     child: Text(
-                      "Editar Tienda",
+                      "Editar Veterinaria",
                       style: TextStyle(
                         fontSize: 28,
                         color: Colors.white,
@@ -719,15 +918,58 @@ class _Editarveterinaria extends State<Editarveterinaria> {
                                   "Nombre de la tienda", "assets/Nombre.png", _nombreTienda, "Ej: Pet Paradise", soloLetras: true,),
                               _campoTextoSimple(
                                   "Cedula", "assets/cedula11.png", _cedulaUsuario, "Ej: 1115574887", soloNumeros: true,),    
-                              _campoHoraApertura(context),
-                              _campoHoraCierre(context),
-                              _campoHoraAperturaSabado(context),
-                              _campoHoraCierreSabado(context),
-                              _switchDiaCerrado("¿Abre los domingos?", _abreDomingo,
-                                  (val) => setState(() => _abreDomingo = val)),
+                              Row(
+                                children: [
+                                  // Hora de apertura
+                                  Expanded(
+                                    child: _campoHoraApertura(context),
+                                  ),
+
+                                  const SizedBox(width: 10), // espacio entre los campos
+
+                                  // Hora de cierre
+                                  Expanded(
+                                    child: _campoHoraCierre(context),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  // Hora de apertura sábado
+                                  Expanded(
+                                    child: _campoHoraAperturaSabado(context),
+                                  ),
+
+                                  const SizedBox(width: 10), // espacio entre los campos
+
+                                  // Hora de cierre sábado
+                                  Expanded(
+                                    child: _campoHoraCierreSabado(context),
+                                  ),
+                                ],
+                              ),
+
+                              _switchDiaCerrado(
+                                "¿Abre los domingos?",
+                                _abreDomingo,
+                                (val) => setState(() => _abreDomingo = val),
+                              ),
                               if (_abreDomingo) ...[
-                                _campoHoraAperturaDomingo(context),
-                                _campoHoraCierreDomingo(context),
+                                Row(
+                                  children: [
+                                    // Hora de apertura domingo
+                                    Expanded(
+                                      child: _campoHoraAperturaDomingo(context),
+                                    ),
+
+                                    const SizedBox(width: 10), // espacio entre los campos
+
+                                    // Hora de cierre domingo
+                                    Expanded(
+                                      child: _campoHoraCierreDomingo(context),
+                                    ),
+                                  ],
+                                ),
                               ],
                               _campoTextoSimple("Teléfono", "assets/Telefono.png", _telefono, "Ej: 3001234567", soloNumeros: true,),
 
@@ -740,23 +982,151 @@ class _Editarveterinaria extends State<Editarveterinaria> {
                                 (val) => setState(() => _domicilioSeleccionado = val),
                               ),
 
+                              Row(
+                                children: [
+                                  // Departamento
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Departamento",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            shadows: [
+                                              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        DropdownButtonFormField<String>(
+                                          value: departamentoSeleccionado,
+                                          decoration: InputDecoration(
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: SizedBox(
+                                                width: 24,
+                                                height: 24,
+                                                child: Image.asset("assets/mapa-de-colombia.png"),
+                                              ),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                          hint: const Text("Seleccione"),
+                                          items: ciudadesPorDepartamento.keys.map((departamento) {
+                                            return DropdownMenuItem(
+                                              value: departamento,
+                                              child: Text(departamento),
+                                            );
+                                          }).toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              departamentoSeleccionado = value;
+                                              ciudadSeleccionada = null; // reset ciudad
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 10), // Espacio entre los campos
+
+                                  // Ciudad
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Ciudad",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            shadows: [
+                                              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        DropdownButtonFormField<String>(
+                                          value: ciudadSeleccionada,
+                                          decoration: InputDecoration(
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: SizedBox(
+                                                width: 24,
+                                                height: 24,
+                                                child: Image.asset("assets/alfiler.png"),
+                                              ),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                          hint: const Text("Seleccione"),
+                                          items: (departamentoSeleccionado == null)
+                                              ? []
+                                              : ciudadesPorDepartamento[departamentoSeleccionado]!
+                                                  .map((ciudad) => DropdownMenuItem(
+                                                        value: ciudad,
+                                                        child: Text(ciudad),
+                                                      ))
+                                                  .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              ciudadSeleccionada = value;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                                  
+
+                              const SizedBox(height: 10),
                               _campoTextoSimple(
                                   "Dirección", "assets/Ubicacion.png", _direccion, "Ej: Calle 123 #45-67", esDireccion: true,),
 
-                              _campoTextoSimple(
-                                "Experiencia",
-                                "assets/sombrero.png",
-                                _experiencia,
-                                "Ej: 5 años de servicio",
-                                esDireccion: true,
-                              ),
+                              Row(
+                                children: [
+                                  // Experiencia
+                                  Expanded(
+                                    child: _campoTextoSimple(
+                                      "Experiencia",
+                                      "assets/sombrero.png",
+                                      _experiencia,
+                                      "Ej: 5 años",
+                                      esDireccion: true,
+                                    ),
+                                  ),
 
-                              _campoTextoSimple(
-                                "Tarifa por consulta",
-                                "assets/precio.png",
-                                _tarifa,
-                                "Ej: 10.000",
-                                formatoMiles: true,
+                                  const SizedBox(width: 10), // espacio entre los campos
+
+                                  // Tarifa por consulta
+                                  Expanded(
+                                    child: _campoTextoSimple(
+                                      "Tarifa por consulta",
+                                      "assets/precio.png",
+                                      _tarifa,
+                                      "Ej: 10.000",
+                                      formatoMiles: true,
+                                    ),
+                                  ),
+                                ],
                               ),
 
                               _campoMultiSeleccion(
@@ -955,7 +1325,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
         filtros.add(FilteringTextInputFormatter.digitsOnly);
       } else if (esDireccion) {
         // ✅ Letras, números, espacios y caracteres comunes en direcciones
-        filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s#\-\.,]')));
+        filtros.add(FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9\s\#\.,\-]")));
       } else if (formatoMiles) {
         // ✅ Formatear con puntos de miles automáticamente
         filtros.add(_MilesFormatter());
@@ -1010,8 +1380,13 @@ class _Editarveterinaria extends State<Editarveterinaria> {
           controller: controller,
           maxLines: 4,
           keyboardType: TextInputType.multiline,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r"[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ.,()\-_/º°!?\s]"),
+            ),
+          ],
           decoration: InputDecoration(
-            hintText: "Digite descripcion...",
+            hintText: "Ej: Clínica veterinaria con atención general, vacunación y desparasitación.",
             hintStyle: TextStyle(color: Colors.grey[800]),
             filled: true,
             fillColor: Colors.white,
@@ -1138,57 +1513,76 @@ class _Editarveterinaria extends State<Editarveterinaria> {
     );
   }
 
-    Widget _campoHora(
-      BuildContext context,
-      String etiqueta,
-      TextEditingController controller,
-      Function(TimeOfDay) onTimeSelected,
-      String iconoPath,
-      String hintText,
-    ) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            etiqueta,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+  Widget _campoHora(
+    BuildContext context,
+    String etiqueta,
+    TextEditingController controller,
+    Function(TimeOfDay) onTimeSelected,
+    String iconoPath,
+    String hintText,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          etiqueta,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          const SizedBox(height: 4),
-          TextField(
-            controller: controller,
-            readOnly: true,
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: TextStyle(color: Colors.grey[800]),
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Image.asset(iconoPath, fit: BoxFit.contain),
-                ),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          readOnly: true,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: Colors.grey[800]),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: Image.asset(iconoPath, fit: BoxFit.contain),
               ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onTap: () async {
-              TimeOfDay? picked = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.now(),
-              );
-              if (picked != null) {
-                onTimeSelected(picked);
-              }
-            },
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          const SizedBox(height: 12),
-        ],
-      );
-    }
+          onTap: () async {
+            TimeOfDay? picked = await showTimePicker(
+              context: context,
+              initialTime: TimeOfDay.now(),
+              builder: (context, child) {
+                return Theme(
+                  data: ThemeData(
+                    useMaterial3: true,
+                    colorScheme: ColorScheme.light(
+                      primary: Color(0xFF3A97F5), 
+                      onPrimary: Colors.white,     // Texto blanco en selección
+                      surface: Colors.white,       // Fondo blanco del reloj
+                      onSurface: Colors.black87,   // Texto normal
+                    ),
+                    timePickerTheme: TimePickerThemeData(
+
+                      dialHandColor: Color(0xFF3A97F5),    // Manecilla celeste
+                      dialTextColor: Colors.black,         // Números negros
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              onTimeSelected(picked);
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 
 
     Widget _campoMultiSeleccion(String etiqueta, String iconoPath, List<String> opciones) {

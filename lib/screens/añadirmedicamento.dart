@@ -239,26 +239,66 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
   }
 
   Future<void> _registrarMedicamento() async {
-    // Evita errores con el controlador
     String? notas = notasController.text.isEmpty ? null : notasController.text;
 
-    // Validación de campos requeridos
-    if (
-        _horaSeleccionada == null ||
-        _tipoSeleccionado == null ||
-        _fecha == null  ||
-        unidadSeleccionada == null 
-        ) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
+    List<String> errores = [];
+
+// Tipo
+    if (_tipoSeleccionado == null) {
+      errores.add("tipo");
+    }
+
+    // Fecha
+    if (_fecha == null) {
+      errores.add("fecha");
+    }
+
+    // Hora
+    if (_horaSeleccionada == null) {
+      errores.add("hora");
+    }
+
+    // Unidad
+    if (unidadSeleccionada == null) {
+      errores.add("unidad");
+    }
+
+    // Dosis vacía
+    if (dosisController.text.isEmpty) {
+      errores.add("dosis");
+    } else if (double.tryParse(dosisController.text) == null) {
+      errores.add("dosis (solo números)");
+    }
+
+    // FRECUENCIA --- ✔️ CORREGIDO
+    if (_frecuenciaSeleccionada == null) {
+      errores.add("frecuencia");
+    } else if (_frecuenciaSeleccionada == "Personalizada" &&
+        frecuenciaPersonalizadaController.text.isEmpty) {
+      errores.add("días de frecuencia personalizada");
+    }
+
+    // Mensajes
+    if (errores.isNotEmpty) {
+      if (errores.length == 1) {
+        mostrarMensajeFlotante(
+          context,
+          "❌ Falta llenar: ${errores.first}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "❌ Faltan llenar: ${errores.join(', ')}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      }
       return;
     }
 
-    // Formatear fecha (YYYY-MM-DD)
+
     String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
                   "${_fecha!.month.toString().padLeft(2, '0')}-"
                   "${_fecha!.day.toString().padLeft(2, '0')}";

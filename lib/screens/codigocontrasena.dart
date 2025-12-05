@@ -106,7 +106,6 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
       );
     }
 
-    print("Código reenviado");
     _iniciarTemporizador(); // Reinicia la cuenta regresiva
   }
 
@@ -121,70 +120,89 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
   }
 
 
-  Future<void> buscarcodigo() async {
+  Future buscarcodigo() async {
     mostrarLoading(context);
+
+    // ✔ Validar dígitos
     if (obtenerCodigoIngresado().length != 6) {
-      mostrarMensajeFlotante(
-        context,
-        "Ingresa los 6 dígitos del código",
-      );
-      return;
+    ocultarLoading(context);
+    mostrarMensajeFlotante(
+    context,
+    "⚠️ Ingresa los 6 dígitos del código",
+    );
+    return;
     }
+
     final url = Uri.parse("http://localhost:5000/codigo");
 
     final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "correo": widget.correo,
-      }),
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+    "correo": widget.correo,
+    }),
     );
 
     ocultarLoading(context);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      final String codigo = data["codigo"];          
-      final expiracionStr = data["expiracion"];
-      final expiracion = DateTime.parse(expiracionStr);
+    final String codigoServidor = data["codigo"];
+    final DateTime expiracion = DateTime.parse(data["expiracion"]);
+    final DateTime ahora = DateTime.now();
 
-
-      final DateTime ahora = DateTime.now();
-
-      if (ahora.isAfter(expiracion)) {
-        mostrarMensajeFlotante(context, "❌ Código vencido",
-        colorFondo: const Color.fromARGB(255, 250, 180, 180),
-        colorTexto: Colors.black);
-        return;
-      }
-
-      final String codigoIngresado = obtenerCodigoIngresado();
-
-      Navigator.push(
+    // ✔ Validar si está vencido
+    if (ahora.isAfter(expiracion)) {
+      mostrarMensajeFlotante(
         context,
-        MaterialPageRoute(
-          builder: (context) => RecuperarCuentaPage(correo: widget.correo, rol: widget.rol),
+        "❌ Código vencido",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+      return;
+    }
+
+    final String codigoIngresado = obtenerCodigoIngresado();
+
+    // ✔ COMPARAR CÓDIGOS AQUÍ
+    if (codigoIngresado != codigoServidor) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Código incorrecto",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+      return;
+    }
+
+    // ✔ Si todo está OK, navegar
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecuperarCuentaPage(
+          correo: widget.correo,
+          rol: widget.rol,
         ),
-      );
+      ),
+    );
+
+    } else if (response.statusCode == 404) {
+    mostrarMensajeFlotante(
+    context,
+    "❌ No existe un código generado para este correo",
+    colorFondo: const Color.fromARGB(255, 250, 180, 180),
+    colorTexto: Colors.black,
+    );
+    } else {
+    mostrarMensajeFlotante(
+    context,
+    "❌ Error inesperado en el servidor",
+    colorFondo: const Color.fromARGB(255, 250, 180, 180),
+    colorTexto: Colors.black,
+    );
     }
-    else if (response.statusCode == 404) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Codigo incorrecto",
-        colorFondo: const Color.fromARGB(255, 250, 180, 180),
-        colorTexto: Colors.black,
-      );
     }
-    else {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Error inesperado en el servidor",
-        colorFondo: const Color.fromARGB(255, 250, 180, 180),
-        colorTexto: Colors.black,
-      );
-    }
-  }
 
   void ocultarLoading(BuildContext context) {
     Navigator.of(context).pop(); // cierra el diálogo
@@ -327,11 +345,11 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
                       width: 320,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 251, 81, 81).withOpacity(0.95),
+                        color: const Color.fromARGB(255, 170, 159, 159).withOpacity(0.6),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color.fromARGB(255, 189, 27, 27).withOpacity(0.4),
+                            color: const Color.fromARGB(255, 142, 131, 131).withOpacity(0.4),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),

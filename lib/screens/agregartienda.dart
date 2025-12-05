@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'mitienda2.dart';
 import 'package:flutter/services.dart';
+import 'iniciarsesion.dart';
 
 class AgregarTiendaScreen extends StatefulWidget {
 
@@ -44,6 +45,143 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
   String? _imagenBase64; // imagen lista para enviar al backend
+
+  String? departamentoSeleccionado;
+  String? ciudadSeleccionada;
+
+  final Map<String, List<String>> ciudadesPorDepartamento = {
+    "Cundinamarca": [
+      "Bogotá",
+      "Soacha",
+      "Zipaquirá",
+      "Chía",
+      "Fusagasugá",
+      "Girardot",
+      "Facatativá",
+      "Madrid",
+      "Mosquera",
+      "Cajicá",
+    ],
+
+    "Antioquia": [
+      "Medellín",
+      "Bello",
+      "Envigado",
+      "Itagüí",
+      "Rionegro",
+      "La Ceja",
+      "Sabaneta",
+      "Apartadó",
+      "Turbo",
+      "Caucasia",
+    ],
+
+    "Valle del Cauca": [
+      "Cali",
+      "Palmira",
+      "Buenaventura",
+      "Tuluá",
+      "Buga",
+      "Cartago",
+      "Jamundí",
+      "Yumbo",
+      "Sevilla",      
+      "Caicedonia",  
+    ],
+
+    "Atlántico": [
+      "Barranquilla",
+      "Soledad",
+      "Malambo",
+      "Galapa",
+      "Sabanalarga",
+      "Baranoa",
+      "Puerto Colombia",
+    ],
+
+    "Santander": [
+      "Bucaramanga",
+      "Floridablanca",
+      "Girón",
+      "Piedecuesta",
+      "Barrancabermeja",
+      "San Gil",
+      "Socorro",
+    ],
+
+    "Nariño": [
+      "Pasto",
+      "Ipiales",
+      "Tumaco",
+      "Túquerres",
+      "Sandoná",
+    ],
+
+    "Bolívar": [
+      "Cartagena",
+      "Magangué",
+      "Turbaco",
+      "Arjona",
+      "Mompox",
+    ],
+
+    "Tolima": [
+      "Ibagué",
+      "Espinal",
+      "Melgar",
+      "Honda",
+      "Chaparral",
+    ],
+
+    "Cesar": [
+      "Valledupar",
+      "Aguachica",
+      "Bosconia",
+      "Curumaní",
+    ],
+
+    "Huila": [
+      "Neiva",
+      "Pitalito",
+      "Garzón",
+      "La Plata",
+    ],
+
+    "Boyacá": [
+      "Tunja",
+      "Duitama",
+      "Sogamoso",
+      "Chiquinquirá",
+      "Paipa",
+    ],
+
+    "Meta": [
+      "Villavicencio",
+      "Acacías",
+      "Granada",
+      "Puerto López",
+    ],
+
+    "Risaralda": [
+      "Pereira",
+      "Dosquebradas",
+      "Santa Rosa de Cabal",
+    ],
+
+    "Caldas": [
+      "Manizales",
+      "Chinchiná",
+      "La Dorada",
+      "Villamaría",
+    ],
+
+    "Quindío": [
+      "Armenia",
+      "Calarcá",
+      "Quimbaya",
+      "Montenegro",
+    ],
+  };
 
   List<String> _tipoPagoSeleccionado = [];
   final _domicilioController = TextEditingController();
@@ -98,6 +236,47 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
   }
 
   Future<void> registrarTienda() async {
+    List<String> camposFaltantes = [];
+
+    // 🧩 Validación de campos obligatorios
+    if (_nombreTienda.text.isEmpty) camposFaltantes.add("Nombre de la tienda");
+    if (_cedula.text.isEmpty) camposFaltantes.add("Cédula");
+    if (_telefono.text.isEmpty) camposFaltantes.add("Teléfono");
+    if (_direccion.text.isEmpty) camposFaltantes.add("Dirección");
+
+    // Horarios
+    if (_horaApertura == null) camposFaltantes.add("Hora de apertura");
+    if (_horaCierre == null) camposFaltantes.add("Hora de cierre");
+    if (_horaAperturaSabado == null) camposFaltantes.add("Hora de apertura sábado");
+    if (_horaCierreSabado == null) camposFaltantes.add("Hora de cierre sábado");
+
+    // Tipo de pago
+    if (_tipoPagoSeleccionado.isEmpty) camposFaltantes.add("Tipo de pago");
+
+    // Credenciales
+    if (correoController.text.isEmpty) camposFaltantes.add("Correo");
+    if (passwordController.text.isEmpty) camposFaltantes.add("Contraseña");
+    if (confirmarController.text.isEmpty) camposFaltantes.add("Confirmar contraseña");
+
+    // Departamento y ciudad
+    if (departamentoSeleccionado == null || departamentoSeleccionado!.isEmpty) {
+      camposFaltantes.add("Departamento");
+    }
+    if (ciudadSeleccionada == null || ciudadSeleccionada!.isEmpty) {
+      camposFaltantes.add("Ciudad");
+    }
+
+    // 🔔 Mostrar mensaje si hay campos faltantes
+    if (camposFaltantes.isNotEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "⚠️ Faltan los siguientes campos:\n• ${camposFaltantes.join("\n• ")}",
+        colorFondo: Colors.white,
+        colorTexto: Colors.redAccent,
+      );
+      return;
+    }
+    
     bool validarCorreo(String correo) {
       final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
       return regex.hasMatch(correo);
@@ -114,27 +293,6 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           context,
           "❌ Por favor, ingrese un correo válido.",
         );
-      return;
-    }
-    // 🧩 Validación de campos obligatorios
-    if (_nombreTienda.text.isEmpty ||
-        _cedula.text.isEmpty ||
-        _telefono.text.isEmpty ||
-        _direccion.text.isEmpty ||
-        _horaApertura == null ||
-        _horaCierre == null ||
-        _horaAperturaSabado == null ||
-        _horaCierreSabado == null ||
-        _tipoPagoSeleccionado.isEmpty ||
-        correoController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmarController.text.isEmpty) {
-      mostrarMensajeFlotante(
-        context,
-        "⚠️ Por favor complete todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
       return;
     }
 
@@ -155,6 +313,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           ? "${_horaCierreDomingo!.hour.toString().padLeft(2, '0')}:${_horaCierreDomingo!.minute.toString().padLeft(2, '0')}:00"
           : null;
 
+      mostrarLoading(context);
       final url = Uri.parse("http://localhost:5000/registrarTienda");
 
       final response = await http.post(
@@ -177,9 +336,12 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
             "metodopago": _tipoPagoSeleccionado.join(", "),
             "correo": correoController.text,
             "contrasena": confirmarController.text,
+            "departamento": departamentoSeleccionado,
+            "ciudad": ciudadSeleccionada,
         }),
       );
 
+      ocultarLoading(context);
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final tienda = data["mitienda"];
@@ -215,6 +377,23 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
         colorTexto: Colors.redAccent,
       );
     }
+  }
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 
   void mostrarMensajeFlotante(
@@ -306,47 +485,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Row superior: menú y iconos
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Menu.png')),
-                        onPressed: () {},
-                      ),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Perfil.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Calendr.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Campana.png')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
+                
                   const SizedBox(height: 20),
 
                   // Título
@@ -434,18 +573,150 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
                               _campoTextoSimple(
                                   "Nombre de la tienda", "assets/Nombre.png", _nombreTienda, "Ej: Pet Paradise", soloLetras: true,),
                               _campoTextoSimple("Cédula", "assets/cedula11.png", _cedula, "Ej: 1115574887", soloNumeros: true),
-                              _campoHoraApertura(context),
-                              _campoHoraCierre(context),
-                              _campoHoraAperturaSabado(context),
-                              _campoHoraCierreSabado(context),
-                              _switchDiaCerrado("¿Abre los domingos?", _abreDomingo,
-                                  (val) => setState(() => _abreDomingo = val)),
+                              Row(
+                                children: [
+                                  Expanded(child: _campoHoraApertura(context)),
+                                  SizedBox(width: 12),
+                                  Expanded(child: _campoHoraCierre(context)),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(child: _campoHoraAperturaSabado(context)),
+                                  SizedBox(width: 12),
+                                  Expanded(child: _campoHoraCierreSabado(context)),
+                                ],
+                              ),
+                              _switchDiaCerrado(
+                                "¿Tiene disponibilidad los domingos?",
+                                _abreDomingo,
+                                (val) => setState(() => _abreDomingo = val),
+                              ),
+
                               if (_abreDomingo) ...[
-                                _campoHoraAperturaDomingo(context),
-                                _campoHoraCierreDomingo(context),
+                                Row(
+                                  children: [
+                                    Expanded(child: _campoHoraAperturaDomingo(context)),
+                                    SizedBox(width: 12),
+                                    Expanded(child: _campoHoraCierreDomingo(context)),
+                                  ],
+                                ),
                               ],
                               _campoTextoSimple("Teléfono", "assets/Telefono.png", _telefono, "Ej: 3001234567", soloNumeros: true),
-                        
+
+                              Row(
+                                children: [
+                                  // Departamento
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Departamento",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            shadows: [
+                                              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        DropdownButtonFormField<String>(
+                                          value: departamentoSeleccionado,
+                                          decoration: InputDecoration(
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: SizedBox(
+                                                width: 24,
+                                                height: 24,
+                                                child: Image.asset("assets/mapa-de-colombia.png"),
+                                              ),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                          hint: const Text("Seleccione"),
+                                          items: ciudadesPorDepartamento.keys.map((departamento) {
+                                            return DropdownMenuItem(
+                                              value: departamento,
+                                              child: Text(departamento),
+                                            );
+                                          }).toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              departamentoSeleccionado = value;
+                                              ciudadSeleccionada = null; // reset ciudad
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 10), // Espacio entre los campos
+
+                                  // Ciudad
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Ciudad",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            shadows: [
+                                              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.black45),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        DropdownButtonFormField<String>(
+                                          value: ciudadSeleccionada,
+                                          decoration: InputDecoration(
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: SizedBox(
+                                                width: 24,
+                                                height: 24,
+                                                child: Image.asset("assets/alfiler.png"),
+                                              ),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                          hint: const Text("Seleccione"),
+                                          items: (departamentoSeleccionado == null)
+                                              ? []
+                                              : ciudadesPorDepartamento[departamentoSeleccionado]!
+                                                  .map((ciudad) => DropdownMenuItem(
+                                                        value: ciudad,
+                                                        child: Text(ciudad),
+                                                      ))
+                                                  .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              ciudadSeleccionada = value;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
                               _campoTextoSimple(
                                   "Dirección", "assets/Ubicacion.png", _direccion, "Ej: Calle 123 #45-67",),
 
@@ -473,25 +744,35 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
                                 esCorreo: true,
                               ),
 
-                              _campoPassword(
-                                "Contraseña",
-                                controller: passwordController,
-                                ocultar: _ocultarPassword,
-                                onToggle: () {
-                                  setState(() => _ocultarPassword = !_ocultarPassword);
-                                },
-                                icono: Image.asset('assets/candado.png'),
-                              ),
-                    
-                              _campoPassword(
-                                "Confirmar contraseña",
-                                controller: confirmarController, 
-                                ocultar: _ocultarConfirmar,
-                                onToggle: () {
-                                  setState(() => _ocultarConfirmar = !_ocultarConfirmar);
-                                },
-                                icono: Image.asset('assets/candado.png'),
-                              ),
+                              Row(
+                              children: [
+                                Expanded(
+                                  child: _campoPassword(
+                                    "Contraseña",
+                                    controller: passwordController,
+                                    ocultar: _ocultarPassword,
+                                    onToggle: () {
+                                      setState(() => _ocultarPassword = !_ocultarPassword);
+                                    },
+                                    icono: Image.asset('assets/candado.png'),
+                                  ),
+                                ),
+
+                                SizedBox(width: 16), // espacio entre los campos
+
+                                Expanded(
+                                  child: _campoPassword(
+                                    "Confirmar contraseña",
+                                    controller: confirmarController,
+                                    ocultar: _ocultarConfirmar,
+                                    onToggle: () {
+                                      setState(() => _ocultarConfirmar = !_ocultarConfirmar);
+                                    },
+                                    icono: Image.asset('assets/candado.png'),
+                                  ),
+                                ),
+                              ],
+                            )
 
                             ],
                           ),
@@ -502,51 +783,69 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Botones Cancelar / Guardar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/cancelar.png')),
-                        label: const Text("Cancelar"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      ElevatedButton.icon(
+                  ElevatedButton.icon(
                         onPressed: () {
                           registrarTienda();
-                        },
+                      },
                         icon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Correcto.png')),
-                        label: const Text("Guardar"),
+                          width: 30,
+                          height: 30,
+                          child: Image.asset('assets/agregar 1.png'),
+                        ),
+                        label: const Text(
+                          'Registrarse',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(1.5, 1.5),
+                                color: Colors.black,
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          backgroundColor: Colors.redAccent,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
+                          elevation: 6,
                         ),
                       ),
-                    ],
-                  ),
 
-                  const SizedBox(height: 40),
+                      const SizedBox(height: 5),
+
+                      // 🔹 Texto para ir al login
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => LoginScreen()),
+                            );
+                          },
+                          child: const Text(
+                            "¿Ya tienes una cuenta? Iniciar sesión",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(1.5, 1.5),
+                                  color: Colors.black,
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                 ],
               ),
             ),
@@ -592,7 +891,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
       filtros.add(FilteringTextInputFormatter.digitsOnly);
     } else if (esDireccion) {
       // ✅ Letras, números, espacios y caracteres comunes en direcciones
-      filtros.add(FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s#\-\.,]')));
+      filtros.add(FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9\s\#\.,\-]")));
     } else if (esCorreo) {
     // ✅ Solo caracteres válidos para correos electrónicos
     filtros.add(FilteringTextInputFormatter.allow(
@@ -632,7 +931,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
     );
   }
 
-  Widget _campoDescripcion(String etiqueta, String assetPath, TextEditingController controller,) {
+  Widget _campoDescripcion(String etiqueta, String assetPath, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -648,8 +947,13 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           controller: controller,
           maxLines: 4,
           keyboardType: TextInputType.multiline,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r"[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ.,()\-_/º°!?\s]"),
+            ),
+          ],
           decoration: InputDecoration(
-            hintText: "Digite descripcion...",
+            hintText: "Ej: Ofrecemos comida, juguetes, camas y accesorios de calidad.",
             hintStyle: TextStyle(color: Colors.grey[800]),
             filled: true,
             fillColor: Colors.white,
@@ -939,7 +1243,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            hintText: "Ingrese su $label",
+            hintText: "ej: 12345678",
             prefixIcon: Padding(
               padding: const EdgeInsets.all(8.0),
               child: SizedBox(width: 24, height: 24, child: icono),
@@ -958,7 +1262,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           ),
           validator: (valor) {
             if (valor == null || valor.isEmpty) {
-              return 'Por favor ingresa $label';
+              return 'ej: 12345678';
             }
             if (valor.length < 6) {
               return 'La contraseña debe tener al menos 6 caracteres';

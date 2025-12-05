@@ -264,40 +264,40 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
     List<String> camposFaltantes = [];
 
     // Dosis
-    if (dosisController.text.isEmpty && (widget.dosis == null || widget.dosis.toString().isEmpty)) {
+    if (dosisController.text.trim().isEmpty || (widget.dosis == null || widget.dosis.toString().trim().isEmpty)) {
       camposFaltantes.add("Dosis");
     }
 
     // Frecuencia
-    if (_frecuenciaSeleccionada == null && (widget.frecuencia?.trim() ?? '').isEmpty) {
+    if (_frecuenciaSeleccionada == null || (widget.frecuencia?.trim() ?? '').isEmpty) {
       camposFaltantes.add("Frecuencia");
     }
 
     // Tipo
-    if (_tipoSeleccionado == null && (widget.tipo?.trim() ?? '').isEmpty) {
+    if (_tipoSeleccionado == null || (widget.tipo?.trim() ?? '').isEmpty) {
       camposFaltantes.add("Tipo");
     }
 
     // Unidad
-    if (unidadSeleccionada == null && (widget.unidad?.trim() ?? '').isEmpty) {
+    if (unidadSeleccionada == null || (widget.unidad?.trim() ?? '').isEmpty) {
       camposFaltantes.add("Unidad");
     }
 
     // Fecha
-    if (_fecha == null && (widget.fecha?.trim() ?? '').isEmpty) {
+    if (_fecha == null || (widget.fecha?.trim() ?? '').isEmpty) {
       camposFaltantes.add("Fecha");
     }
 
     // Hora
-    if (_horaSeleccionada == null && (widget.hora?.trim() ?? '').isEmpty) {
+    if (_horaSeleccionada == null || (widget.hora?.trim() ?? '').isEmpty) {
       camposFaltantes.add("Hora");
     }
 
-    // Mostrar mensaje si hay campos faltantes
+    // Mostrar mensaje si faltan campos
     if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "❌ Faltan campos: ${camposFaltantes.join(", ")}",
+        "⚠️ Faltan campos: ${camposFaltantes.join(", ")}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
@@ -305,22 +305,6 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
     }
     // Evita errores con el controlador
     String? notas = notasController.text.isEmpty ? null : notasController.text;
-
-    // Validación de campos requeridos
-    if (
-        _horaSeleccionada == null ||
-        _tipoSeleccionado == null ||
-        _fecha == null  ||
-        unidadSeleccionada == null 
-        ) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
-      return;
-    }
 
     // Formatear fecha (YYYY-MM-DD)
     String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"

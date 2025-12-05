@@ -230,20 +230,36 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   }
 
   Future<void> registrarCita() async {
+   // --- Lista de campos faltantes ---
+    List<String> camposFaltantes = [];
+
+    // Nombre de mascota
     if (_nombreMascota == null ||
-      _nombreMascota == "Cargando..." ||
-      _tipoPago == null ||
-      _tipoPago!.isEmpty ||
-      _motivo.text.isEmpty) {
+        _nombreMascota == "Cargando..." ||
+        _nombreMascota!.trim().isEmpty) {
+      camposFaltantes.add("Nombre de la mascota");
+    }
+
+    // Tipo de pago
+    if (_tipoPago == null || _tipoPago!.trim().isEmpty) {
+      camposFaltantes.add("Tipo de pago");
+    }
+
+    // Motivo
+    if (_motivo.text.trim().isEmpty) {
+      camposFaltantes.add("Motivo");
+    }
+
+    // Mostrar mensaje si faltan campos
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "⚠️ Por favor complete todos los campos obligatorios.",
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
       return;
     }
-
     try {
       // 🌐 URL del backend
       final url = Uri.parse("http://localhost:5000/registrarCitaVeterinaria");
@@ -1150,6 +1166,16 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
           "Teléfono",
           "assets/Telefono.png",
           _veterinaria.isNotEmpty ? (_veterinaria[0]["telefono"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Departamento",
+          "assets/mapa-de-colombia.png",
+          _veterinaria.isNotEmpty ? (_veterinaria[0]["departamento"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Ciudad",
+          "assets/alfiler.png",
+          _veterinaria.isNotEmpty ? (_veterinaria[0]["ciudad"] ?? "No disponible") : "No disponible",
         ),
         _datoConIcono(
           "Dirección",

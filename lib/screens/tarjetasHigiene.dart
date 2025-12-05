@@ -276,7 +276,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
     case "Cuidado dental":
     return const Color.fromARGB(255, 176, 224, 230); // celeste
     case "Cuidado de orejas":
-    return const Color.fromARGB(255, 255, 255, 153); // amarillo pastel
+    return const Color.fromARGB(255, 225, 225, 140); // amarillo pastel
     default:
     return Colors.grey.shade300; // color por defecto
     }
@@ -370,32 +370,6 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  Text(
-                    (widget.tipo.isNotEmpty ? widget.tipo : "Sin tipo").toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(1.5, 1.5),
-                          color: Colors.black,
-                          blurRadius: 2,
-                        ),
-                        Shadow(
-                          offset: Offset(-1.5, -1.5),
-                          color: Colors.black,
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                
-                  const SizedBox(height: 10),
-
-                 
-
                   // Tarjeta azul con contenido
                   Center(
                     child: Container(
@@ -416,7 +390,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                             children: [
                             // Texto delineado negro
                             Text(
-                            "Mascota",
+                            (widget.tipo.isNotEmpty ? widget.tipo : "Sin tipo").toUpperCase(),
                             style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -428,7 +402,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                             ),
                             // Texto blanco encima
                             Text(
-                            "Mascota",
+                            (widget.tipo.isNotEmpty ? widget.tipo : "Sin tipo").toUpperCase(),
                             style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -568,7 +542,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                     text: value, // el valor normal
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      fontSize: isNote ? 14 : 16,
+                      fontSize: 16,
                       color:  Color.fromARGB(255, 37, 36, 36),
                     ),
                   ),

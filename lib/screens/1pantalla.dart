@@ -26,6 +26,8 @@ class Pantalla1 extends StatefulWidget {
   final String telefono;
   final String direccion;
   final Uint8List fotoPerfil;
+  final String departamento;
+  final String ciudad;
 
 
   const Pantalla1({
@@ -37,6 +39,8 @@ class Pantalla1 extends StatefulWidget {
     required this.telefono,
     required this.direccion,
     required this.fotoPerfil,
+    required this.departamento,
+    required this.ciudad,
   });
 
   @override

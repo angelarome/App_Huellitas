@@ -304,20 +304,54 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
 
 
   Future<void> _registrarMascota() async {
-    // Validar el formulario y campos obligatorios
-    if (!_formKey.currentState!.validate() ||
-        especieSeleccionada == null ||
-        generoSeleccionado == null ||
-        _fechaNacimiento == null) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: const Color.fromARGB(255, 211, 60, 60),
-      );
-      return;
+   List<String> errores = [];
+
+    if (!_formKey.currentState!.validate()) {
+      errores.add("campos del formulario");
+    }
+    if (apellidoController.text.trim().isEmpty) {
+      errores.add("apellido");
+    }
+    if (nombreController.text.trim().isEmpty) {
+      errores.add("nombre");
+    }
+    if (razaController.text.trim().isEmpty) {
+      errores.add("raza");
+    }
+    if (pesoController.text.trim().isEmpty) {
+      errores.add("peso");
+    }
+    if (especieSeleccionada == null) {
+      errores.add("especie");
+    }
+    if (generoSeleccionado == null) {
+      errores.add("género");
+    }
+    if (esterilizado == null) {
+      errores.add("fecha de nacimiento");
+    }
+    if (_fechaNacimiento == null) {
+      errores.add("fecha de nacimiento");
     }
 
+    if (errores.isNotEmpty) {
+      if (errores.length == 1) {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Falta llenar: ${errores.first}.",
+          colorFondo: Colors.white,
+          colorTexto: const Color.fromARGB(255, 211, 60, 60),
+        );
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Faltan: ${errores.join(', ')}.",
+          colorFondo: Colors.white,
+          colorTexto: const Color.fromARGB(255, 211, 60, 60),
+        );
+      }
+      return;
+    }
     // Formatear la fecha
     String? fechaStr;
     if (_fechaNacimiento != null) {
@@ -581,52 +615,64 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                               tipo: 'letras',
                               hintText: "Digite apellido de la mascota",
                             ),
-                            _dropdownConEtiqueta(
-                              "Especie",
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: Image.asset(
-                                    especieSeleccionada != null
-                                        ? iconosEspecie[especieSeleccionada!]!
-                                        : 'assets/Especie.png',
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _dropdownConEtiqueta(
+                                    "Especie",
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Image.asset(
+                                          especieSeleccionada != null
+                                              ? iconosEspecie[especieSeleccionada!]!
+                                              : 'assets/Especie.png',
+                                        ),
+                                      ),
+                                    ),
+                                    ["Perro", "Gato", "Ave", "Conejo", "Otro"],
+                                    "Seleccione",
+                                    valorInicial: especieSeleccionada,
+                                    onChanged: (valor) {
+                                      setState(() {
+                                        especieSeleccionada = valor;
+                                      });
+                                    },
                                   ),
                                 ),
-                              ),
-                              ["Perro", "Gato", "Ave", "Conejo", "Otro"],
-                              "Seleccione especie",
-                              valorInicial: especieSeleccionada,
-                              onChanged: (valor) {
-                                setState(() {
-                                  especieSeleccionada = valor;
-                                });
-                              },
-                            ),
-                            _dropdownConEtiqueta(
-                              "Género",
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: Image.asset(
-                                    generoSeleccionado != null
-                                        ? iconosGenero[generoSeleccionado!]!
-                                        : 'assets/Genero.png',
+
+                                SizedBox(width: 12), // espacio entre los dos
+
+                                Expanded(
+                                  child: _dropdownConEtiqueta(
+                                    "Género",
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Image.asset(
+                                          generoSeleccionado != null
+                                              ? iconosGenero[generoSeleccionado!]!
+                                              : 'assets/Genero.png',
+                                        ),
+                                      ),
+                                    ),
+                                    ["Macho", "Hembra"],
+                                    "Seleccione",
+                                    valorInicial: generoSeleccionado,
+                                    onChanged: (valor) {
+                                      setState(() {
+                                        generoSeleccionado = valor;
+                                      });
+                                    },
                                   ),
                                 ),
-                              ),
-                              ["Macho", "Hembra"],
-                              "Seleccione género",
-                              valorInicial: generoSeleccionado,
-                              onChanged: (valor) {
-                                setState(() {
-                                  generoSeleccionado = valor;
-                                });
-                              },
+                              ],
                             ),
+
                             _campoTextoConEtiqueta(
                               "Raza",
                               Padding(
@@ -637,17 +683,32 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                               tipo: 'letras',
                               hintText: "Digite la raza",
                             ),
-                            _campoPeso("Peso", "assets/Peso.png", pesoController),
                             _campoFechaNacimiento(context),
-                    
-                            _dropdownConEtiquetaEsterilizado(
-                                "¿Está esterilizado?",
-                                _icono("assets/carpeta.png"),
-                                ["Si", "No"],
-                                "Seleccione",
-                                esterilizado,
-                                (val) => setState(() => esterilizado = val),
-                              ),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _campoPeso(
+                                    "Peso",
+                                    "assets/Peso.png",
+                                    pesoController,
+                                  ),
+                                ),
+
+                                SizedBox(width: 12), // espacio entre los dos
+
+                                Expanded(
+                                  child: _dropdownConEtiquetaEsterilizado(
+                                    "¿Está esterilizado?",
+                                    _icono("assets/carpeta.png"),
+                                    ["Si", "No"],
+                                    "Seleccione",
+                                    esterilizado,
+                                    (val) => setState(() => esterilizado = val),
+                                  ),
+                                ),
+                              ],
+                            ),
 
                             const SizedBox(height: 20),
 
@@ -677,10 +738,10 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                                   onPressed: () {
                                     mostrarConfirmacionRegistro(context, _registrarMascota); // 👈 Muestra el mensaje en lugar de registrar directo
                                   },
-                                  icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Correcto.png')),
-                                  label: const Text("Añadir"),
+                                  icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Editar.png')),
+                                  label: const Text("Editar"),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
+                                    backgroundColor: Colors.amber,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

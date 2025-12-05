@@ -130,19 +130,31 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
     }
   }
 
-  bool camposVaciosProducto() {
-    return nombreController.text.trim().isEmpty ||
-        tarifaController.text.trim().isEmpty ||
-        cantidadController.text.trim().isEmpty ||
-        (_imagenBase64 == null || _imagenBase64!.isEmpty);
-  }
 
   // ✅ Función principal para actualizar producto
   Future<void> actualizarProducto() async {
-    if (camposVaciosProducto()) {
+    List<String> camposFaltantes = [];
+
+    // Nombre del producto
+    if (nombreController.text.trim().isEmpty) {
+      camposFaltantes.add("Nombre del producto");
+    }
+
+    // Tarifa
+    if (tarifaController.text.trim().isEmpty) {
+      camposFaltantes.add("Precio");
+    }
+
+    // Cantidad
+    if (cantidadController.text.trim().isEmpty) {
+      camposFaltantes.add("Cantidad disponible");
+    }
+
+    // Mostrar mensaje si faltan campos
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "❌ Por favor completa todos los campos obligatorios.",
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );

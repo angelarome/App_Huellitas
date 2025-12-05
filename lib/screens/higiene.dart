@@ -203,17 +203,34 @@ class _HigieneScreenState extends State<HigieneScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  const Center(
-                    child: Text(
-                      "HIGIENE",
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-                      ),
-                    ),
+                  Center(
+                  child: Stack(
+                  children: [
+                  // Texto delineado negro
+                  Text(
+                  "HIGIENE",
+                  style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 3
+                  ..color = Colors.black,
                   ),
+                  ),
+                  // Texto blanco encima
+                  Text(
+                  "HIGIENE",
+                  style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  ),
+                  ),
+                  ],
+                  ),
+                  ),
+
 
                   const SizedBox(height: 30),
 

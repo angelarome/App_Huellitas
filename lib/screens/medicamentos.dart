@@ -72,43 +72,44 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
     }
   }
 
-  Color _getColorMedicamentos(String? tipo) {
+ Color _getColorMedicamentos(String? tipo) {
     switch (tipo) {
       case "Vacuna":
-        return const Color.fromARGB(255, 47, 161, 255);  
+        return const Color.fromARGB(255, 72, 176, 224);
       case "Inyección":
-        return const Color.fromARGB(255, 35, 177, 202);      // azul para baño
+        return const Color.fromARGB(255, 42, 194, 214);
       case "Antipulgas":
-        return const Color.fromARGB(255, 232, 136, 136);    // morado para peluquería
+        return const Color.fromARGB(255, 248, 121, 133);
       case "Medicamentos":
-        return const Color.fromARGB(255, 196, 73, 73);   // naranja para manicure
+        return const Color.fromARGB(255, 245, 133, 99);
       case "Desparasitación":
-        return const Color.fromARGB(255, 203, 189, 64);  
+        return const Color.fromARGB(255, 202, 191, 86);
       case "Vitaminas y suplementos":
-        return const Color.fromARGB(255, 34, 168, 123);   // verde para arenero
+        return const Color.fromARGB(255, 75, 211, 111);
       default:
-        return Colors.grey.shade300;      // color por defecto
+        return Colors.grey.shade300;
     }
   }
 
   Color _getBorderColorMedicamentos(String? tipo) {
     switch (tipo) {
       case "Vacuna":
-        return const Color.fromARGB(255, 28, 94, 159);
+        return const Color(0xFF0288D1);
       case "Inyección":
-        return const Color.fromARGB(255, 36, 117, 117);
+        return const Color(0xFF0097A7);
       case "Antipulgas":
-        return const Color.fromARGB(255, 197, 116, 116);
+        return const Color.fromARGB(255, 229, 56, 56);
       case "Medicamentos":
-        return const Color.fromARGB(255, 135, 31, 20);
+        return const Color(0xFFD84315);
       case "Desparasitación":
-        return const Color.fromARGB(255, 173, 161, 53); 
+        return const Color.fromARGB(255, 201, 165, 75);
       case "Vitaminas y suplementos":
-        return const Color.fromARGB(255, 27, 97, 44);
+        return const Color.fromARGB(255, 61, 176, 92);
       default:
         return Colors.grey.shade700;
     }
   }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,18 +202,33 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  const Center(
-                    child: Text(
-                      "Medicamentos",
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-                      ),
+                  Center(
+                    child: Stack(
+                    children: [
+                    // Texto delineado negro
+                    Text(
+                    "Medicamentos",
+                    style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 3
+                    ..color = Colors.black,
                     ),
-                  ),
-
+                    ),
+                    // Texto blanco encima
+                    Text(
+                    "Medicamentos",
+                    style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    ),
+                    ),
+                    ],
+                    ),
+                    ),
                   const SizedBox(height: 30),
 
                   Column(
@@ -333,7 +349,7 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
                                               const SizedBox(width: 8),
                                               Text(
                                                 item['hora'] ?? "Sin hora",
-                                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                                                style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 37, 36, 36)),
                                               ),
                                             ],
                                           ),
@@ -345,7 +361,7 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
                                               const SizedBox(width: 8),
                                               Text(
                                                 item['fecha'] ?? "Sin fecha",
-                                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                                                style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 37, 36, 36)),
                                               ),
                                             ],
                                           ),
@@ -353,16 +369,7 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Checkbox(
-                                      value: _confirmado,
-                                      onChanged: (bool? nuevoValor) {
-                                        setState(() {
-                                          _confirmado = nuevoValor!;
-                                        });
-                                      },
-                                      activeColor: Colors.blue,
-                                      checkColor: Colors.white,
-                                    ),
+                                    
                                   ],
                                 ),
                               ),

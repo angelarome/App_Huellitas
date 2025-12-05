@@ -259,7 +259,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
     if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "❌ Faltan campos: ${camposFaltantes.join(", ")}",
+        "⚠️ Faltan campos: ${camposFaltantes.join(", ")}",
         colorFondo: Colors.white,
         colorTexto: Colors.redAccent,
       );
@@ -457,7 +457,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
                           _dropdownConEtiqueta(
                             "Tipo",
                             _icono("assets/Etiqueta.png"),
-                            ["Baño", "Peluquería", "Manicure", "Cambio de arenero"],
+                            ["Baño", "Manicure", "Cambio de arenero", "Peluquería", "Cuidado de orejas", "Cuidado dental"],
                             "Seleccione tipo de cuidado",
                             _tipoSeleccionado,
                             (val) => setState(() => _tipoSeleccionado = val),
@@ -627,27 +627,44 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Fecha",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        Row(
+          children: [
+      
+            const SizedBox(width: 6),
+            const Text(
+              "Fecha",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 252, 252, 252)),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         GestureDetector(
           onTap: () async {
             final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              builder: (context, child) {
-                return Theme(
-                  data: ThemeData.dark().copyWith(
-                    colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+            builder: (context, child) {
+              return Theme(
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.light(
+                    primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                    onPrimary: Colors.white,      // Texto dentro de los botones
+                    surface: Colors.white,        // Fondo del calendario
+                    onSurface: Colors.black87,    // Texto general
                   ),
-                  child: child!,
-                );
-              },
-            );
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                    ),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
             if (picked != null) {
               setState(() {
                 _fecha = picked;
@@ -722,11 +739,19 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        "Hora",
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      Row(
+        children: const [
+          Text(
+            "Hora",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+          ),
+        ],
       ),
       const SizedBox(height: 4),
+
       GestureDetector(
         onTap: () async {
           final TimeOfDay? picked = await showTimePicker(
@@ -734,39 +759,41 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
             initialTime: TimeOfDay.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  timePickerTheme: TimePickerThemeData(
-                    backgroundColor: Colors.blue[700],
-                    hourMinuteTextColor: Colors.white,
-                    dialHandColor: Colors.white,
-                    dialTextColor: Colors.white,
-                    entryModeIconColor: Colors.white,
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: const ColorScheme.light(
+                    primary: Color(0xFF3A97F5),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black87,
                   ),
                 ),
                 child: child!,
               );
             },
           );
+
           if (picked != null) {
             setState(() {
               _horaSeleccionada = picked;
+
+              // 🔹 Guardar en el controlador para que el TextField lo muestre
+              _horaController.text = picked.format(context);
             });
           }
         },
+
         child: AbsorbPointer(
           child: TextField(
-            controller: _horaController,
+            controller: _horaController,   // 👈 AQUÍ VA EL CONTROLLER
             decoration: InputDecoration(
-              hintText: _horaSeleccionada == null
-                  ? "Seleccione la hora"
-                  : _horaSeleccionada!.format(context),
+              hintText: "Seleccione la hora",
               hintStyle: TextStyle(color: Colors.grey[800]),
 
-              // 👇 Aquí reemplazamos el ícono por una imagen personalizada
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Image.asset(
-                  "assets/Hora.png", // tu ícono personalizado
+                  "assets/Hora.png",
                   width: 24,
                   height: 24,
                 ),
@@ -781,6 +808,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
           ),
         ),
       ),
+
       const SizedBox(height: 12),
     ],
   );

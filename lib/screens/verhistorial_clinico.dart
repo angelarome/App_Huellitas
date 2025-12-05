@@ -23,6 +23,7 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
   bool _confirmado = false;
   List<Map<String, dynamic>> _historial = [];
   bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
+  List<Map<String, dynamic>> mascotas = [];
 
   void _toggleMenu() {
     setState(() {
@@ -34,6 +35,46 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
   void initState() {
     super.initState();
     _obtenerHistorial(); // Llamamos a la API apenas se abre la pantalla
+    _obtenerMascota();
+  }
+
+  
+  Future<void> _obtenerMascota() async {
+    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": widget.id}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+    final List mascotasJson = data["mascotas"] ?? [];
+
+    setState(() {
+      mascotas = mascotasJson.map<Map<String, dynamic>>((m) {
+        if (m["imagen_perfil"] != null && m["imagen_perfil"].isNotEmpty) {
+          try {
+            m["foto"] = base64Decode(m["imagen_perfil"]);
+          } catch (e) {
+            print("❌ Error decodificando imagen: $e");
+            m["foto"] = null;
+          }
+        }
+        return Map<String, dynamic>.from(m);
+      }).toList();
+    });
+  } 
+  }
+
+  String calcularEdad(String fechaStr) {
+    final fecha = DateTime.parse(fechaStr);
+    final ahora = DateTime.now();
+    int edad = ahora.year - fecha.year;
+    if (ahora.month < fecha.month || (ahora.month == fecha.month && ahora.day < fecha.day)) {
+      edad--;
+    }
+    return "$edad años";
   }
 
 
@@ -347,7 +388,11 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
                   const SizedBox(height: 30),
 
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      ...mascotas.map((m) => carta(context, m)),
+
+                      const SizedBox(height: 20),
                       if (_historial.isEmpty)
                         Center(
                           child: Container(
@@ -695,4 +740,170 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
       ),
     );
   }
+
+
+  Widget carta(BuildContext context, Map<String, dynamic> m) {
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: m["sexo"] == "Macho"
+              ? const Color.fromARGB(255, 28, 106, 190)
+              : const Color.fromARGB(255, 219, 44, 131),
+          width: 2,
+        ),
+      ),
+      color: m["sexo"] == "Macho"
+          ? const Color.fromARGB(255, 76, 162, 255)
+          : const Color.fromARGB(255, 249, 89, 169),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: m["foto"] != null
+                  ? Image.memory(
+                      m["foto"],
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                    )
+                  : const SizedBox(width: 70, height: 70),
+            ),
+            const SizedBox(width: 16),
+
+            // 👉 Columna con la info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${m["nombre"] ?? ""} ${m["apellido"] ?? ""}".trim().toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(offset: Offset(1.5, 1.5), color: Colors.black, blurRadius: 2),
+                        Shadow(offset: Offset(-1.5, -1.5), color: Colors.black, blurRadius: 2),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // 👉 Especie
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        m["especies"] == "Perro"
+                            ? 'assets/Perrocafe.png'
+                            : m["especies"] == "Gato"
+                                ? 'assets/gato-negro.png'
+                                : m["especies"] == "Conejo"
+                                    ? 'assets/conejo1.png'
+                                    : m["especies"] == "Ave"
+                                        ? 'assets/guacamayo.png'
+                                        : 'assets/masmascotas.png',
+                        width: 20,
+                        height: 20,
+                      ),
+
+                      const SizedBox(width: 6),
+
+                      Text(
+                        m["especies"] ?? "Especie no disponible",
+                        style: const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+
+                      const SizedBox(width: 20),
+
+                      Image.asset(
+                        'assets/Especie.png',
+                        width: 18,
+                        height: 18,
+                      ),
+
+                      const SizedBox(width: 6),
+
+                      Text(
+                        m["raza"] ?? "Raza no disponible",
+                        style: const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // 👉 Sexo + Esterilizado
+                  Row(
+                    children: [
+                      Image.asset(
+                        m["sexo"] == "Macho"
+                            ? 'assets/masculino.png'
+                            : 'assets/mujer.png',
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        m["sexo"] ?? "Sexo no disponible",
+                        style: const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+
+                      const SizedBox(width: 20),
+
+                      // Icono de esterilizado
+                      Image.asset(
+                        'assets/carpeta.png',
+                        width: 18,
+                        height: 18,
+                      ),
+
+                      const SizedBox(width: 6),
+
+                      // Texto esterilizado con "Esterilizado: Sí/No"
+                      Text(
+                        "Esterilizado: ${(
+                          m["esterilizado"] == 1 ||
+                          m["esterilizado"] == "1"
+                        ) ? "Sí" : "No"}",
+                        style: const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // 👉 Edad
+                  Row(
+                    children: [
+                      Image.asset(
+                        'assets/pastel-de-cumpleanos.png',
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        m["fecha_nacimiento"] != null
+                            ? calcularEdad(m["fecha_nacimiento"])
+                            : "Edad no disponible",
+                        style: const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  
 }
+

@@ -12,6 +12,8 @@ import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'editartienda.dart';
 import 'editarProducto.dart';
+import 'calendariopedidostienda.dart';
+import 'calendarioreservasTienda.dart';
 
 class PerfilTiendaScreen extends StatefulWidget {
   final int idtienda;
@@ -445,7 +447,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/Tienda.jpeg"),
+                image: AssetImage("assets/descarga.jpeg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -697,7 +699,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => Editartienda(idtienda: widget.idtienda, imagen: _tienda[0]["imagen"], cedulaUsuario: _tienda[0]["cedula_usuario"], nombreTienda: _tienda[0]["nombre_negocio"], descripcion: _tienda[0]["descripcion"], direccion: _tienda[0]["direccion"], telefono: _tienda[0]["telefono"], domicilio: _tienda[0]["domicilio"], horariolunesviernes: _tienda[0]["horariolunesviernes"], cierrelunesviernes: _tienda[0]["cierrelunesviernes"], horariosabado: _tienda[0]["horariosabado"], cierresabado: _tienda[0]["cierresabado"], horariodomingo: _tienda[0]["horariodomingo"], cierredomingo: _tienda[0]["cierredomingo"], metodopago: _tienda[0]["metodo_pago"]),
+                                        builder: (context) => Editartienda(idtienda: widget.idtienda, imagen: _tienda[0]["imagen"], cedulaUsuario: _tienda[0]["cedula_usuario"], nombreTienda: _tienda[0]["nombre_negocio"], descripcion: _tienda[0]["descripcion"], direccion: _tienda[0]["direccion"], telefono: _tienda[0]["telefono"], domicilio: _tienda[0]["domicilio"], horariolunesviernes: _tienda[0]["horariolunesviernes"], cierrelunesviernes: _tienda[0]["cierrelunesviernes"], horariosabado: _tienda[0]["horariosabado"], cierresabado: _tienda[0]["cierresabado"], horariodomingo: _tienda[0]["horariodomingo"], cierredomingo: _tienda[0]["cierredomingo"], metodopago: _tienda[0]["metodo_pago"], departamento: _tienda[0]["departamento"], ciudad: _tienda[0]["ciudad"]),
                                       ),
                                     );
                                   },
@@ -831,6 +833,16 @@ Widget _tarjetaPerfil() {
           "Teléfono",
           "assets/Telefono.png",
           _tienda.isNotEmpty ? (_tienda[0]["telefono"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Departamento",
+          "assets/mapa-de-colombia.png",
+          _tienda.isNotEmpty ? (_tienda[0]["departamento"] ?? "No disponible") : "No disponible",
+        ),
+        _datoConIcono(
+          "Ciudad",
+          "assets/alfiler.png",
+          _tienda.isNotEmpty ? (_tienda[0]["ciudad"] ?? "No disponible") : "No disponible",
         ),
         _datoConIcono(
           "Dirección",
@@ -971,199 +983,297 @@ Widget _tarjetaComentarios() {
 
   // 🔹 Si hay productos, los mostramos
   Widget _tarjetaCatalogo() {
-  if (_producto.isEmpty) {
-    return Container(
-      key: const ValueKey("catalogo"),
-      width: MediaQuery.of(context).size.width * 0.9,
-      constraints: const BoxConstraints(minHeight: 300),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Image.asset("assets/catalogo.png", width: 60, height: 60),
-          const SizedBox(height: 20),
-          const Text(
-            "Aún no tienes ningún producto registrado",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "¡Añade uno para comenzar!",
-            style: TextStyle(fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 🔹 Si hay productos, los mostramos
-  return Column(
-    key: const ValueKey("catalogo"),
-    children: [
-      // 🔹 Tarjeta calendario
-      Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 246, 245, 245),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-          border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
-        ),
-        child: Row(
+    // 🔹 Tarjetas de arriba: Mis pedidos / Mis reservas
+    Widget tarjetasSuperiores = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Image.asset("assets/Calendario.png", width: 40, height: 40),
-            const SizedBox(width: 12),
-            Stack(
-              children: [
-                Text(
-                  "Calendario de pedidos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    foreground: Paint()
-                      ..style = PaintingStyle.stroke
-                      ..strokeWidth = 2
-                      ..color = Colors.black,
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CalendarioTiendaScreen(id_tienda: widget.idtienda),
+                    ),
+                  );
+                },
+                child: Container(
+                  height: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Color.fromARGB(255, 55, 131, 58),
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          "assets/catalogo.png",
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          "Pedidos",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const Text(
-                  "Calendario de pedidos",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CalendarioReservasScreen(id_tienda: widget.idtienda),
+                    ),
+                  );
+                },
+                child: Container(
+                  height: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Color.fromARGB(255, 223, 168, 6),
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          "assets/reserva.png",
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          "Reservas",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
-      ),
+        SizedBox(height: 20),
+      ],
+    );
 
-      // 🔹 Tarjetas de productos
-      ..._producto.map<Widget>((producto) {
-        final nombreOriginal = producto["nombre"] ?? "Sin nombre";
-        final nombre = nombreOriginal.isNotEmpty
-            ? nombreOriginal[0].toUpperCase() + nombreOriginal.substring(1).toLowerCase()
-            : "Sin nombre";
-        final descripcion = producto["descripcion"] ?? "Sin descripción";
-        final disponibles = producto["cantidad_disponible"] ?? "N/A";
-
-        final precioNumero = producto["precio"] is num
-            ? producto["precio"]
-            : num.tryParse(producto["precio"]?.toString() ?? "0") ?? 0;
-
-        final precioFormateado = "\$${NumberFormat("#,##0", "es_CO").format(precioNumero)}";
-
-        Uint8List? foto;
-        final imagenBase64 = producto['imagen'];
-        if (imagenBase64 != null && imagenBase64.isNotEmpty) {
-          foto = base64Decode(imagenBase64);
-        }
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 246, 245, 245),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black26)],
-            border: Border.all(color: const Color.fromARGB(255, 131, 123, 99), width: 2),
+    // 🔹 Si NO hay productos
+    if (_producto.isEmpty) {
+      return Column(
+        key: ValueKey("catalogo"),
+        children: [
+          tarjetasSuperiores,
+          Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            constraints: BoxConstraints(minHeight: 300),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(blurRadius: 6, color: Colors.black26),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset("assets/catalogo.png", width: 60, height: 60),
+                SizedBox(height: 20),
+                Text(
+                  "Aún no tienes ningún producto registrado",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "¡Añade uno para comenzar!",
+                  style: TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
-                    child: foto != null
-                        ? Image.memory(foto, width: 90, height: 90, fit: BoxFit.cover)
-                        : Image.asset("assets/perfilshop.png",
-                            width: 90, height: 90, fit: BoxFit.cover),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          nombre,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(descripcion, style: const TextStyle(fontSize: 14)),
-                        const SizedBox(height: 4),
-                        Text("Disponibles: $disponibles",
-                            style: const TextStyle(fontSize: 14, color: Colors.black)),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    precioFormateado,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
+        ],
+      );
+    }
+
+    // 🔹 Si SÍ hay productos
+    return Column(
+      key: ValueKey("catalogo"),
+      children: [
+        tarjetasSuperiores,
+
+        // 🔹 Lista de productos
+        ..._producto.map<Widget>((producto) {
+          final nombreOriginal = producto["nombre"] ?? "Sin nombre";
+          final nombre = nombreOriginal.isNotEmpty
+              ? nombreOriginal[0].toUpperCase() +
+                  nombreOriginal.substring(1).toLowerCase()
+              : "Sin nombre";
+
+          final descripcion = producto["descripcion"] ?? "Sin descripción";
+          final disponibles = producto["cantidad_disponible"] ?? "N/A";
+
+          final precioNumero = producto["precio"] is num
+              ? producto["precio"]
+              : num.tryParse(producto["precio"].toString()) ?? 0;
+
+          final precioFormateado =
+              "\$${NumberFormat("#,##0", "es_CO").format(precioNumero)}";
+
+          Uint8List? foto;
+          final imagenBase64 = producto["imagen"];
+          if (imagenBase64 != null && imagenBase64.isNotEmpty) {
+            foto = base64Decode(imagenBase64);
+          }
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 246, 245, 245),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(blurRadius: 6, color: Colors.black26),
+              ],
+              border: Border.all(
+                color: Color.fromARGB(255, 131, 123, 99),
+                width: 2,
               ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                  onPressed: () {
-                    mostrarConfirmacionRegistro(
-                      context,
-                      () {
-                        _eliminarProducto(producto["idproducto"]); // acción concreta al confirmar
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: foto != null
+                          ? Image.memory(foto,
+                              width: 90, height: 90, fit: BoxFit.cover)
+                          : Image.asset("assets/perfilshop.png",
+                              width: 90, height: 90, fit: BoxFit.cover),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            nombre,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(descripcion,
+                              style: TextStyle(fontSize: 14)),
+                          SizedBox(height: 4),
+                          Text("Disponibles: $disponibles",
+                              style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      precioFormateado,
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        mostrarConfirmacionRegistro(
+                          context,
+                          () {
+                            _eliminarProducto(producto["idproducto"]);
+                          },
+                          producto["idproducto"],
+                        );
                       },
-                      producto["idproducto"],
-                    );
-                  },  
-                    icon: Image.asset('assets/Botebasura.png', width: 20),
-                    label: const Text(
-                      "Eliminar",
-                      style: TextStyle(color: Colors.white),
+                      icon: Image.asset('assets/Botebasura.png', width: 20),
+                      label: Text("Eliminar"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 210, 42, 42),
+                        foregroundColor: Colors.white,
+                      ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 210, 42, 42),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductoMascotaEditarScreen(
+                              idtienda: widget.idtienda,
+                              idproducto: producto["idproducto"],
+                              nombre: producto["nombre"],
+                              precio: double.tryParse(
+                                      producto["precio"].toString()) ??
+                                  0.0,
+                              cantidad: int.tryParse(producto["cantidad_disponible"].toString()) ?? 0,
+                              imagen: producto["imagen"],
+                              descripcion: producto["descripcion"],
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Image.asset('assets/Editar.png', width: 20),
+                      label: Text("Editar"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.white,
+                      ),
                     ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductoMascotaEditarScreen(idtienda: widget.idtienda, idproducto: producto["idproducto"], nombre: producto["nombre"], precio: double.tryParse(producto["precio"].toString()) ?? 0.0, cantidad: int.tryParse(producto["cantidad_disponible"].toString()) ?? 0, imagen: producto["imagen"], descripcion: producto["descripcion"]),
-                        ),
-                      );
-                    },
-                    icon: Image.asset('assets/Editar.png', width: 20),
-                    label: const Text("Editar"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    ],
-  );
-}
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
 }

@@ -150,37 +150,36 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // ❌ Botón "No"
-                        ElevatedButton(
-                          onPressed: () {
-                            overlayEntry?.remove();
-                          },
+                        ElevatedButton.icon(
+                          onPressed: () { overlayEntry?.remove(); },
+                          icon: Image.asset(
+                            "assets/cancelar.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('No', style: TextStyle(color: Colors.white, fontSize: 16)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 202, 65, 65),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text(
-                            'No',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                  
                         ),
-                        // ✅ Botón "Sí"
-                        ElevatedButton(
+                        ElevatedButton.icon(          
                           onPressed: () {
                             overlayEntry?.remove();
                             _registrarMascota(); // 👉 Llama a la función que hace el registro
                           },
+                          icon: Image.asset(
+                            "assets/Correcto.png", // tu icono
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text('Sí', style: TextStyle(color: Colors.white, fontSize: 16)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text(
-                            'Sí',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                      
                         ),
                       ],
                     ),
@@ -258,19 +257,71 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
 
 
   Future<void> _registrarMascota() async {
-    // Validar el formulario y campos obligatorios
-    if (!_formKey.currentState!.validate() ||
-        especieSeleccionada == null ||
-        generoSeleccionado == null ||
-        _fechaNacimiento == null) {
+   List<String> camposFaltantes = [];
+
+    // Helper reutilizable para detectar "vacío"
+    bool estaVacio(dynamic valor) {
+      if (valor == null) return true;
+      // Si es un TextEditingController -> usar .text
+      if (valor is TextEditingController) {
+        return valor.text.trim().isEmpty;
+      }
+      // Si es String
+      if (valor is String) {
+        return valor.trim().isEmpty;
+      }
+      // Para otros tipos (bool, DateTime, etc.) usamos su toString seguro
+      return valor.toString().trim().isEmpty;
+    }
+
+    // Validaciones
+    // Validar formulario (si estás usando validators dentro de los TextFormField,
+    // _formKey.currentState!.validate() debe haberse llamado antes si quieres incluirlo)
+    if (!_formKey.currentState!.validate()) {
+      camposFaltantes.add("Campos del formulario");
+    }
+
+    // Especie (si es String o variable seleccionada)
+    if (estaVacio(especieSeleccionada)) {
+      camposFaltantes.add("Especie");
+    }
+
+    // Género
+    if (estaVacio(generoSeleccionado)) {
+      camposFaltantes.add("Género");
+    }
+
+    // Fecha de nacimiento (DateTime o String)
+    if (_fechaNacimiento == null || estaVacio(_fechaNacimiento)) {
+      camposFaltantes.add("Fecha de nacimiento");
+    }
+
+    // Peso (TextEditingController)
+    if (estaVacio(pesoController)) {
+      camposFaltantes.add("Peso");
+    }
+
+    // Esterilizado (si es un bool o una selección)
+    if (esterilizado == null || estaVacio(esterilizado)) {
+      camposFaltantes.add("Esterilizado");
+    }
+
+    // Raza (TextEditingController)
+    if (estaVacio(razaController)) {
+      camposFaltantes.add("Raza");
+    }
+
+    // Mostrar mensaje si faltan campos
+    if (camposFaltantes.isNotEmpty) {
       mostrarMensajeFlotante(
         context,
-        "❌ Por favor completa todos los campos obligatorios.",
+        "⚠️ Faltan campos: ${camposFaltantes.join(', ')}",
         colorFondo: Colors.white,
         colorTexto: const Color.fromARGB(255, 211, 60, 60),
       );
       return;
     }
+
 
     // Formatear la fecha
     String? fechaStr;
@@ -538,51 +589,62 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                               tipo: 'letras',
                               hintText: "ej: Pérez",
                             ),
-                            _dropdownConEtiqueta(
-                              "Especie",
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: Image.asset(
-                                    especieSeleccionada != null
-                                        ? iconosEspecie[especieSeleccionada!]!
-                                        : 'assets/Especie.png',
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _dropdownConEtiqueta(
+                                    "Especie",
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Image.asset(
+                                          especieSeleccionada != null
+                                              ? iconosEspecie[especieSeleccionada!]!
+                                              : 'assets/Especie.png',
+                                        ),
+                                      ),
+                                    ),
+                                    ["Perro", "Gato", "Ave", "Conejo", "Otro"],
+                                    "Seleccione",
+                                    valorInicial: especieSeleccionada,
+                                    onChanged: (valor) {
+                                      setState(() {
+                                        especieSeleccionada = valor;
+                                      });
+                                    },
                                   ),
                                 ),
-                              ),
-                              ["Perro", "Gato", "Ave", "Conejo", "Otro"],
-                              "Seleccione especie",
-                              valorInicial: especieSeleccionada,
-                              onChanged: (valor) {
-                                setState(() {
-                                  especieSeleccionada = valor;
-                                });
-                              },
-                            ),
-                            _dropdownConEtiqueta(
-                              "Género",
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: Image.asset(
-                                    generoSeleccionado != null
-                                        ? iconosGenero[generoSeleccionado!]!
-                                        : 'assets/Genero.png',
+
+                                const SizedBox(width: 12), // espacio entre los dos campos
+
+                                Expanded(
+                                  child: _dropdownConEtiqueta(
+                                    "Género",
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Image.asset(
+                                          generoSeleccionado != null
+                                              ? iconosGenero[generoSeleccionado!]!
+                                              : 'assets/Genero.png',
+                                        ),
+                                      ),
+                                    ),
+                                    ["Macho", "Hembra"],
+                                    "Seleccione",
+                                    valorInicial: generoSeleccionado,
+                                    onChanged: (valor) {
+                                      setState(() {
+                                        generoSeleccionado = valor;
+                                      });
+                                    },
                                   ),
                                 ),
-                              ),
-                              ["Macho", "Hembra"],
-                              "Seleccione género",
-                              valorInicial: generoSeleccionado,
-                              onChanged: (valor) {
-                                setState(() {
-                                  generoSeleccionado = valor;
-                                });
-                              },
+                              ],
                             ),
                             _campoTextoConEtiqueta(
                               "Raza",
@@ -594,17 +656,32 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                               tipo: 'letras',
                               hintText: "ej: Labrador / Persa / Loro Amazónico",
                             ),
-                            _campoPeso("Peso", "assets/Peso.png", pesoController),
                             _campoFechaNacimiento(context),
                     
-                            _dropdownConEtiquetaEsterilizado(
-                                "¿Está esterilizado?",
-                                _icono("assets/carpeta.png"),
-                                ["Si", "No"],
-                                "Seleccione",
-                                esterilizado,
-                                (val) => setState(() => esterilizado = val),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _campoPeso(
+                                    "Peso",
+                                    "assets/Peso.png",
+                                    pesoController,
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12), // espacio horizontal
+
+                                Expanded(
+                                  child: _dropdownConEtiquetaEsterilizado(
+                                    "¿Está esterilizado?",
+                                    _icono("assets/carpeta.png"),
+                                    ["Si", "No"],
+                                    "Seleccione",
+                                    esterilizado,
+                                    (val) => setState(() => esterilizado = val),
+                                  ),
+                                ),
+                              ],
+                            ),
 
                             const SizedBox(height: 20),
 
@@ -828,8 +905,19 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
             lastDate: DateTime.now(),
             builder: (context, child) {
               return Theme(
-                data: ThemeData.dark().copyWith(
-                  colorScheme: ColorScheme.dark(primary: Colors.blue[700]!),
+                data: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.light(
+                    primary: Color(0xFF3A97F5),   // 🌟 Color celeste (botones, selección)
+                    onPrimary: Colors.white,      // Texto dentro de los botones
+                    surface: Colors.white,        // Fondo del calendario
+                    onSurface: Colors.black87,    // Texto general
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF3A97F5), // Color de "Cancelar"
+                    ),
+                  ),
                 ),
                 child: child!,
               );

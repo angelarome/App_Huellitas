@@ -235,26 +235,68 @@ class _AgregarHistorialScreenState extends State<AgregarHistorialScreen> {
 
   Future<void> _registrarHistorial() async {
 
-    // Validación de campos requeridos
-    if (
-      _horaSeleccionada == null ||
-      _fecha == null ||
-      nombre_veterinariaController.text.trim().isEmpty ||
-      pesoController.text.trim().isEmpty ||
-      motivoController.text.trim().isEmpty ||
-      diagnosticoController.text.trim().isEmpty ||
-      tratamientoController.text.trim().isEmpty ||
-      observacionesController.text.trim().isEmpty
-    ) {
-      mostrarMensajeFlotante(
-        context,
-        "❌ Por favor completa todos los campos obligatorios.",
-        colorFondo: Colors.white,
-        colorTexto: Colors.redAccent,
-      );
-      return;
+    List<String> errores = [];
+
+    // Hora
+    if (_horaSeleccionada == null) {
+      errores.add("hora");
     }
 
+    // Fecha
+    if (_fecha == null) {
+      errores.add("fecha");
+    }
+
+    // Nombre veterinaria
+    if (nombre_veterinariaController.text.trim().isEmpty) {
+      errores.add("nombre de la veterinaria");
+    }
+
+    // Peso
+    if (pesoController.text.trim().isEmpty) {
+      errores.add("peso");
+    }
+
+    // Motivo
+    if (motivoController.text.trim().isEmpty) {
+      errores.add("motivo");
+    }
+
+    // Diagnóstico
+    if (diagnosticoController.text.trim().isEmpty) {
+      errores.add("diagnóstico");
+    }
+
+    // Tratamiento
+    if (tratamientoController.text.trim().isEmpty) {
+      errores.add("tratamiento");
+    }
+
+    // Observaciones
+    if (observacionesController.text.trim().isEmpty) {
+      errores.add("observaciones");
+    }
+
+
+    // --- Mostrar errores ---
+    if (errores.isNotEmpty) {
+      if (errores.length == 1) {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Falta llenar: ${errores.first}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      } else {
+        mostrarMensajeFlotante(
+          context,
+          "⚠️ Faltan: ${errores.join(', ')}.",
+          colorFondo: Colors.white,
+          colorTexto: Colors.redAccent,
+        );
+      }
+      return;
+    }
     // Formatear fecha (YYYY-MM-DD)
     String fecha = "${_fecha!.year.toString().padLeft(4, '0')}-"
                   "${_fecha!.month.toString().padLeft(2, '0')}-"

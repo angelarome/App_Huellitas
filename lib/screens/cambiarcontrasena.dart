@@ -30,17 +30,31 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
   bool _ocultarPassword = true;
   bool _ocultarConfirmar = true;
 
-  Future<void> contrasena() async {
-  if (passwordController.text != confirmarController.text) {
+  Future contrasena() async {
+    String pass = passwordController.text.trim();
+    String confirmar = confirmarController.text.trim();
+
+    // ✔ Validar campos vacíos
+    if (pass.isEmpty || confirmar.isEmpty) {
     mostrarMensajeFlotante(
-      context,
-      "❌ Las contraseñas no coinciden",
-      colorFondo: const Color.fromARGB(255, 250, 180, 180),
-      colorTexto: Colors.black,
+    context,
+    "⚠️ Debes completar ambos campos de contraseña",
+    colorFondo: const Color.fromARGB(255, 250, 180, 180),
+    colorTexto: Colors.black,
     );
     return;
-  }
+    }
 
+    // ✔ Validar coincidencia
+    if (pass != confirmar) {
+    mostrarMensajeFlotante(
+    context,
+    "❌ Las contraseñas no coinciden",
+    colorFondo: const Color.fromARGB(255, 250, 180, 180),
+    colorTexto: Colors.black,
+    );
+    return;
+    }
   mostrarLoading(context);
 
   final response = await http.put(
@@ -53,8 +67,6 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
       "rol": widget.rol
     }),
   );
-  
-
   
   ocultarLoading(context);
   if (response.statusCode == 200) {
@@ -227,11 +239,11 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
                       width: 350,
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 251, 81, 81).withOpacity(0.95),
+                        color: const Color.fromARGB(255, 170, 159, 159).withOpacity(0.6),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color.fromARGB(255, 189, 27, 27).withOpacity(0.4),
+                            color: const Color.fromARGB(255, 142, 131, 131).withOpacity(0.4),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),

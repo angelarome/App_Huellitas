@@ -107,10 +107,12 @@ def registrar_usuario():
     direccion = data.get("direccion")
     contrasena = data.get("contrasena")
     imagen_base64 = data.get("imagen")
+    departamento = data.get("departamento")
+    ciudad = data.get("ciudad")
 
     contrasena_cifrada = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    if not all([cedula, nombre, apellido, telefono, correo, direccion, contrasena]):
+    if not all([cedula, nombre, apellido, telefono, correo, direccion, contrasena, departamento, ciudad]):
         return jsonify({"error": "Faltan campos obligatorios"}), 400
     
     db = get_connection()
@@ -146,10 +148,10 @@ def registrar_usuario():
 
     # 3️⃣ Insertar en dueno_mascotas
     sql_dueno = """
-        INSERT INTO dueno_mascotas (id_dueno, cedula, nombre, apellido, telefono, correo, direccion, contraseña, foto_perfil)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO dueno_mascotas (id_dueno, cedula, nombre, apellido, telefono, correo, departamento, ciudad, direccion, contraseña, foto_perfil)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    valores_dueno = (id_usuario, cedula, nombre, apellido, telefono, correo, direccion, contrasena_cifrada, imagen_base64)
+    valores_dueno = (id_usuario, cedula, nombre, apellido, telefono, correo, departamento, ciudad, direccion, contrasena_cifrada, imagen_base64)
     cursor.execute(sql_dueno, valores_dueno)
     db.commit()
     
@@ -159,7 +161,7 @@ def registrar_usuario():
         print("Error enviando correo:", e)
 
     # 🔹 Recuperar los datos recién insertados
-    cursor.execute("SELECT id_dueno, cedula, nombre, apellido, telefono, direccion, foto_perfil FROM dueno_mascotas WHERE id_dueno = %s", 
+    cursor.execute("SELECT id_dueno, cedula, nombre, apellido, telefono, departamento, ciudad, direccion, foto_perfil FROM dueno_mascotas WHERE id_dueno = %s", 
                    (id_usuario,))
     usuario = cursor.fetchone()
     
@@ -205,7 +207,7 @@ def login():
 
     if rol == "dueno":
         sql_detalle = """
-            SELECT id_dueno, cedula, nombre, apellido, telefono, correo, direccion, foto_perfil 
+            SELECT id_dueno, cedula, nombre, apellido, telefono, correo, departamento, ciudad, direccion, foto_perfil 
             FROM dueno_mascotas
             WHERE id_dueno = %s
         """
@@ -770,6 +772,17 @@ def obtener_mascotas():
     cursor.close()
     db.close()
     
+    for m in resultados:
+        if m["fecha_nacimiento"]:
+            m["fecha_nacimiento"] = m["fecha_nacimiento"].strftime("%Y-%m-%d")
+        imagen = m.get("imagen_perfil")
+        if imagen:
+            if isinstance(imagen, (bytes, bytearray)):
+                m["imagen_perfil"] = base64.b64encode(imagen).decode("utf-8")
+            # Si ya es texto (por ejemplo, un path o un base64), lo dejamos igual
+            elif isinstance(imagen, str):
+                m["imagen_perfil"] = imagen
+    
     return jsonify({"mascotas": resultados})
 
 @app.route('/eliminar_medicamento', methods=['DELETE'])
@@ -904,10 +917,12 @@ def registrarTienda():
     metodopago = data.get("metodopago")
     correo = data.get("correo")
     contrasena = data.get("contrasena")
+    departamento = data.get("departamento")
+    ciudad = data.get("ciudad")
     
     contrasena_cifrada = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    if not all([cedulaUsuario, imagen, nombre_negocio, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, correo, contrasena]):
+    if not all([cedulaUsuario, imagen, nombre_negocio, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, correo, contrasena, departamento, ciudad]):
         return jsonify({"error": "Faltan campos obligatorios"}), 400
 
     db = get_connection()
@@ -942,10 +957,10 @@ def registrarTienda():
 
     # 3️⃣ Insertar en dueno_mascotas
     sql = """
-        INSERT INTO tienda (idtienda, imagen, cedula_usuario, nombre_negocio, descripcion, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierresabado, horariodomingo, cierredomingo, metodo_pago, correo, contrasena)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO tienda (idtienda, imagen, cedula_usuario, nombre_negocio, descripcion, departamento, ciudad, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierresabado, horariodomingo, cierredomingo, metodo_pago, correo, contrasena)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    valores = (id_usuario, imagen, cedulaUsuario, nombre_negocio, descripcion, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, horariodomingos, cierredomingos, metodopago, correo, contrasena_cifrada)
+    valores = (id_usuario, imagen, cedulaUsuario, nombre_negocio, descripcion, departamento, ciudad, direccion, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, horariodomingos, cierredomingos, metodopago, correo, contrasena_cifrada)
     cursor.execute(sql, valores)
     db.commit()
 
@@ -961,7 +976,8 @@ def registrarTienda():
             "cedulaUsuario": cedulaUsuario,
             "nombre_negocio": nombre_negocio,
             "descripcion": descripcion,
-            "direccion": direccion,
+            "departamento": departamento,
+            "ciudad": ciudad,
             "telefono": telefono,
             "domicilio": domicilio,
             "horariolunesviernes": horariolunesviernes,
@@ -1323,6 +1339,8 @@ def registrarVeterinaria():
     tarifa = data.get("tarifa")
     correo = data.get("correo")
     contrasena = data.get("contrasena")
+    departamento = data.get("departamento")
+    ciudad = data.get("ciudad")
 
     # 🔐 Encriptar contraseña
     contrasena_cifrada = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -1330,7 +1348,7 @@ def registrarVeterinaria():
     # 🚨 Validar campos obligatorios
     if not all([cedulaUsuario, nombre_veterinaria, direccion, experiencia, telefono, domicilio,
                 horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado,
-                metodopago, tarifa, correo, contrasena]):
+                metodopago, tarifa, correo, contrasena, departamento, ciudad]):
         return jsonify({"error": "⚠️ Faltan campos obligatorios"}), 400
 
     db = get_connection()
@@ -1364,15 +1382,15 @@ def registrarVeterinaria():
         sql_vet = """
             INSERT INTO veterinaria (
                 id_veterinaria, cedula_usuario, nombre_veterinaria, imagen, tarifa, telefono, 
-                descripcion, experiencia, certificados, direccion, tipo_pago, domicilio, 
+                descripcion, experiencia, certificados, departamento, ciudad, direccion, tipo_pago, domicilio, 
                 horariolunesviernes, cierrelunesviernes, horariosabado, cierresabado, 
                 horariodomingo, cierredomingo, correo, contrasena
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(sql_vet, (
             id_usuario, cedulaUsuario, nombre_veterinaria, imagen, tarifa, telefono,
-            descripcion, experiencia, certificado, direccion, metodopago, domicilio,
+            descripcion, experiencia, certificado, departamento, ciudad, direccion, metodopago, domicilio,
             horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado,
             horariodomingos, cierredomingos, correo, contrasena_cifrada
         ))
@@ -1565,7 +1583,6 @@ def editar_comentarioVeterinaria():
 @app.route("/registrarProducto", methods=["POST"])
 def registrar_producto():
     data = request.get_json()
-    print("📦 Datos recibidos:", data)
     tienda_id = data.get("tienda_id")
     nombre = data.get("nombre")
     precio = data.get("precio")
@@ -1743,10 +1760,12 @@ def actualizar_tienda():
         horariodomingos = data.get("horariodomingos")
         cierredomingos = data.get("cierredomingos")
         metodopago = data.get("metodopago")
+        departamento = data.get("departamento")
+        ciudad = data.get("ciudad")
 
         if not all([id, cedulaUsuario, imagen, nombre_negocio, direccion, telefono,
                     domicilio, horariolunesviernes, cierrelunesviernes,
-                    horariosabado, cierrehorasabado, metodopago]):
+                    horariosabado, cierrehorasabado, metodopago, departamento, ciudad]):
             return jsonify({"error": "Faltan campos obligatorios"}), 400
 
         db = get_connection()
@@ -1761,6 +1780,8 @@ def actualizar_tienda():
                 cedula_usuario = %s, 
                 nombre_negocio = %s, 
                 descripcion = %s, 
+                departamento = %s,
+                ciudad = %s,
                 direccion = %s, 
                 telefono = %s, 
                 domicilio = %s, 
@@ -1773,7 +1794,7 @@ def actualizar_tienda():
                 metodo_pago = %s 
             WHERE idtienda = %s
         """
-        valores = (imagen, cedulaUsuario, nombre_negocio, descripcion, direccion, telefono, domicilio,
+        valores = (imagen, cedulaUsuario, nombre_negocio, descripcion, departamento, ciudad, direccion, telefono, domicilio,
                 horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado,
                 horariodomingos, cierredomingos, metodopago, id)
         cursor.execute(sql, valores)
@@ -1791,6 +1812,8 @@ def actualizar_tienda():
                 "cedulaUsuario": cedulaUsuario,
                 "nombre_negocio": nombre_negocio,
                 "descripcion": descripcion,
+                "departamento": departamento,
+                "ciudad": ciudad,
                 "direccion": direccion,
                 "telefono": telefono,
                 "domicilio": domicilio,
@@ -1830,8 +1853,10 @@ def actualizar_veterinaria():
         metodopago = data.get("metodopago")
         certificado = data.get("certificado")
         tarifa = data.get("tarifa")
+        departamento = data.get("departamento")
+        ciudad = data.get("ciudad")
 
-        if not all([cedulaUsuario, imagen, nombre_veterinaria, direccion, experiencia, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa]):
+        if not all([cedulaUsuario, imagen, departamento, ciudad, nombre_veterinaria, direccion, experiencia, telefono, domicilio, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa]):
             return jsonify({"error": "Faltan campos obligatorios"}), 400
 
         db = get_connection()
@@ -1849,6 +1874,8 @@ def actualizar_veterinaria():
                 descripcion = %s, 
                 experiencia = %s,
                 certificados = %s,
+                departamento = %s,
+                ciudad = %s,
                 direccion = %s, 
                 tipo_pago = %s,
                 domicilio = %s, 
@@ -1860,7 +1887,7 @@ def actualizar_veterinaria():
                 cierredomingo = %s 
             WHERE id_veterinaria = %s
         """
-        valores = (nombre_veterinaria, imagen, tarifa, telefono, descripcion, experiencia, certificado, direccion, metodopago, domicilio,
+        valores = (nombre_veterinaria, imagen, tarifa, telefono, descripcion, experiencia, certificado, departamento, ciudad, direccion, metodopago, domicilio,
                 horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado,
                 horariodomingos, cierredomingos, id)
         cursor.execute(sql, valores)
@@ -1882,6 +1909,8 @@ def actualizar_veterinaria():
                 "descripcion": descripcion,
                 "experiencia": experiencia,
                 "certificado": certificado,
+                "departamento": departamento,
+                "ciudad": ciudad,
                 "direccion": direccion,
                 "metodopago": metodopago,
                 "domicilio": domicilio,
@@ -1895,7 +1924,6 @@ def actualizar_veterinaria():
             }), 200
     
     except Exception as e:
-        print("💥 Error en actualizar_tienda:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route("/registrarPaseador", methods=["POST"])
@@ -1920,11 +1948,13 @@ def registrarPaseador():
     tarifa = data.get("tarifa")
     correo = data.get("correo")
     contrasena = data.get("contrasena")
+    departamento = data.get("departamento")
+    ciudad = data.get("ciudad")
 
     # 🔐 Encriptar contraseña
     contrasena_cifrada = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    if not all([nombre, apellido, cedulaUsuario, imagen, direccion, experiencia, telefono, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa, correo, contrasena]):
+    if not all([nombre, apellido, cedulaUsuario, imagen, direccion, experiencia, telefono, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa, correo, contrasena, departamento, ciudad]):
         return jsonify({"error": "Faltan campos obligatorios"}), 400
 
     db = get_connection()
@@ -1956,10 +1986,10 @@ def registrarPaseador():
 
         # Insertar higiene
         sql = """
-            INSERT INTO paseador (id_paseador, nombre, apellido, cedula_usuario, imagen, certificado, zona_servicio, experiencia, tarifa_hora, telefono, descripcion, tipo_pago, horariolunesviernes, cierrelunesviernes, horariosabado, cierresabado, horariodomingo, cierredomingo, correo, contrasena)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO paseador (id_paseador, nombre, apellido, cedula_usuario, imagen, certificado, departamento, ciudad, zona_servicio, experiencia, tarifa_hora, telefono, descripcion, tipo_pago, horariolunesviernes, cierrelunesviernes, horariosabado, cierresabado, horariodomingo, cierredomingo, correo, contrasena)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        valores = (id_usuario, nombre, apellido, cedulaUsuario, imagen, certificado, direccion, experiencia, tarifa, telefono, descripcion, metodopago, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, horariodomingos, cierredomingos, correo, contrasena_cifrada)
+        valores = (id_usuario, nombre, apellido, cedulaUsuario, imagen, certificado, departamento, ciudad, direccion, experiencia, tarifa, telefono, descripcion, metodopago, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, horariodomingos, cierredomingos, correo, contrasena_cifrada)
         cursor.execute(sql, valores)
         db.commit()
 
@@ -2163,9 +2193,11 @@ def actualizar_Paseador():
         cierredomingos = data.get("cierredomingos")
         metodopago = data.get("metodopago")
         certificado = data.get("certificado")
+        departamento = data.get("departamento")
+        ciudad = data.get("ciudad")
 
 
-        if not all([nombre, apellido, cedulaUsuario, imagen, direccion, experiencia, telefono, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa]):
+        if not all([nombre, apellido, cedulaUsuario, imagen, direccion, experiencia, telefono, horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado, metodopago, tarifa, ciudad, departamento]):
             return jsonify({"error": "Faltan campos obligatorios"}), 400
 
         db = get_connection()
@@ -2181,6 +2213,8 @@ def actualizar_Paseador():
                 cedula_usuario = %s,
                 imagen = %s,
                 certificado = %s, 
+                departamento = %s,
+                ciudad = %s,
                 zona_servicio = %s,
                 experiencia = %s,
                 telefono = %s, 
@@ -2195,7 +2229,7 @@ def actualizar_Paseador():
                 cierredomingo = %s 
             WHERE id_paseador = %s
         """
-        valores = (nombre, apellido, cedulaUsuario, imagen, certificado, direccion, experiencia, telefono, descripcion, tarifa, metodopago,
+        valores = (nombre, apellido, cedulaUsuario, imagen, certificado, departamento, ciudad, direccion, experiencia, telefono, descripcion, tarifa, metodopago,
                 horariolunesviernes, cierrelunesviernes, horariosabado, cierrehorasabado,
                 horariodomingos, cierredomingos, id_paseador)
         cursor.execute(sql, valores)
@@ -2213,6 +2247,8 @@ def actualizar_Paseador():
                 "descripcion": descripcion,
                 "experiencia": experiencia,
                 "certificado": certificado,
+                "departamento": departamento,
+                "ciudad": ciudad,
                 "direccion": direccion,
                 "metodopago": metodopago,
                 "horariolunesviernes": horariolunesviernes,
@@ -3352,7 +3388,7 @@ def registrar_reserva():
             int(data["cantidad"]),
             fecha_reserva_str,  # enviar como string
             fecha_finalizado_str,  # enviar como string
-            "pendiente",
+            "Pendiente",
             total_float,  # enviar como float
             data["metodopago"]
         ))
@@ -3369,9 +3405,446 @@ def registrar_reserva():
         print("Error SQL:", e)  # <-- imprime el error real
         return jsonify({"error": str(e)}), 500
     
+@app.route("/registrarPedido", methods=["POST"])
+def registrar_pedido():
+    data = request.get_json()
 
+    required_fields = ["id_dueno", "id_tienda", "total", "metodopago", "fecha", "direccion"]
+    for field in required_fields:
+        if field not in data or data[field] in (None, ""):
+            return jsonify({"error": f"Falta el campo {field}"}), 400
 
+    # Parsear fechas y convertir a string
+    try:
+        fecha_reserva = datetime.strptime(data["fecha"], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return jsonify({"error": "Formato de fecha inválido. Use yyyy-MM-dd HH:mm:ss"}), 400
+
+    # Convertir total a float
+    try:
+        total_float = float(data["total"])
+    except Exception:
+        return jsonify({"error": "Total inválido, debe ser un número"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    try:
+        cursor = db.cursor()
+        query = """
+            INSERT INTO pedido (id_cliente, id_tienda, direccion_envio, estado, metodo_pago, total, fecha)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data["id_dueno"],
+            data["id_tienda"],
+            data["direccion"],
+            "Pendiente",
+            data["metodopago"],
+            total_float, 
+            fecha_reserva
+        ))
+        db.commit()
+        id_pedido = cursor.lastrowid
+        for prod in data["productos"]:
+            query_producto = """
+                INSERT INTO PedidoProducto (id_pedido, id_producto, cantidad)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query_producto, (
+                id_pedido,
+                prod["idproducto"],
+                prod["cantidadSeleccionada"]
+            ))
+
+        db.commit()
+        cursor.close()
+        db.close()
+
+        return jsonify({"message": "Reserva registrada correctamente"}), 201
+
+    except Exception as e:
+        db.rollback()
+        cursor.close()
+        db.close()
+        print("Error SQL:", e)  # <-- imprime el error real
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/mispedidos", methods=["POST"])
+def obtenerPedidos_usuario():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+
+    if not id_dueno:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+    p.idpedido,
+    p.id_cliente,
+    p.id_tienda,
+    t.nombre_negocio,    
+    p.total,
+    p.metodo_pago,
+    p.direccion_envio,
+    p.fecha,
+    p.estado,
+    pp.id_producto,
+    pp.cantidad,
+    pr.nombre AS nombre_producto,
+    pr.precio AS precio_producto,
+    pr.imagen AS foto_producto
+    FROM Pedido p
+    JOIN Tienda t ON p.id_tienda = t.idtienda   
+    JOIN PedidoProducto pp ON p.idpedido = pp.id_pedido
+    JOIN Producto pr ON pp.id_producto = pr.idproducto
+    WHERE p.id_cliente = %s;
+    """, (id_dueno,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha'] = r['fecha'].strftime("%Y-%m-%d") if isinstance(r['fecha'], datetime) else str(r['fecha'])
+
+        resultados_serializables.append(r)
+
+    return jsonify({"pedido": resultados_serializables})
+
+@app.route("/cancelar_pedido", methods=["PUT"])
+def cancelar_pedido():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE pedido SET estado = %s WHERE idpedido = %s"
+    cursor.execute(sql, ("Cancelado", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Pedido cancelado correctamente"}), 200
+
+@app.route("/recibido_pedido", methods=["PUT"])
+def recibido_pedido():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE pedido SET estado = %s WHERE idpedido = %s"
+    cursor.execute(sql, ("Recibido", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Pedido recibido correctamente"}), 200
+
+@app.route("/norecibido_pedido", methods=["PUT"])
+def Norecibido_pedido():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE pedido SET estado = %s WHERE idpedido = %s"
+    cursor.execute(sql, ("No recibido", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Pedido recibido correctamente"}), 200
+
+@app.route("/misreservas", methods=["POST"])
+def obtenerReservas_usuario():
+    data = request.get_json()
+    id_dueno = data.get("id_dueno")
+
+    if not id_dueno:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE reserva
+        SET estado = 'Vencida'
+        WHERE estado = 'pendiente' AND fecha_vencimiento < NOW();
+    """)
+    db.commit()
+    cursor.close()
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+    r.idreserva,
+    r.id_tienda,
+    t.nombre_negocio,
+    r.id_producto,
+    p.nombre AS nombre_producto,
+    p.imagen AS imagen_producto,
+    p.precio AS precio_producto,
+    r.cantidad,
+    r.fecha_reserva,
+    r.fecha_vencimiento,
+    r.estado,
+    r.total,
+    r.tipo_pago
+    FROM reserva r
+    JOIN producto p ON r.id_producto = p.idproducto
+    JOIN tienda t ON r.id_tienda = t.idtienda
+    WHERE r.id_cliente = %s;
+    """, (id_dueno,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha_reserva'] = r['fecha_reserva'].strftime("%Y-%m-%d") if isinstance(r['fecha_reserva'], datetime) else str(r['fecha_reserva'])
+        r['fecha_vencimiento'] = r['fecha_vencimiento'].strftime("%Y-%m-%d %H:%M:%S") if isinstance(r['fecha_vencimiento'], datetime) else str(r['fecha_vencimiento'])
+        resultados_serializables.append(r)
+
+    return jsonify({"reserva": resultados_serializables})
+
+@app.route("/cancelar_reserva", methods=["PUT"])
+def cancelar_reserva():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE reserva SET estado = %s WHERE idreserva = %s"
+    cursor.execute(sql, ("Cancelada", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Reserva cancelada correctamente"}), 200
+
+@app.route("/reserva_completada", methods=["PUT"])
+def completar_reserva():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE reserva SET estado = %s WHERE idreserva = %s"
+    cursor.execute(sql, ("Recogida", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Reserva completada correctamente"}), 200
+
+@app.route("/pedidos", methods=["POST"])
+def obtenerPedido():
+    data = request.get_json()
+    id_tienda = data.get("id_tienda")
+
+    if not id_tienda:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+    p.idpedido,
+    p.id_cliente,
+    dm.nombre AS nombre_cliente,
+    dm.apellido AS apellido_cliente,
+    p.id_tienda,
+    t.nombre_negocio,
+    p.total,
+    p.metodo_pago,
+    p.direccion_envio,
+    p.fecha,
+    p.estado,
+    pp.id_producto,
+    pp.cantidad,
+    pr.nombre AS nombre_producto,
+    pr.precio AS precio_producto,
+    pr.imagen AS foto_producto
+    FROM Pedido p
+    JOIN Tienda t ON p.id_tienda = t.idtienda
+    JOIN PedidoProducto pp ON p.idpedido = pp.id_pedido
+    JOIN Producto pr ON pp.id_producto = pr.idproducto
+    LEFT JOIN dueno_mascotas dm ON p.id_cliente = dm.id_dueno
+    WHERE p.id_tienda = %s;
+    """, (id_tienda,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha'] = r['fecha'].strftime("%Y-%m-%d") if isinstance(r['fecha'], datetime) else str(r['fecha'])
+
+        resultados_serializables.append(r)
+
+    return jsonify({"pedido": resultados_serializables})
+
+@app.route("/enviado_pedido", methods=["PUT"])
+def enviado_pedido():
+    data = request.get_json()
+    id_pedido = data.get("id")
+    productos = data.get("productos", [])
+
+    if not id_pedido:
+        return jsonify({"error": "Falta id del pedido"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+
+    try:
+        # 1️⃣ Cambiar estado del pedido
+        sql_pedido = "UPDATE pedido SET estado = %s WHERE idpedido = %s"
+        cursor.execute(sql_pedido, ("Enviado", id_pedido))
+
+        # 2️⃣ Restar inventario por cada producto
+        for item in productos:
+            id_producto = item.get("id_producto")
+            cantidad = item.get("cantidad")
+
+            if id_producto and cantidad:
+                sql_resta = """
+                    UPDATE producto 
+                    SET cantidad_disponible = cantidad_disponible - %s
+                    WHERE idproducto = %s
+                """
+                cursor.execute(sql_resta, (cantidad, id_producto))
+
+        db.commit()
+        return jsonify({"mensaje": "Pedido enviado y stock actualizado"}), 200
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        db.close()
+        
+@app.route("/reservas", methods=["POST"])
+def obtenerReservas():
+    data = request.get_json()
+    id_tienda = data.get("id_tienda")
+
+    if not id_tienda:
+        return jsonify({"error": "Falta la cédula"}), 400
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+    
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE reserva
+        SET estado = 'Vencida'
+        WHERE estado = 'pendiente' AND fecha_vencimiento < NOW();
+    """)
+    db.commit()
+    cursor.close()
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+    SELECT 
+    r.idreserva,
+    r.id_tienda,
+    t.nombre_negocio,
+    r.id_producto,
+    p.nombre AS nombre_producto,
+    p.imagen AS imagen_producto,
+    p.precio AS precio_producto,
+    r.cantidad,
+    r.fecha_reserva,
+    r.fecha_vencimiento,
+    r.estado,
+    r.total,
+    r.tipo_pago,
+    dm.nombre AS nombre_cliente,
+    dm.apellido AS apellido_cliente
+    FROM reserva r
+    JOIN producto p ON r.id_producto = p.idproducto
+    JOIN tienda t ON r.id_tienda = t.idtienda
+    LEFT JOIN dueno_mascotas dm ON r.id_cliente = dm.id_dueno
+    WHERE r.id_tienda = %s;
+    """, (id_tienda,))
+    resultados = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    resultados_serializables = []
+    for r in resultados:
+        # Convertir fecha y horas a string
+        r['fecha_reserva'] = r['fecha_reserva'].strftime("%Y-%m-%d") if isinstance(r['fecha_reserva'], datetime) else str(r['fecha_reserva'])
+        r['fecha_vencimiento'] = r['fecha_vencimiento'].strftime("%Y-%m-%d %H:%M:%S") if isinstance(r['fecha_vencimiento'], datetime) else str(r['fecha_vencimiento'])
+        resultados_serializables.append(r)
+
+    return jsonify({"reserva": resultados_serializables})
+
+@app.route("/reserva_aceptada", methods=["PUT"])
+def aceptar_reserva():
+    data = request.get_json()
+    id = data.get("id")
+
+    db = get_connection()
+    if db is None:
+        return jsonify({"error": "No hay conexión a la base de datos"}), 500
+
+    cursor = db.cursor()
+    sql = "UPDATE reserva SET estado = %s WHERE idreserva = %s"
+    cursor.execute(sql, ("Aceptada", id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"mensaje": "Reserva aceptada correctamente"}), 200
 
 if __name__ == "__main__":
+    print("Iniciando servidor Flask...")
+    # Opcional: probar la conexión antes de iniciar
+    conn = get_connection()
+    if conn:
+        print("Conexión exitosa a MySQL")
+        conn.close()
+    else:
+        print("Fallo en la conexión a MySQL")
+    
+    # Ejecutar Flask
     app.run(host="0.0.0.0", port=5000, debug=True)
     

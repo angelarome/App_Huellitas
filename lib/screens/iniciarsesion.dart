@@ -27,9 +27,31 @@ class LoginScreen extends StatefulWidget {
 
 
 class _LoginScreenState extends State<LoginScreen> {
+  
   bool _ocultarPassword = true;
 
   Future<void> iniciarSesion() async {
+    if (correoController.text.trim().isEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor ingresa tu correo",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+      return; // detiene la función
+    }
+
+    if (passwordController.text.trim().isEmpty) {
+      mostrarMensajeFlotante(
+        context,
+        "❌ Por favor ingresa tu contraseña",
+        colorFondo: const Color.fromARGB(255, 250, 180, 180),
+        colorTexto: Colors.black,
+      );
+      return; // detiene la función
+    }
+
+    mostrarLoading(context);
     final url = Uri.parse("http://localhost:5000/login");
     final response = await http.post(
       url,
@@ -40,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }),
     );
 
+    ocultarLoading(context);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
@@ -55,6 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final telefono = detalles["telefono"];
         final direccion = detalles["direccion"];
         final foto = detalles["foto_perfil"];
+        final departamento = detalles["departamento"];
+        final ciudad = detalles["ciudad"];
 
         final Uint8List bytes = base64Decode(foto);
 
@@ -69,6 +94,8 @@ class _LoginScreenState extends State<LoginScreen> {
               telefono: telefono,
               direccion: direccion,
               fotoPerfil: bytes,
+              departamento: departamento,
+              ciudad: ciudad,
             ),
           ),
         );
@@ -125,6 +152,23 @@ class _LoginScreenState extends State<LoginScreen> {
           "❌ Usuario o contraseña incorrectos",
         );
     }
+  } 
+
+  void ocultarLoading(BuildContext context) {
+    Navigator.of(context).pop(); // cierra el diálogo
+  }
+
+
+  void mostrarLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // No se puede cerrar tocando afuera
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 
   void mostrarMensajeFlotante(BuildContext context, String mensaje, {Color colorFondo = Colors.white, Color colorTexto = Colors.black}) {
@@ -241,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 320,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 205, 192, 192).withOpacity(0.6),
+                      color: const Color.fromARGB(255, 170, 159, 159).withOpacity(0.6),
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(

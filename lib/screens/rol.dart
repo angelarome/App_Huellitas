@@ -74,6 +74,9 @@ class Rol1Screen extends StatelessWidget {
                           ),
                           actions: [
                             TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor: Color(0xFF42A5F5), // Azul clarito / celeste
+                              ),
                               child: Text('Cerrar'),
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -85,7 +88,7 @@ class Rol1Screen extends StatelessWidget {
                     );
                   },
                   child: Image.asset(
-                    'assets/ayudar.jpg',
+                    'assets/ayudar.png',
                     width: 32,
                     height: 32,
                   ),
