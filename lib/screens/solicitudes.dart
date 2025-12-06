@@ -48,7 +48,7 @@ class _SolicitudesState extends State<Solicitudes> {
   Future<void> _obtenerMascotas() async {
     setState(() => cargando = true);
 
-    final url = Uri.parse("http://localhost:5000/mascotas");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mascotas");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -86,7 +86,7 @@ class _SolicitudesState extends State<Solicitudes> {
     setState(() => cargandoSolicitudes = true);
 
     try {
-      final url = Uri.parse("http://localhost:5000/obtener_solicitudes");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtener_solicitudes");
 
       final response = await http.post(
         url,
@@ -154,7 +154,7 @@ class _SolicitudesState extends State<Solicitudes> {
       );
       return;
     }
-    final url = Uri.parse("http://localhost:5000/enviar_solicitud");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/enviar_solicitud");
 
     try {
       final response = await http.post(
@@ -202,7 +202,7 @@ class _SolicitudesState extends State<Solicitudes> {
   }
 
   Future<void> cancelarSolicitud(int id_solicitud) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_solicitud");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_solicitud");
 
     final response = await http.put(
       url,
@@ -233,7 +233,7 @@ class _SolicitudesState extends State<Solicitudes> {
   }
 
   Future<void> AceptarSolicitud(int id_solicitud, int id_mascota, int id_dueno) async {
-    final url = Uri.parse("http://localhost:5000/aceptar_solicitud");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/aceptar_solicitud");
 
     final response = await http.put(
       url,

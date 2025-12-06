@@ -203,7 +203,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
 
 
   Future<void> obtenerMascotasPorId() async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -226,7 +226,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
   }
 
   Future<void> eliminarHigiene() async {
-    final url = Uri.parse("http://localhost:5000/eliminar_higiene");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminar_higiene");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,

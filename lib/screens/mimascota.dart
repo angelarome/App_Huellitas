@@ -49,7 +49,7 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
   Future<void> _obtenerMascotas() async {
   setState(() => cargando = true);
 
-  final url = Uri.parse("http://localhost:5000/mascotas");
+  final url = Uri.parse("https://apphuellitas-production.up.railway.app/mascotas");
   final response = await http.post(
     url,
     headers: {"Content-Type": "application/json"},

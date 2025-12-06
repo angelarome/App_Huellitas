@@ -331,7 +331,7 @@ class _AgregarMascotaScreenState extends State<AgregarMascotaScreen> {
                 "${_fechaNacimiento!.day.toString().padLeft(2,'0')}";
     }
 
-    final url = Uri.parse("http://localhost:5000/registrarMascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarMascota");
 
     final response = await http.post(
       url,

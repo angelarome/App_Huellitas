@@ -48,7 +48,7 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
   }
   
   Future<void> _obtenerPaseador() async {
-    final url = Uri.parse("http://localhost:5000/mipaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mipaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -366,7 +366,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
 
         final imagenBase64 = base64Encode(bytes);
 
-        final url = Uri.parse("http://localhost:5000/actualizar_imagen_paseador");
+        final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_imagen_paseador");
         final response = await http.put(
           url,
           headers: {"Content-Type": "application/json"},
@@ -403,7 +403,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   Future<double> _promedio_paseador() async {
     if (_paseador.isEmpty) return 0.0;
 
-    final url = Uri.parse("http://localhost:5000/promedioPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/promedioPaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -419,7 +419,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _obtener_comentariosPaseador() async {
-    final url = Uri.parse("http://localhost:5000/comentariosPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentariosPaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -441,7 +441,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _sumarLike(int idCalificacion, int nuevosLikes) async {
-    final url = Uri.parse("http://localhost:5000/likeComentarioPaseador"); // tu endpoint Flask
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/likeComentarioPaseador"); // tu endpoint Flask
     try {
       final response = await http.post(
         url,
@@ -463,7 +463,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _obtenerCitas_paseador() async {
-    final url = Uri.parse("http://localhost:5000/paseosPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/paseosPaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -482,7 +482,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<Map<String, dynamic>?> _obtenerCitasUsuarios(int id_dueno) async {
-    final url = Uri.parse("http://localhost:5000/obtenerUsuario");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenerUsuario");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -502,7 +502,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<Map<String, dynamic>?> _obtenerMascota(String idMascota) async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -523,7 +523,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
 
   Future<void> aceptar_paseo(idCita) async {
 
-    final url = Uri.parse("http://localhost:5000/aceptar_paseo");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/aceptar_paseo");
 
     try {
       final response = await http.put(
@@ -569,7 +569,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> cancelar_paseo(idCita) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_paseo");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_paseo");
 
     try {
       final response = await http.put(

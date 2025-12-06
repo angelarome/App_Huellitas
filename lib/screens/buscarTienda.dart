@@ -32,7 +32,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
 
 
   Future<void> _obtenerTienda() async {
-    final url = Uri.parse("http://localhost:5000/tiendas"); // 👈 misma ruta del backend
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/tiendas"); // 👈 misma ruta del backend
     final response = await http.get(url); // 👈 usar GET, no POST
 
     if (response.statusCode == 200) {

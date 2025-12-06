@@ -40,7 +40,7 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
 
   
   Future<void> _obtenerMascota() async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -79,7 +79,7 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
 
 
   Future<void> _obtenerHistorial() async {
-    final url = Uri.parse("http://localhost:5000/historialClinico");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/historialClinico");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -100,7 +100,7 @@ class _VerHistorialclinicoState extends State<VerHistorialclinico> {
 
 
   Future<void> eliminarHistorial(int id_historial) async {
-    final url = Uri.parse("http://localhost:5000/eliminar_historial");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminar_historial");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,

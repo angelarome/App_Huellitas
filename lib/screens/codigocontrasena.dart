@@ -66,7 +66,7 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
 
   Future<void> _reenviarCodigo() async {
     mostrarLoading(context);
-    final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/recuperarcontrasena");
 
     final response = await http.post(
       url,
@@ -133,7 +133,7 @@ class _RecuperarCuentaCodigoState extends State<RecuperarCuentaCodigo> {
     return;
     }
 
-    final url = Uri.parse("http://localhost:5000/codigo");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/codigo");
 
     final response = await http.post(
     url,

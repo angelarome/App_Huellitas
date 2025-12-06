@@ -290,7 +290,7 @@ class _RegistroUsuarioPageState extends State<RegistroUsuarioPage> {
     // 🚫 Si algún campo está mal → detener
     if (camposInvalidos()) return;
       mostrarLoading(context);
-      final url = Uri.parse("http://localhost:5000/registrar");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrar");
 
       final response = await http.post(
         url,

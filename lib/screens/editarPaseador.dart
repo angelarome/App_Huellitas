@@ -491,7 +491,7 @@ class _EditarPaseador extends State<EditarPaseador> {
     double tarifaDecimal = double.parse(textoTarifa);
 
     mostrarLoading(context);
-    final url = Uri.parse("http://localhost:5000/actualizarPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizarPaseador");
 
     final response = await http.put(
       url,

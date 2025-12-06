@@ -36,7 +36,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
     }
     
     mostrarLoading(context);
-    final url = Uri.parse("http://localhost:5000/recuperarcontrasena");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/recuperarcontrasena");
 
     final response = await http.post(
       url,

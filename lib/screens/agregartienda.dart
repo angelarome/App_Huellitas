@@ -314,7 +314,7 @@ class _AgregarTiendaScreenState extends State<AgregarTiendaScreen> {
           : null;
 
       mostrarLoading(context);
-      final url = Uri.parse("http://localhost:5000/registrarTienda");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarTienda");
 
       final response = await http.post(
         url,

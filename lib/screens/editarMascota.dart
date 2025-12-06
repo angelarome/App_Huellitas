@@ -227,7 +227,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
 
   Future<void> obtenerMascotasPorId() async {
     try {
-      final url = Uri.parse("http://localhost:5000/obtenermascota");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -300,7 +300,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
         final imagenBase64 = base64Encode(bytes);
 
         // ✅ Enviamos al backend
-        final url = Uri.parse("http://localhost:5000/actualizar_imagen_mascota");
+        final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_imagen_mascota");
         final response = await http.put(
           url,
           headers: {"Content-Type": "application/json"},
@@ -335,7 +335,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
   }
 
   Future<void> eliminarMascota() async {
-    final url = Uri.parse("http://localhost:5000/eliminarMascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminarMascota");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,

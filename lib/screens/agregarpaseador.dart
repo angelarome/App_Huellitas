@@ -309,7 +309,7 @@ class _Agregarpaseador extends State<Agregarpaseador> {
 
       mostrarLoading(context);
       // 🌐 URL del backend
-      final url = Uri.parse("http://localhost:5000/registrarPaseador");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarPaseador");
 
       // 🧠 Datos a enviar
       final body = {

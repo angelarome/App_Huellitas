@@ -31,7 +31,7 @@ class _MascotasCompartidasState extends State<MascotasCompartidas> {
     setState(() => cargandoSolicitudes = true);
 
     try {
-      final url = Uri.parse("http://localhost:5000/obtener_mascotas_compartidas");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtener_mascotas_compartidas");
 
       final response = await http.post(
         url,

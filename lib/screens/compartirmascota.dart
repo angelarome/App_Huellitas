@@ -57,7 +57,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
 
 
   Future<void> _obtenerusuarios() async {
-    final url = Uri.parse("http://localhost:5000/usuarios"); // 👈 misma ruta del backend
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/usuarios"); // 👈 misma ruta del backend
     final response = await http.get(url); // 👈 usar GET, no POST
 
     if (response.statusCode == 200) {
@@ -91,7 +91,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
   Future<void> _obtenerMascotas() async {
     setState(() => cargando = true);
 
-    final url = Uri.parse("http://localhost:5000/mascotas");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mascotas");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -138,7 +138,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
       );
       return;
     }
-    final url = Uri.parse("http://localhost:5000/enviar_solicitud");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/enviar_solicitud");
 
     try {
       final response = await http.post(
@@ -188,7 +188,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
     setState(() => cargandoSolicitudes = true);
 
     try {
-      final url = Uri.parse("http://localhost:5000/obtener_solicitudes");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtener_solicitudes");
 
       final response = await http.post(
         url,

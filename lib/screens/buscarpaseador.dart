@@ -36,7 +36,7 @@ class _BuscarPaseador extends State<BuscarPaseador> {
 
 
   Future<void> _obtenerPaseadores() async {
-    final url = Uri.parse("http://localhost:5000/paseadores"); // 👈 misma ruta del backend
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/paseadores"); // 👈 misma ruta del backend
     final response = await http.get(url); // 👈 usar GET, no POST
 
     if (response.statusCode == 200) {

@@ -88,7 +88,7 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
     }
     
     Future<void> _obtenerPaseador() async {
-    final url = Uri.parse("http://localhost:5000/mipaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mipaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -171,7 +171,7 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
   Future<void> _obtenerMascotas() async {
     setState(() => cargando = true);
 
-    final url = Uri.parse("http://localhost:5000/mascotas");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mascotas");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -304,7 +304,7 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
       String horaInicio = "${_horaInicio!.hour.toString().padLeft(2, '0')}:${_horaInicio!.minute.toString().padLeft(2, '0')}:00";
       String cierreFin= "${_horaFin!.hour.toString().padLeft(2, '0')}:${_horaFin!.minute.toString().padLeft(2, '0')}:00";
       // 🌐 URL del backend
-      final url = Uri.parse("http://localhost:5000/registrarPaseo");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarPaseo");
 
       // 🧠 Datos a enviar
       final body = {
@@ -679,7 +679,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   Future<double> _promedio_paseador() async {
     if (_paseador.isEmpty) return 0.0;
 
-    final url = Uri.parse("http://localhost:5000/promedioPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/promedioPaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -695,7 +695,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _obtener_comentariosPaseador() async {
-    final url = Uri.parse("http://localhost:5000/comentariosPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentariosPaseador");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -717,7 +717,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _sumarLike(int idCalificacion, int nuevosLikes) async {
-    final url = Uri.parse("http://localhost:5000/likeComentarioPaseador"); // tu endpoint Flask
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/likeComentarioPaseador"); // tu endpoint Flask
     try {
       final response = await http.post(
         url,
@@ -912,7 +912,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
     String comentario = comentarioCtrl.text;
     int rating = calificacion;
 
-    final url = Uri.parse("http://localhost:5000/comentarPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentarPaseador");
 
     final response = await http.post(
       url,
@@ -940,7 +940,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> _editarComentario(int idComentario) async {
-    final url = Uri.parse("http://localhost:5000/editarcomentarioPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/editarcomentarioPaseador");
 
     final response = await http.put(
       url,
@@ -962,7 +962,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   }
 
   Future<void> eliminarComentario(int idComentario) async {
-    final url = Uri.parse("http://localhost:5000/eliminarcomentarioPaseador");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminarcomentarioPaseador");
 
     final response = await http.delete(
       url,

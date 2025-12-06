@@ -40,7 +40,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   List<Map<String, dynamic>> _citasDelDiaActual = []; 
 
   Future<void> _obtenerCitas_Veterinaria() async {
-    final url = Uri.parse("http://localhost:5000/citasVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/citasVeterinaria");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -58,7 +58,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<Map<String, dynamic>?> _obtenerCitasUsuarios(int id_dueno) async {
-    final url = Uri.parse("http://localhost:5000/obtenerUsuario");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenerUsuario");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -78,7 +78,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<Map<String, dynamic>?> _obtenerMascota(String idMascota) async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -98,7 +98,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<void> No_asistio_paseo(idCita) async {
-    final url = Uri.parse("http://localhost:5000/no_asistio_cita");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/no_asistio_cita");
 
     try {
       final response = await http.put(
@@ -158,7 +158,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
             _horaSeleccionada!.minute.toString().padLeft(2, '0') + ":00";
     } 
 
-    final url = Uri.parse("http://localhost:5000/aceptar_cita_medica");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/aceptar_cita_medica");
 
     try {
       final response = await http.put(
@@ -206,7 +206,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<void> cancelar_cita_medica(idCita) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_cita_medica");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_cita_medica");
 
     try {
       final response = await http.put(
@@ -252,7 +252,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<void> finalizado(String idCita) async {
-    final url = Uri.parse("http://localhost:5000/finalizada_cita");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/finalizada_cita");
 
     try {
       final response = await http.put(

@@ -33,7 +33,7 @@ class _CalendarioReservasScreenState extends State<CalendarioReservasScreen> {
   List<Map<String, dynamic>> _citasDelDiaActual = []; 
 
   Future<void> _obtenerreservas() async {
-    final url = Uri.parse("http://localhost:5000/reservas");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/reservas");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -51,7 +51,7 @@ class _CalendarioReservasScreenState extends State<CalendarioReservasScreen> {
   }
 
   Future<void> cancelarreserva(id) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_reserva");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_reserva");
 
     try {
       final response = await http.put(
@@ -95,7 +95,7 @@ class _CalendarioReservasScreenState extends State<CalendarioReservasScreen> {
   }
 
   Future<void> completada(id) async {
-    final url = Uri.parse("http://localhost:5000/reserva_completada");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/reserva_completada");
 
     try {
       final response = await http.put(
@@ -139,7 +139,7 @@ class _CalendarioReservasScreenState extends State<CalendarioReservasScreen> {
   }
 
   Future<void> aceptarreserva(id) async {
-    final url = Uri.parse("http://localhost:5000/reserva_aceptada");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/reserva_aceptada");
 
     try {
       final response = await http.put(

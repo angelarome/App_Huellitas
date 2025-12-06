@@ -76,7 +76,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
 
         final imagenBase64 = base64Encode(bytes);
 
-        final url = Uri.parse("http://localhost:5000/actualizar_imagen_tienda");
+        final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_imagen_tienda");
         final response = await http.put(
           url,
           headers: {"Content-Type": "application/json"},
@@ -111,7 +111,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
   }
 
   Future<void> _obtenerTienda() async {
-    final url = Uri.parse("http://localhost:5000/mitienda");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mitienda");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -154,7 +154,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
   Future<double> _obtenerPromedioTienda() async {
     if (_tienda.isEmpty) return 0.0;
 
-    final url = Uri.parse("http://localhost:5000/promedioTienda");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/promedioTienda");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -170,7 +170,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
   }
 
   Future<void> _obtenerComentarios() async {
-    final url = Uri.parse("http://localhost:5000/comentariosTienda");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentariosTienda");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -192,7 +192,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
   }
 
   Future<void> _sumarLike(int idCalificacion, int nuevosLikes) async {
-    final url = Uri.parse("http://localhost:5000/likeComentario"); // tu endpoint Flask
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/likeComentario"); // tu endpoint Flask
     try {
       final response = await http.post(
         url,
@@ -214,7 +214,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
   }
 
   Future<void> _obtenerProducto() async {
-    final url = Uri.parse("http://localhost:5000/misproductos");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/misproductos");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -251,7 +251,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
 
   Future<void> _eliminarProducto(int idProducto) async {
     try {
-      final url = Uri.parse("http://localhost:5000/eliminarProducto");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminarProducto");
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

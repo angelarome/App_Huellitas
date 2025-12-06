@@ -205,7 +205,7 @@ class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
 
 
   Future<void> obtenerMascotasPorId() async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -228,7 +228,7 @@ class _TarjetaMedicamentoScreenState extends State<TarjetaMedicamentoScreen> {
   }
 
   Future<void> eliminarMedicamento() async {
-    final url = Uri.parse("http://localhost:5000/eliminar_medicamento");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminar_medicamento");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,

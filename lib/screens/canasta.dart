@@ -112,7 +112,7 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
       String totalText = _totalController.text.replaceAll(',', '').replaceAll('.', '');
       final total = double.tryParse(totalText) ?? 0.0;
       final fechaReserva = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(_fechaHoraController.text));
-      final url = Uri.parse("http://localhost:5000/registrarPedido");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarPedido");
 
       final response = await http.post(
         url,

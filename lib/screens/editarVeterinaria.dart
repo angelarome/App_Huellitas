@@ -488,7 +488,7 @@ class _Editarveterinaria extends State<Editarveterinaria> {
     double tarifaDecimal = double.parse(textoTarifa);
 
     mostrarLoading(context);
-    final url = Uri.parse("http://localhost:5000/actualizarVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizarVeterinaria");
 
     final response = await http.put(
       url,

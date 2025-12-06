@@ -460,7 +460,7 @@ class _EditartiendaState extends State<Editartienda> {
         : null;
 
     mostrarLoading(context);
-    final url = Uri.parse("http://localhost:5000/actualizarTienda");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizarTienda");
 
     final response = await http.put(
       url,

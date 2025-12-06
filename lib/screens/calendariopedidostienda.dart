@@ -33,7 +33,7 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   List<Map<String, dynamic>> _citasDelDiaActual = []; 
 
   Future<void> _obtenerpedidos() async {
-    final url = Uri.parse("http://localhost:5000/pedidos");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/pedidos");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -79,7 +79,7 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   }
 
   Future<void> cancelarpedido(id) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_pedido");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_pedido");
 
     try {
       final response = await http.put(
@@ -123,7 +123,7 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   }
 
   Future<void> enviado(id, List productos) async {
-    final url = Uri.parse("http://localhost:5000/enviado_pedido");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/enviado_pedido");
     try {
       final response = await http.put(
         url,
@@ -167,7 +167,7 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   }
 
   Future<void> recibido(id) async {
-    final url = Uri.parse("http://localhost:5000/recibido_pedido");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/recibido_pedido");
 
     try {
       final response = await http.put(
@@ -211,7 +211,7 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   }
 
   Future<void> Norecibido(id) async {
-    final url = Uri.parse("http://localhost:5000/norecibido_pedido");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/norecibido_pedido");
 
     try {
       final response = await http.put(

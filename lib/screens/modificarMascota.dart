@@ -360,7 +360,7 @@ class _ModificarMascotaScreen extends State<ModificarMascotaScreen> {
                 "${_fechaNacimiento!.day.toString().padLeft(2,'0')}";
     }
 
-    final url = Uri.parse("http://localhost:5000/editarMascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/editarMascota");
 
     final response = await http.put(
       url,

@@ -34,7 +34,7 @@ class _AgregarDocumentosScreenState extends State<AgregarDocumentosScreen> {
 
 
   Future<void> _obtenerDocumentos() async {
-    final url = Uri.parse("http://localhost:5000/documentos");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/documentos");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -81,7 +81,7 @@ class _AgregarDocumentosScreenState extends State<AgregarDocumentosScreen> {
 
 
   Future<void> eliminarDocumento(int id_documento) async {
-    final url = Uri.parse("http://localhost:5000/eliminar_documento");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminar_documento");
 
     final response = await http.delete( // 👈 DELETE en lugar de POST
       url,

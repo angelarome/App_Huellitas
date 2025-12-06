@@ -29,7 +29,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
   }
 
   Future<void> _obtenerVeterinaria() async {
-    final url = Uri.parse("http://localhost:5000/veterinarias"); // 👈 misma ruta del backend
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/veterinarias"); // 👈 misma ruta del backend
     final response = await http.get(url); // 👈 usar GET, no POST
 
     if (response.statusCode == 200) {

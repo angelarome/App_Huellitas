@@ -314,7 +314,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
 
     String dias = frecuenciaPersonalizadaController.text;  
 
-    final url = Uri.parse("http://localhost:5000/actualizar_higiene");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_higiene");
 
     try {
       final response = await http.put(

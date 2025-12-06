@@ -317,7 +317,7 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
 
     String dias = frecuenciaPersonalizadaController.text;  
 
-    final url = Uri.parse("http://localhost:5000/editarMedicamento");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/editarMedicamento");
 
     try {
       final response = await http.put(

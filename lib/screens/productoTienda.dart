@@ -151,7 +151,7 @@ class _ProductoMascotaScreenState extends State<ProductoMascotaScreen> {
     try {
       String textoTarifa = tarifaController.text.replaceAll('.', '');
       double tarifaDecimal = double.parse(textoTarifa);
-      final url = Uri.parse("http://localhost:5000/registrarProducto");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarProducto");
 
       final response = await http.post(
         url,

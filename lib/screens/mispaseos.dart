@@ -33,7 +33,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   List<Map<String, dynamic>> _citasDelDiaActual = []; 
 
   Future<void> _obtenerPaseos() async {
-    final url = Uri.parse("http://localhost:5000/paseos_dueno");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/paseos_dueno");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -51,7 +51,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<void> cancelar_paseo(idCita) async {
-    final url = Uri.parse("http://localhost:5000/cancelar_paseo");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/cancelar_paseo");
 
     try {
       final response = await http.put(

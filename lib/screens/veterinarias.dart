@@ -77,7 +77,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   }
 
   Future<void> _obtenerVeterinaria() async {
-    final url = Uri.parse("http://localhost:5000/miveterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/miveterinaria");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -161,7 +161,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   Future<void> _obtenerMascotas() async {
     setState(() => cargando = true);
 
-    final url = Uri.parse("http://localhost:5000/mascotas");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/mascotas");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -262,7 +262,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     }
     try {
       // 🌐 URL del backend
-      final url = Uri.parse("http://localhost:5000/registrarCitaVeterinaria");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarCitaVeterinaria");
 
       // 🧠 Datos a enviar
       final body = {
@@ -318,7 +318,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   Future<double> _promedio_veterinaria() async {
     if (_veterinaria.isEmpty) return 0.0;
 
-    final url = Uri.parse("http://localhost:5000/promedioVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/promedioVeterinaria");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -334,7 +334,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   }
 
   Future<void> _obtener_comentariosVeterinaria() async {
-    final url = Uri.parse("http://localhost:5000/comentariosVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentariosVeterinaria");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -356,7 +356,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   }
 
   Future<void> eliminarComentario(int idComentario) async {
-    final url = Uri.parse("http://localhost:5000/eliminarcomentarioVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/eliminarcomentarioVeterinaria");
 
     final response = await http.delete(
       url,
@@ -379,7 +379,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
 
 
   Future<void> _sumarLike(int idCalificacion, int nuevosLikes) async {
-    final url = Uri.parse("http://localhost:5000/likeComentarioVeterinaria"); // tu endpoint Flask
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/likeComentarioVeterinaria"); // tu endpoint Flask
     try {
       final response = await http.post(
         url,
@@ -713,7 +713,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     String comentario = comentarioCtrl.text;
     int rating = calificacion;
 
-    final url = Uri.parse("http://localhost:5000/comentarVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/comentarVeterinaria");
 
     final response = await http.post(
       url,
@@ -741,7 +741,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   }
 
   Future<void> _editarComentario(int idComentario) async {
-    final url = Uri.parse("http://localhost:5000/editarcomentarioVeterinaria");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/editarcomentarioVeterinaria");
 
     final response = await http.put(
       url,

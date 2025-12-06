@@ -77,7 +77,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         final imagenBase64 = base64Encode(bytes);
 
         // ✅ Enviamos al backend
-        final url = Uri.parse("http://localhost:5000/actualizar_imagen_mascota");
+        final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_imagen_mascota");
         final response = await http.put(
           url,
           headers: {"Content-Type": "application/json"},

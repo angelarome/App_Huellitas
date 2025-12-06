@@ -35,7 +35,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
 
 
   Future<void> _obtenerHigiene() async {
-    final url = Uri.parse("http://localhost:5000/higiene");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/higiene");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},

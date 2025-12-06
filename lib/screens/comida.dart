@@ -40,7 +40,7 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
       _loading = true;
     });
 
-    final url = Uri.parse("http://localhost:5000/Comida");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/Comida");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -118,7 +118,7 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
       return; // Sale de la función si hay campos vacíos
     }
 
-    final url = Uri.parse("http://localhost:5000/GuardarComida");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/GuardarComida");
 
     final body = {
       "id_mascota": widget.idMascota,
@@ -157,7 +157,7 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
   }
 
   Future<void> actualizarDatosTotal(int gramosTotales, int aguaTotal) async {
-    final url = Uri.parse("http://localhost:5000/ActualizarComida");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/ActualizarComida");
 
     final body = {
       "id_mascota": widget.idMascota,
@@ -519,7 +519,7 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
                     "${date.month.toString().padLeft(2,'0')}-"
                     "${date.day.toString().padLeft(2,'0')}";
 
-    final url = Uri.parse("http://localhost:5000/EditarComida");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/EditarComida");
 
     // Convertir los valores a int
     final gramosInt = int.tryParse(gramos) ?? 0;
@@ -565,7 +565,7 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
                     "${date.month.toString().padLeft(2,'0')}-"
                     "${date.day.toString().padLeft(2,'0')}";
 
-    final url = Uri.parse("http://localhost:5000/EditarAgua");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/EditarAgua");
 
     // Convertir los valores a int
     final aguaInt = int.tryParse(agua) ?? 0;

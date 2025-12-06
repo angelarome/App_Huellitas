@@ -163,7 +163,7 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
       String textoTarifa = tarifaController.text.replaceAll('.', '');
       double tarifaDecimal = double.parse(textoTarifa);
 
-      final url = Uri.parse("http://localhost:5000/actualizarProducto");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizarProducto");
 
       final response = await http.put(
         url,

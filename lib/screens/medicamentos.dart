@@ -34,7 +34,7 @@ class _MedicamentosScreenState extends State<MedicamentosScreen> {
 
 
   Future<void> _obtenerMedicamentos() async {
-    final url = Uri.parse("http://localhost:5000/medicamento");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/medicamento");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},

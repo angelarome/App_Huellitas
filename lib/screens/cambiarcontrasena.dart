@@ -58,7 +58,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
   mostrarLoading(context);
 
   final response = await http.put(
-    Uri.parse("http://localhost:5000/cambiarcontrasena"),
+    Uri.parse("https://apphuellitas-production.up.railway.app/cambiarcontrasena"),
     headers: {"Content-Type": "application/json"},
     
     body: jsonEncode({

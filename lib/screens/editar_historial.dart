@@ -256,7 +256,7 @@ class _EditarHistorialScreenState extends State<EditarHistorialScreen> {
   }
 
   Future<void> obtenerMascotasPorId() async {
-    final url = Uri.parse("http://localhost:5000/obtenermascota");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenermascota");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -346,7 +346,7 @@ class _EditarHistorialScreenState extends State<EditarHistorialScreen> {
                   _horaSeleccionada!.minute.toString().padLeft(2, '0') + ":00";
 
 
-    final url = Uri.parse("http://localhost:5000/editarHistorial");
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/editarHistorial");
 
     try {
       final response = await http.put(

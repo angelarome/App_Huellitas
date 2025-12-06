@@ -292,7 +292,7 @@ class _AgregarVeterinariaScreenState extends State<AgregarVeterinariaScreen> {
 
       mostrarLoading(context);
       // 🌐 URL del backend
-      final url = Uri.parse("http://localhost:5000/registrarVeterinaria");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarVeterinaria");
       
       // 🧠 Datos a enviar
       final body = {

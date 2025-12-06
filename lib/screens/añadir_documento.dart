@@ -46,7 +46,7 @@ class _AgregarDocumentoScreenState extends State<AgregarDocumentoScreen> {
 
     try {
       // 🌐 URL del backend
-      final url = Uri.parse("http://localhost:5000/registrarDocumento");
+      final url = Uri.parse("https://apphuellitas-production.up.railway.app/registrarDocumento");
       
       // 🧠 Datos a enviar
       final body = {
