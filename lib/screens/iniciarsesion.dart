@@ -76,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final rol = usuario["rol"];
 
       if (rol == "dueno") {
+      try {
         final id = detalles["id_dueno"];
         final cedula = detalles["cedula"];
         final nombre = detalles["nombre"];
@@ -86,16 +87,27 @@ class _LoginScreenState extends State<LoginScreen> {
         final departamento = detalles["departamento"];
         final ciudad = detalles["ciudad"];
 
-        final Uint8List bytes = base64Decode(foto);
+        Uint8List bytes;
+        try {
+          bytes = base64Decode(foto);
+        } catch (e) {
+          print("Error decodificando foto: $e");
+          bytes = Uint8List(0); // fallback si la foto está mal
+        }
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idUsuario', id);
 
-        await guardarTokenUsuario(
-          idUsuario: id.toString(),
-          rol: "dueno",
-        );
+        try {
+          await guardarTokenUsuario(idUsuario: id.toString(), rol: "dueno");
+        } catch (e) {
+          print("Error guardando token: $e");
+        }
+
+        // Comprobar si el widget sigue montado
+        if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -112,12 +124,20 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         );
-      } 
+      } catch (e) {
+        print("Error en login dueno: $e");
+      }
+    }
       else if (rol == "veterinaria") {
         final id = detalles["id_veterinaria"];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idVeterinaria', id);
+
+        await guardarTokenUsuario(
+          idUsuario: id.toString(),
+          rol: "veterinaria",
+        );
 
         Navigator.pushReplacement(
           context,
@@ -136,6 +156,12 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('logueado', true);
         await prefs.setInt('idTienda', idtienda);
 
+        await guardarTokenUsuario(
+          idUsuario: idtienda.toString(),
+          rol: "tienda",
+        );
+
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -151,6 +177,11 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idPaseador', id_paseador);
+
+        await guardarTokenUsuario(
+          idUsuario: id_paseador.toString(),
+          rol: "paseador",
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
