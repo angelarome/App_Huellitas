@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'editarVeterinaria.dart';
 import 'calendarioveterinaria.dart';
 import 'barralateralveterinaria.dart';
+import 'iniciarsesion.dart';
 
 class PerfilVeterinariaScreen extends StatefulWidget {
   final int id_veterinaria;
@@ -1497,7 +1498,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
           child: IconButton(
             icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
             onPressed: () {
-              Navigator.pop(context);
+              LoginScreen();
             },
           ),
         ),

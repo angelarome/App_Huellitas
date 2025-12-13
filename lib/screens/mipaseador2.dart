@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'editarPaseador.dart';
 import 'calendariopaseador.dart';
-
+import 'iniciarsesion.dart';
 class PerfilPaseadorScreen extends StatefulWidget {
   final int id_paseador;
 
@@ -700,7 +700,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
             ),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () => LoginScreen(),
               child: SizedBox(width: 24, height: 24, child: Image.asset('assets/devolver5.png')),
             ),
           ],

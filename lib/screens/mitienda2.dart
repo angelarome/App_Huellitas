@@ -14,6 +14,7 @@ import 'editartienda.dart';
 import 'editarProducto.dart';
 import 'calendariopedidostienda.dart';
 import 'calendarioreservasTienda.dart';
+import 'iniciarsesion.dart';
 
 class PerfilTiendaScreen extends StatefulWidget {
   final int idtienda;
@@ -477,7 +478,7 @@ class _PerfilTiendaScreenState extends State<PerfilTiendaScreen> {
                           ),
                           const SizedBox(height: 8),
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => LoginScreen(),
                             child: SizedBox(
                                 width: 24,
                                 height: 24,
