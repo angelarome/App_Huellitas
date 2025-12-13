@@ -134,11 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('logueado', true);
         await prefs.setInt('idVeterinaria', id);
 
-        await guardarTokenUsuario(
-          idUsuario: id.toString(),
-          rol: "veterinaria",
-        );
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -156,12 +151,6 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('logueado', true);
         await prefs.setInt('idTienda', idtienda);
 
-        await guardarTokenUsuario(
-          idUsuario: idtienda.toString(),
-          rol: "tienda",
-        );
-
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -178,10 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('logueado', true);
         await prefs.setInt('idPaseador', id_paseador);
 
-        await guardarTokenUsuario(
-          idUsuario: id_paseador.toString(),
-          rol: "paseador",
-        );
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
