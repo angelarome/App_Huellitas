@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'veterinaria2.dart';
+import 'barralateralveterinaria.dart';
 
 class _MilesFormatter extends TextInputFormatter {
   final NumberFormat _formatter = NumberFormat.decimalPattern('es_CO');
@@ -121,6 +122,13 @@ class _Editarveterinaria extends State<Editarveterinaria> {
   TimeOfDay? _horaCierreDomingo;
   Uint8List? _certificadoBytes;
   String? _rutaCertificado;
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   @override
   void initState() {

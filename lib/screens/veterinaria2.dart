@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'editarVeterinaria.dart';
 import 'calendarioveterinaria.dart';
+import 'barralateralveterinaria.dart';
 
 class PerfilVeterinariaScreen extends StatefulWidget {
   final int id_veterinaria;
@@ -49,6 +50,13 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   void initState() {
     super.initState();
     _obtenerVeterinaria();
+  }
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
   }
 
   
@@ -584,11 +592,6 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        onPressed: () {},
-        child: Image.asset('assets/inteligent.png', width: 36, height: 36),
-      ),
       body: Stack(
         children: [
           Container(
@@ -608,7 +611,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _menuSuperior(),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 20),
                   _fotoYNombre(),
                   const SizedBox(height: 12),
@@ -654,6 +657,8 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_veterinaria, nombreVeterinaria: _veterinaria[0]["nombre_veterinaria"],),
         ],
       ),
     );
@@ -676,46 +681,6 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     }
   }
   // ═══════════════════════════════════════════
-  // MENÚ SUPERIOR
-  Widget _menuSuperior() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Menu.png')),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/devolver5.png')),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Perfil.png')),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Calendr.png')),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Campana3.png')),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   // ═══════════════════════════════════════════
   // FOTO Y NOMBRE
@@ -1486,7 +1451,60 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     },
   );
 }
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
 
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
   // ═══════════════════════════════════════════
   Widget _campoFecha(BuildContext context) {
   return Column(
