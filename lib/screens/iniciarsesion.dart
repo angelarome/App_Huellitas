@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idVeterinaria', id);
-
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -150,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idTienda', idtienda);
-
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('logueado', true);
         await prefs.setInt('idPaseador', id_paseador);
-
+        if (!mounted) return;
 
         Navigator.pushReplacement(
           context,

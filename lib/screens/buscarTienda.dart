@@ -291,7 +291,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
                                           child: Text(
                                             "Mis pedidos",
                                             style: TextStyle(
-                                              fontSize: 24,
+                                              fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
@@ -340,7 +340,7 @@ class _TiendaMascotaScreenState extends State<TiendaMascotaScreen> {
                                           child: Text(
                                             "Mis reservas",
                                             style: TextStyle(
-                                              fontSize: 24,
+                                              fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),

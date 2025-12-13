@@ -547,7 +547,7 @@ class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
                                 const Text(
                                   "Mascotas\ncompartidas",
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
