@@ -112,7 +112,7 @@ class Rol1Screen extends StatelessWidget {
                         Text(
                           '¡Elige tu perfil en Huellitas!',
                           style: TextStyle(
-                            fontSize: 30,
+                            fontSize: 20,
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
