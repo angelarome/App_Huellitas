@@ -12,10 +12,14 @@ android {
 
     defaultConfig {
         applicationId = "com.example.huellitas"
-        minSdk = 21 // valor explícito
+        minSdk = flutter.minSdkVersion
         targetSdk = 33 // valor explícito
         versionCode = 1
         versionName = "1.0"
+    }
+
+    buildFeatures {
+        buildConfig = true  // <--- esto es lo que Cloud Firestore necesita
     }
 
     compileOptions {
