@@ -14,6 +14,7 @@ import 'mitienda2.dart';
 import 'mipaseador2.dart';
 import 'recuperarcontrasena.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_notifications.dart';
 
 final TextEditingController correoController = TextEditingController();
 final TextEditingController passwordController = TextEditingController();
@@ -91,6 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('logueado', true);
         await prefs.setInt('idUsuario', id);
 
+        await guardarTokenUsuario(
+          idUsuario: id.toString(),
+          rol: "dueno",
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
