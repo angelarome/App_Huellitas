@@ -9,6 +9,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:ui' show ImageFilter;
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'interfazIA.dart';
 
 class CalendarioTiendaScreen extends StatefulWidget {
   final int id_dueno;
@@ -28,6 +32,13 @@ class _CalendarioTiendaScreenState extends State<CalendarioTiendaScreen> {
   void initState() {
     super.initState();
     _obtenerpedidos(); // Llamamos a la API apenas se abre la pantalla
+  }
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
   }
 
   List<Map<String, dynamic>> _citasDelDiaActual = []; 
@@ -383,30 +394,6 @@ void mostrarConfirmacion(
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true, // <-- AppBar encima del fondo
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 211, 70, 60),
-        elevation: 0,
-        leading: IconButton(
-          icon: Image.asset(
-            "assets/devolver5.png",   // ← tu imagen
-            width: 26,
-            height: 26,
-            color: Colors.white,      // opcional, si quieres que se vea blanca
-          ),
-          onPressed: () {
-           
-          },
-        ),
-        title: Text(
-          "Calendario de pedidos",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: Stack(
         children: [
           // ------------ FONDO ------------
@@ -424,7 +411,21 @@ void mostrarConfirmacion(
             child: Container(color: Colors.black.withOpacity(0.25)),
           ),
 
-          // ------------ CONTENIDO ------------
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  
+                  _barraSuperiorConAtras(context),
+
+                ],
+              ),
+            ),
+          ),
+
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
           Column(
             children: [
               SizedBox(height: 90), // separación debajo de la AppBar
@@ -446,6 +447,78 @@ void mostrarConfirmacion(
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _headerBonito() {
   return Container(

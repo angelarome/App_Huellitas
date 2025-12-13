@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'perfil_mascota.dart';
 // 🔹 Importa ChatBubble
 import 'chat_bubble.dart';
 
@@ -9,7 +12,8 @@ import 'ia_service.dart';
 
 
 class IaMascotasScreen extends StatefulWidget {
-  const IaMascotasScreen({super.key});
+  final int id_dueno;
+  const IaMascotasScreen({super.key, required this.id_dueno});
 
   @override
   State<IaMascotasScreen> createState() => _IaMascotasScreenState();
@@ -20,7 +24,13 @@ class _IaMascotasScreenState extends State<IaMascotasScreen> {
   final List<Map<String, dynamic>> _mensajes = [];
 
   bool _cargando = false;
+  bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
 
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
   Future<void> _enviarMensaje() async {
     final texto = _controller.text.trim();
     if (texto.isEmpty) return;
@@ -45,6 +55,7 @@ class _IaMascotasScreenState extends State<IaMascotasScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,15 +78,8 @@ class _IaMascotasScreenState extends State<IaMascotasScreen> {
           SafeArea(
             child: Stack(
               children: [
-                // Botón volver
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Image.asset("assets/devolver5.png", width: 40, height: 40),
-                  ),
-                ),
+                _barraSuperiorConAtras(context),
+                  const SizedBox(height: 20),
 
                 // Tarjeta principal
                 Center(
@@ -189,8 +193,82 @@ class _IaMascotasScreenState extends State<IaMascotasScreen> {
               ],
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
 }
