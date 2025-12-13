@@ -12,17 +12,17 @@ import 'dart:ui' show ImageFilter;
 import 'veterinaria2.dart';
 import 'verhistorial_clinico.dart';
 
-class CalendarioScreen extends StatefulWidget {
+class CalendarioScreenc extends StatefulWidget {
   final int id_dueno;
 
 
-  const CalendarioScreen({super.key, required this.id_dueno});
+  const CalendarioScreenc({super.key, required this.id_dueno});
 
   @override
-  _CalendarioScreenState createState() => _CalendarioScreenState();
+  _CalendarioScreencState createState() => _CalendarioScreencState();
 }
 
-class _CalendarioScreenState extends State<CalendarioScreen> {
+class _CalendarioScreencState extends State<CalendarioScreenc> {
   DateTime _mesActual = DateTime(DateTime.now().year, DateTime.now().month);
 
   @override

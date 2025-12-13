@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'dart:ui'; // Para aplicar desenfoque si lo necesitas más adelante
 import 'package:http/http.dart' as http; 
 import 'dart:convert';  
+import 'dart:typed_data';
 import 'agregarhigiene.dart';  
 import 'tarjetasHigiene.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'perfil_mascota.dart';
 
 class HigieneScreen extends StatefulWidget {
   
   final int id;
+  final int id_dueno;
+  final String nombreMascota;
+  final Uint8List? fotoMascota;
 
-  const HigieneScreen({super.key, required this.id});
+  const HigieneScreen({super.key, required this.id, required this.id_dueno, required this.nombreMascota, required this.fotoMascota});
   @override
   State<HigieneScreen> createState() => _HigieneScreenState();
   
@@ -152,55 +160,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Image.asset('assets/Menu.png'),
-                        ),
-                        onPressed: _toggleMenu,
-                        
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Perfil.png'),
-                          ),
-                          const SizedBox(width: 10),
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Calendr.png'),
-                          ),
-                          const SizedBox(width: 10),
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Campana.png'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  // Ícono de devolver alineado con menú
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: IconButton(
-                        icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
-                        onPressed: () {
-                          
-                        },
-                      ),
-                    ),
-                  ),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 10),
 
                   Center(
@@ -287,6 +247,9 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                     tipo: item["tipo"],
                                     hora: item["hora"],
                                     fecha: item["fecha"],
+                                    id_dueno: widget.id_dueno,
+                                    nombreMascota: widget.nombreMascota,
+                                    fotoMascota: widget.fotoMascota
                                   ),
                                 ),
                               );
@@ -402,6 +365,7 @@ class _HigieneScreenState extends State<HigieneScreen> {
                                 
                                 builder: (context) => AgregarCuidadoScreen(
                                   idMascota: widget.id,
+                                  id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota
                                 ),
                               ),
                             );
@@ -452,8 +416,87 @@ class _HigieneScreenState extends State<HigieneScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ServiciosScreen(id_dueno: widget.id_dueno, idMascota: widget.id, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota)
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
 }

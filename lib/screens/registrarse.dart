@@ -311,6 +311,23 @@ class _RegistroUsuarioPageState extends State<RegistroUsuarioPage> {
 
       ocultarLoading(context);
       if (response.statusCode == 201) {
+        cedulaController.clear();
+        nombreController.clear();
+        apellidoController.clear();
+        telefonoController.clear();
+        correoController.clear();
+        direccionController.clear();
+        passwordController.clear();
+        confirmarController.clear();
+
+        // Dropdowns / Selecciones
+        setState(() {
+          departamentoSeleccionado = null;
+          ciudadSeleccionada = null;
+
+          // Imagen
+          _imagenBase64 = null;
+        });
         final data = jsonDecode(response.body);
         final usuario = data["usuario"]; 
         final id = usuario["id_dueno"];// 👈 Aquí viene el usuario completo
@@ -947,13 +964,41 @@ class _RegistroUsuarioPageState extends State<RegistroUsuarioPage> {
           ),
           validator: (valor) {
             if (valor == null || valor.isEmpty) {
-              return 'ej: 12345678';
+              return 'La contraseña es obligatoria';
             }
-            if (valor.length < 6) {
-              return 'La contraseña debe tener al menos 6 caracteres';
+
+            if (valor.length < 8) {
+              return 'La contraseña debe tener al menos 8 caracteres';
             }
+
+            final mayuscula = RegExp(r'[A-Z]');
+            final minuscula = RegExp(r'[a-z]');
+            final numero = RegExp(r'[0-9]');
+            final simbolo = RegExp(r'[@#\$%&*_-]');
+
+            if (!mayuscula.hasMatch(valor)) {
+              return 'Debe contener al menos una letra mayúscula';
+            }
+
+            if (!minuscula.hasMatch(valor)) {
+              return 'Debe contener al menos una letra minúscula';
+            }
+
+            if (!numero.hasMatch(valor)) {
+              return 'Debe contener al menos un número';
+            }
+
+            if (!simbolo.hasMatch(valor)) {
+              return 'Debe contener al menos un símbolo: @ # \$ % & * _ -';
+            }
+
+            final regex = RegExp(r'^[a-zA-Z0-9@#\$%&*_-]+$');
+            if (!regex.hasMatch(valor)) {
+              return 'Caracteres inválidos detectados';
+            }
+
             return null;
-          },
+        },
         ),
       ],
     );

@@ -12,6 +12,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'mimascota.dart';
 import 'modificarMascota.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import '1pantalla.dart';
 
 class EditarMascotaScreen extends StatefulWidget {
   final int idMascota;
@@ -31,6 +35,13 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
     obtenerMascotasPorId(); // Llamamos a la API apenas se abre la pantalla
   }
 
+  bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
+
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   String nombreMascota = "";
   String apellidoMascota = "";
@@ -346,12 +357,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
     );
 
     if (response.statusCode == 200) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MiMascotaScreen(id_dueno: widget.id_dueno),
-        ),
-      );
+      Navigator.pop(context);
 
       Future.delayed(const Duration(milliseconds: 300), () {
         mostrarMensajeFlotante(
@@ -458,44 +464,9 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Encabezado superior (sin cambios)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Image.asset('assets/Menu.png', width: 24, height: 24),
-                      ),
-                      Row(
-                        children: [
-                          Image.asset('assets/Perfil.png', width: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Calendr.png', width: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Campana.png', width: 24),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Ícono de devolver alineado con menú
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: IconButton(
-                        icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  ),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 10),
 
-
-                  // Tarjeta azul con contenido
                   Center(
                     child: Container(
                       margin: const EdgeInsets.all(16),
@@ -616,7 +587,7 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
                           infoItem(
                             "assets/Peso.png",
                             "Peso",
-                            pesoMascota.toString(),
+                            "${pesoMascota.toString()}k",
                           ),
                           infoItem(
                             "assets/Calendario.png",
@@ -678,12 +649,84 @@ class _EditarMascotaScreen extends State<EditarMascotaScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
 
-  // Widget para mostrar ítem con ícono
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
   Widget infoItem(String iconPath, String label, String value, {bool isNote = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

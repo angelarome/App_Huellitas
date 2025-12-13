@@ -5,6 +5,11 @@ import 'dart:convert';
 import 'higiene.dart';  
 import 'package:flutter/services.dart';
 import 'medicamentos.dart';
+import 'dart:typed_data';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'perfil_mascota.dart';
 
 class EditarMedicamentoScreen extends StatefulWidget {
   final int idMascota;
@@ -18,8 +23,10 @@ class EditarMedicamentoScreen extends StatefulWidget {
   final double dosis;
   final String hora;
   final String fecha;
+  final int id_dueno;
+  final Uint8List? fotoMascota;
 
-  const EditarMedicamentoScreen({super.key, required this.idMascota, required this.id_medicamento, required this.nombreMascota, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.unidad, required this.dosis, required this.hora, required this.fecha});
+  const EditarMedicamentoScreen({super.key, required this.idMascota, required this.id_medicamento, required this.nombreMascota, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.unidad, required this.dosis, required this.hora, required this.fecha, required this.id_dueno, required this.fotoMascota});
 
 
   @override
@@ -355,7 +362,7 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MedicamentosScreen(id: widget.idMascota),
+            builder: (context) => MedicamentosScreen(id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota),
           ),
         );
       } else {
@@ -415,23 +422,7 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Menu.png')),
-                        onPressed: _toggleMenu,
-                    
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(width: 24, height: 24, child: Image.asset('assets/Calendr.png')),
-                          const SizedBox(width: 10),
-                          SizedBox(width: 24, height: 24, child: Image.asset('assets/Campana.png')),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 20),
                   const Center(
                     child: Text(
@@ -571,6 +562,8 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
@@ -622,6 +615,79 @@ class _EditarMedicamentoScreenState extends State<EditarMedicamentoScreen> {
       ],
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 
   Widget _dropdownConEtiquetaa(
     String etiqueta,

@@ -328,6 +328,27 @@ class _AgregarVeterinariaScreenState extends State<AgregarVeterinariaScreen> {
 
       ocultarLoading(context);
       if (response.statusCode == 201) {
+        _nombreTienda.clear();
+        _cedula.clear();
+        _tarifa.clear();
+        _telefono.clear();
+        _direccion.clear();
+        _experiencia.clear();
+        correoController.clear();
+        passwordController.clear();
+        confirmarController.clear();
+
+        // Opcional: resetear selecciones de horas y dropdowns
+        setState(() {
+          _horaApertura = null;
+          _horaCierre = null;
+          _horaAperturaSabado = null;
+          _horaCierreSabado = null;
+          departamentoSeleccionado = null;
+          ciudadSeleccionada = null;
+          _tipoPagoSeleccionado = [];
+        });
+
         final data = jsonDecode(response.body);
         final tienda = data["miveterinaria"];
         final id_veterinaria = tienda["id_veterinaria"];
@@ -1511,12 +1532,41 @@ Widget build(BuildContext context) {
           ),
           validator: (valor) {
             if (valor == null || valor.isEmpty) {
-              return 'ej: 12345678';
+              return 'La contraseña es obligatoria';
             }
-            if (valor.length < 6) {
-              return 'La contraseña debe tener al menos 6 caracteres';
+
+            if (valor.length < 8) {
+              return 'La contraseña debe tener al menos 8 caracteres';
             }
-            return null;
+
+            final mayuscula = RegExp(r'[A-Z]');
+            final minuscula = RegExp(r'[a-z]');
+            final numero = RegExp(r'[0-9]');
+            final simbolo = RegExp(r'[@#\$%&*_-]');
+
+            if (!mayuscula.hasMatch(valor)) {
+              return 'Debe contener al menos una letra mayúscula';
+            }
+
+            if (!minuscula.hasMatch(valor)) {
+              return 'Debe contener al menos una letra minúscula';
+            }
+
+            if (!numero.hasMatch(valor)) {
+              return 'Debe contener al menos un número';
+            }
+
+            if (!simbolo.hasMatch(valor)) {
+              return 'Debe contener al menos un símbolo: @ # \$ % & * _ -';
+            }
+
+            // También podemos asegurar que solo tenga caracteres válidos
+            final regex = RegExp(r'^[a-zA-Z0-9@#\$%&*_-]+$');
+            if (!regex.hasMatch(valor)) {
+              return 'Caracteres inválidos detectados';
+            }
+
+            return null; // contraseña válida
           },
         ),
       ],

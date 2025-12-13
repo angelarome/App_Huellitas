@@ -49,6 +49,7 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
     ocultarLoading(context);
 
     if (response.statusCode == 200) {
+      correoController.clear();
       final data = jsonDecode(response.body);
       final usuario = data["usuario"];
       final rol = usuario["rol"]; // si lo necesitas

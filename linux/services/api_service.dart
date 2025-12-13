@@ -2538,6 +2538,103 @@ Future<bool> CancelarSolicitud({
     return response.statusCode == 200;
   }
   
+static Future<List<Map<String, dynamic>>> obtenerAgenda({
+    required int id_dueno,
+  }) async {
+    final url = Uri.parse("$baseUrl/miagenda");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": id_dueno}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List agenda = data["agenda"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return agenda.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+static Future<List<Map<String, dynamic>>> obtenerCollar({
+    required int id_mascota,
+  }) async {
+    final url = Uri.parse("$baseUrl/collar");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id_mascota}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List collar = data["collar"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return collar.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
+static Future<bool> registrarCollar({
+  required int id_mascota,
+  required String codigo_unico,
+  required String latitud,
+  required String longitud,
+}) async {
+  final url = Uri.parse("$baseUrl/registrar_collar");
+
+  final body = {
+    "id_mascota": id_mascota,
+    "codigo_unico": codigo_unico,
+    "latitud": latitud,
+    "longitud": longitud,
+  };
+
+
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(body),
+  );
+
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    print("❌ Error al registrar collar: ${response.body}");
+    return false;
+  }
+}
+
+static Future<List<Map<String, dynamic>>> obtenerUbicacion({
+    required int id_mascota,
+  }) async {
+    final url = Uri.parse("$baseUrl/ubicacion");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_mascota": id_mascota}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List ubicacion = data["ubicacion"] ?? [];
+      // Convertimos cada elemento a Map<String, dynamic>
+      return ubicacion.map<Map<String, dynamic>>((h) => Map<String, dynamic>.from(h)).toList();
+    } else {
+      // Retornamos lista vacía si no hay datos o error
+      return [];
+    }
+  }
+
 
 } 
 

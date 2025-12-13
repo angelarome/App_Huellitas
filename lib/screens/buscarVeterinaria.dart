@@ -268,7 +268,7 @@ class _BuscarvMascotaScreenScreenState extends State<BuscarvMascotaScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => CalendarioScreen(id_dueno: widget.id_dueno), // <-- tu pantalla destino
+                                builder: (context) => CalendarioScreenc(id_dueno: widget.id_dueno), // <-- tu pantalla destino
                               ),
                             );
                           },

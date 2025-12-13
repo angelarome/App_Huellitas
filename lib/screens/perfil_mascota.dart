@@ -17,6 +17,9 @@ import 'historialClinico.dart';
 import 'comida.dart';
 import 'documentos.dart';
 import 'ubicacion.dart';
+import 'mascotasCompartidas.dart';
+import 'calendario.dart';
+
 
 class ServiciosScreen extends StatefulWidget {
   final int id_dueno;
@@ -160,7 +163,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
           
           // Menú lateral animado
           if (_menuAbierto)
-            MenuLateralAnimado(onCerrar: _toggleMenu),
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
@@ -182,10 +185,22 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
         Row(
           children: [
             _iconoTop("assets/Perfil.png", () {
-              
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
             }),
             const SizedBox(width: 10),
-            _iconoTop("assets/Calendr.png", () {}),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
             const SizedBox(width: 10),
             _iconoTop("assets/Campana.png", () {}),
           ],
@@ -279,69 +294,67 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 20, // espacio horizontal entre botones
+          runSpacing: 15, // espacio vertical entre filas
           children: [
-            InkWell(
-              onTap: () {
-                // Acción para Compartir
-                print("Compartir presionado");
-                // Navigator.push(...);
-              },
-              child: _iconoAccion("Compartir", "assets/compartir.png"),
-            ),
-
-            InkWell(
-              onTap: () {
-                // Acción para Información
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditarMascotaScreen(idMascota: widget.idMascota, id_dueno: widget.id_dueno),
+            _botonAccion("Información", "assets/Informacion.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditarMascotaScreen(
+                    idMascota: widget.idMascota,
+                    id_dueno: widget.id_dueno,
                   ),
-                );
-              },
-              child: _iconoAccion("Información", "assets/Informacion.png"),
-            ),
-
-            InkWell(
-              onTap: () {
-              },
-              child: _iconoAccion("Emergencia", "assets/Medicina.png"),
-            ),
-
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UbicacionMascota(idMascota: widget.idMascota),
+                ),
+              );
+            }),
+            _botonAccion("Ver ubicación", "assets/Mapa.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UbicacionScreen(
+                    idMascota: widget.idMascota,
+                    id_dueno: widget.id_dueno,
                   ),
-                );
-              },
-              child: _iconoAccion("Ver ubicación", "assets/Mapa.png"),
-            ),
+                ),
+              );
+            }),
           ],
-        )
-      ],
+        )],
     );
   }
 
+  
 
-  Widget _iconoAccion(String label, String assetPath) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+  Widget _botonAccion(String texto, String pathImagen, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(width: 32, height: 32, child: Image.asset(assetPath)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.white)),
+          Image.asset(
+            pathImagen,
+            width: 30,
+            height: 30,
+            errorBuilder: (context, error, stackTrace) => Icon(Icons.error, size: 30),
+          ),
+          SizedBox(height: 8),
+          Text(
+            texto,
+            style: TextStyle(
+              color: Colors.white, // ← aquí
+              fontSize: 14,        // puedes ajustar el tamaño
+              fontWeight: FontWeight.w500, // opcional: negrita ligera
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // 🔹 Contenedor principal de los servicios
+  
   Widget _contenedorServicios(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -431,7 +444,6 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
     );
   }
 
-  // 🔹 Tarjeta individual con acción de navegación
   Widget _tarjetaServicio(BuildContext context, String label, List<String> assetPaths,
       Color color, Color borderColor) {
     return InkWell(
@@ -488,7 +500,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     shadows: [Shadow(blurRadius: 2, color: Colors.black)],
@@ -510,19 +522,19 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
       case 'HIGIENE':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => HigieneScreen(id: widget.idMascota)),
+          MaterialPageRoute(builder: (_) => HigieneScreen(id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota)),
         );
         break;
       case 'BIENESTAR DIARIO':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => SimpleFoodWaterCalendar(idMascota: widget.idMascota)),
+          MaterialPageRoute(builder: (_) => SimpleFoodWaterCalendar(idMascota: widget.idMascota, id_dueno: widget.id_dueno)),
         );
         break;
       case 'MEDICINA':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => MedicamentosScreen(id: widget.idMascota)),
+          MaterialPageRoute(builder: (_) => MedicamentosScreen(id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota)),
         );
         break;
       case 'DOCUMENTOS':

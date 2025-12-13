@@ -8,15 +8,14 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'mimascota.dart';
 import 'compartirmascota.dart';
-import 'menu_lateral.dart';
 import 'calendario.dart';
 import 'interfazIA.dart';
 import 'notificaciones.dart';
-import "mascota.dart";
 import 'buscarVeterinaria.dart';
 import 'buscarTienda.dart';
 import 'buscarpaseador.dart';
 import 'mascotasCompartidas.dart';
+import 'menu_lateral.dart';
 
 class Pantalla1 extends StatefulWidget {
   final int id;
@@ -53,7 +52,13 @@ class Pantalla1 extends StatefulWidget {
 class _Pantalla1State extends State<Pantalla1> {
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
-  bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
+  bool _menuAbierto = false;
+
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   String _capitalizar(String texto) {
     if (texto.isEmpty) return texto;
@@ -139,14 +144,6 @@ class _Pantalla1State extends State<Pantalla1> {
     });
   }
 
-
-  void _toggleMenu() {
-    setState(() {
-      _menuAbierto = !_menuAbierto;
-    });
-  }
-
-
   // Método para abrir galería y actualizar imagen
   Future<void> _seleccionarImagen() async {
     final picker = ImagePicker();
@@ -176,7 +173,7 @@ class _Pantalla1State extends State<Pantalla1> {
         final imagenBase64 = base64Encode(bytes);
 
         // ✅ Enviamos al backend
-        final url = Uri.parse("http://localhost:5000/actualizar_imagen");
+        final url = Uri.parse("https://apphuellitas-production.up.railway.app/actualizar_imagen");
         final response = await http.put(
           url,
           headers: {"Content-Type": "application/json"},
@@ -210,7 +207,6 @@ class _Pantalla1State extends State<Pantalla1> {
 
   @override
   Widget build(BuildContext context) {
-    // Mostrar imagen nueva si se seleccionó, o la de la BD si no
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
@@ -222,11 +218,11 @@ class _Pantalla1State extends State<Pantalla1> {
             ),
           );
         },
-        child: Image.asset('assets/inteligent.png', width: 36, height: 36), // Icono de la IA , fit: BoxFit.contain
+        child: Image.asset('assets/inteligent.png', width: 36, height: 36),
       ),
       body: Stack(
         children: [
-          // Fondo con desenfoque
+          // ----------------- FONDO -----------------
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -240,86 +236,18 @@ class _Pantalla1State extends State<Pantalla1> {
             ),
           ),
 
-          // 🧱 Contenido principal
+          // ----------------- CONTENIDO PRINCIPAL -----------------
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  _barraSuperior(context), // Barra superior con botón
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Image.asset('assets/Menu.png'),
-                        ),
-                        onPressed: _toggleMenu,
-                      ),
-                      
-                      Row(
-                        children: [
-                          // 🔹 PERFIL
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => listvaciacompartirScreen(id_dueno: widget.id),
-                                ),
-                              );
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Perfil.png'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
+                  const SizedBox(height: 10),
 
-                          // 🔹 CALENDARIO
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CalendarioEventosScreen(),
-                                ),
-                              );
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Calendr.png'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-
-                          // 🔹 CAMPANA (notificaciones)
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => NotifiMascotaScreen(),
-                                ),
-                              );
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Campana.png'),
-                            ),
-                          ),
-                        ],
-                      )
-                    ]
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 🔸 Foto de perfil con botón de cámara
+                  // ----------------- PERFIL -----------------
                   Stack(
                     children: [
                       GestureDetector(
@@ -331,9 +259,6 @@ class _Pantalla1State extends State<Pantalla1> {
                               : _imagen != null
                                   ? FileImage(_imagen!)
                                   : MemoryImage(widget.fotoPerfil),
-                          child: (_webImagen == null && _imagen == null)
-                              ? null
-                              : null,
                         ),
                       ),
                       Positioned(
@@ -360,18 +285,6 @@ class _Pantalla1State extends State<Pantalla1> {
 
                   const SizedBox(height: 10),
 
-                  if (_menuAbierto) ...[
-                    // Fondo semitransparente para cerrar el menú al tocar fuera
-                    GestureDetector(
-                      onTap: _toggleMenu,
-                      child: Container(
-                        color: Colors.black54,
-                      ),
-                    ),
-                    // Menú lateral animado
-                    MenuLateralAnimado(onCerrar: _toggleMenu),
-                  ],
-
                   // Nombre del usuario
                   Text(
                     "${_capitalizar(widget.nombreUsuario)} ${_capitalizar(widget.apellidoUsuario)}",
@@ -390,6 +303,8 @@ class _Pantalla1State extends State<Pantalla1> {
                   ),
 
                   const SizedBox(height: 20),
+
+                  // ----------------- MIS SERVICIOS -----------------
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -426,10 +341,68 @@ class _Pantalla1State extends State<Pantalla1> {
               ),
             ),
           ),
+
+          // ----------------- MENÚ LATERAL ANIMADO -----------------
+          if (_menuAbierto)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              child: MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id),
+            ),
         ],
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
 
 Widget _gridServicios(BuildContext context) {
     final List<Map<String, dynamic>> servicios = [
@@ -566,12 +539,12 @@ Widget _tarjetaServicio(BuildContext context, String label, List<String> assetPa
       case 'MIS MASCOTAS':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => MiMascotaScreen(id_dueno: widget.id)),
+          MaterialPageRoute(builder: (_) => MiMascotaScreen(id_dueno: widget.id, cedula: widget.cedula, nombreUsuario: widget.nombreUsuario, apellidoUsuario: widget.apellidoUsuario, telefono: widget.telefono, direccion: widget.direccion, fotoPerfil: widget.fotoPerfil, departamento: widget.departamento, ciudad: widget.ciudad)),
         );
         break;
       case 'PASEADORES':
         Navigator.push(
-          context,
+          context, 
           MaterialPageRoute(builder: (_) => BuscarPaseador(id_dueno: widget.id)),
         );
         break;

@@ -236,9 +236,10 @@ class _MascotasCompartidasState extends State<MascotasCompartidas> {
                       ? Padding(
                           padding: const EdgeInsets.all(20),
                           child: Container(
+                            width: 450,
                             height: 200,
                             padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 120),
+                                vertical: 20, horizontal: 20),
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(187, 255, 255, 255),
                               borderRadius: BorderRadius.circular(20),
@@ -267,7 +268,7 @@ class _MascotasCompartidasState extends State<MascotasCompartidas> {
                                   "No tienes mascotas compartidas",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black54,
                                   ),

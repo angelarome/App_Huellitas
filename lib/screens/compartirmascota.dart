@@ -6,15 +6,15 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'solicitudes.dart';
 import 'mascotasCompartidas.dart';
 
-class listvaciacompartirScreen extends StatefulWidget {
+class ListVaciaCompartirScreen extends StatefulWidget {
   final int id_dueno;
-  const listvaciacompartirScreen({super.key, required this.id_dueno});
+  const ListVaciaCompartirScreen({super.key, required this.id_dueno});
 
   @override
-  State<listvaciacompartirScreen> createState() => _listvaciacompartirScreen();
+  State<ListVaciaCompartirScreen> createState() => _ListVaciaCompartirScreen();
 }
 
-class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
+class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
   List<Map<String, dynamic>> _usuarios = [];
   List<Map<String, dynamic>> _usuariosFiltrado = [];
   TextEditingController _buscarController = TextEditingController();
@@ -427,7 +427,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
                                     contentPadding: EdgeInsets.symmetric(vertical: 12),
                                     suffixIcon: Padding(
                                       padding: EdgeInsets.only(right: 4),
-                                      child: Image.asset("assets/buscar.png", width: 20, height: 20),
+                                      child: Image.asset("assets/buscar.png", width: 15, height: 15),
                                     ),
                                   ),
                                   onChanged: (value) {
@@ -564,7 +564,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
                                 const Text(
                                   "Mascotas\ncompartidas",
                                   style: TextStyle(
-                                    fontSize: 19,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -616,7 +616,7 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
                                 const Text(
                                   "Solicitudes\nenviadas",
                                   style: TextStyle(
-                                    fontSize: 19,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -644,63 +644,61 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
   }
 
   Widget _tarjetaComentarios() {
-    if (_usuarios.isEmpty) {
-      return const Center(
-        child: Text(
-          "No hay usuarios disponibles",
-          style: TextStyle(color: Colors.white),
-        ),
-      );
-    }
+  // Filtrar para que no aparezca tu propio usuario
+  final usuariosFiltrados = _usuarios.where((u) => u['id_dueno'] != widget.id_dueno).toList();
 
-    return Column(
-        children: _usuarios.map<Widget>((usuario) {
-          final String nombre = capitalizar(usuario['nombre'] ?? 'Sin nombre');
-          final String apellido = capitalizar(usuario['apellido'] ?? 'Sin apellido');
-          final String? imagenBase64 = usuario['imagen'];
+  if (usuariosFiltrados.isEmpty) {
+    return const Center(
+      child: Text(
+        "No hay usuarios disponibles",
+        style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
 
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color:  const Color.fromARGB(187, 255, 255, 255),
-            border: Border.all(
-              color: const Color.fromARGB(255, 180, 179, 176),
-              width: 2, // Ancho del borde
-            ),
-            borderRadius: BorderRadius.circular(20),
+  return Column(
+    children: usuariosFiltrados.map<Widget>((usuario) {
+      final String nombre = capitalizar(usuario['nombre'] ?? 'Sin nombre');
+      final String apellido = capitalizar(usuario['apellido'] ?? 'Sin apellido');
+      final String? imagenBase64 = usuario['imagen'];
+
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(187, 255, 255, 255),
+          border: Border.all(
+            color: const Color.fromARGB(255, 180, 179, 176),
+            width: 2,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // 🖼 Imagen de la tienda
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: (imagenBase64 != null && imagenBase64.isNotEmpty)
-                    ? MemoryImage(base64Decode(imagenBase64))
-                    : const AssetImage("assets/usuario.png") as ImageProvider,
-              ),
-              const SizedBox(width: 12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Imagen del usuario
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: (imagenBase64 != null && imagenBase64.isNotEmpty)
+                  ? MemoryImage(base64Decode(imagenBase64))
+                  : const AssetImage("assets/usuario.png") as ImageProvider,
+            ),
+            const SizedBox(width: 12),
 
-             // 🏪 Información
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "$nombre $apellido",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 37, 36, 36),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            // Nombre y botón debajo
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    "$nombre $apellido",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 37, 36, 36),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: () {
                       _mostrarModalsolicitud(usuario['id_dueno']);
@@ -712,11 +710,11 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
                     ),
                     label: const Text(
                       "Enviar solicitud",
-                      style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+                      style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 33, 138, 184),
-                      foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -725,15 +723,13 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
-
-              
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
 
   Widget _icono(String assetPath) {
     return Padding(
@@ -804,44 +800,57 @@ class _listvaciacompartirScreen extends State<listvaciacompartirScreen> {
 
                     const SizedBox(height: 10),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Image.asset(
-                            "assets/cancelar.png",
-                            height: 24,
-                            width: 24,
-                          ),
-                          label: const Text("Cancelar"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Image.asset(
+                              "assets/cancelar.png",
+                              height: 24,
+                              width: 24,
+                            ),
+                            label: const Text(
+                              "Cancelar",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await enviar_solicitud(_idMascota, id_persona);
-                            Navigator.pop(context);
-                          
-                          },
-                          icon: Image.asset(
-                            "assets/correo.png",
-                            height: 24,
-                            width: 24,
-                          ),
-                          label: const Text("Enviar"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 33, 138, 184),
-                            foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        const SizedBox(width: 12), // espacio entre botones
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              await enviar_solicitud(_idMascota, id_persona);
+                              Navigator.pop(context);
+                            },
+                            icon: Image.asset(
+                              "assets/correo.png",
+                              height: 24,
+                              width: 24,
+                            ),
+                            label: const Text(
+                              "Enviar",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(255, 33, 138, 184),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),

@@ -6,11 +6,29 @@ import 'dart:convert'; // Para jsonEncode y base64Encode
 import 'package:flutter/services.dart';
 import 'perfil_mascota.dart';
 import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import '1pantalla.dart';
 
 class MiMascotaScreen extends StatefulWidget {
   final int id_dueno;
+  final String cedula;
+  final String nombreUsuario;
+  final String apellidoUsuario;
+  final String telefono;
+  final String direccion;
+  final Uint8List fotoPerfil;
+  final String departamento;
+  final String ciudad;
 
-  const MiMascotaScreen({super.key, required this.id_dueno});
+  const MiMascotaScreen({super.key, required this.id_dueno, required this.cedula,
+    required this.nombreUsuario,
+    required this.apellidoUsuario,
+    required this.telefono,
+    required this.direccion,
+    required this.fotoPerfil,
+    required this.departamento,
+    required this.ciudad,});
 
   @override
   _MiMascotaScreenState createState() => _MiMascotaScreenState();
@@ -126,76 +144,8 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
               child: Column(
                 children: [
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Image.asset('assets/Menu.png'),
-                        ),
-                        onPressed: _toggleMenu,
-                      ),
-                      Row(
-                        children: [
-                          // 🔹 PERFIL
-                          GestureDetector(
-                            onTap: () {
-                              
-                              
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Perfil.png'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
+                  _barraSuperiorConAtras(context),
 
-                          // 🔹 CALENDARIO
-                          GestureDetector(
-                            onTap: () {
-                              // Acción calendario
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Calendr.png'),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-
-                          // 🔹 CAMPANA (notificaciones)
-                          GestureDetector(
-                            onTap: () {
-                              // Acción campana
-                            },
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Image.asset('assets/Campana.png'),
-                            ),
-                          ),
-                        ],
-                      )
-                    ]
-                  ),
-              
-                  
-                  // Ícono de devolver alineado con menú
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: IconButton(
-                        icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  ),
                   // Título centrado
                   const Center(
                     child: Text(
@@ -419,7 +369,7 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AgregarMascotaScreen(
-                              id_dueno: widget.id_dueno,
+                              id_dueno: widget.id_dueno, cedula: widget.cedula, nombreUsuario: widget.nombreUsuario, apellidoUsuario: widget.apellidoUsuario, telefono: widget.telefono, direccion: widget.direccion, fotoPerfil: widget.fotoPerfil, departamento: widget.departamento, ciudad: widget.ciudad
                             ),
                           ),
                         );
@@ -468,8 +418,88 @@ class _MiMascotaScreenState extends State<MiMascotaScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Pantalla1(id: widget.id_dueno, cedula: widget.cedula, nombreUsuario: widget.nombreUsuario, apellidoUsuario: widget.apellidoUsuario, telefono: widget.telefono, direccion: widget.direccion, fotoPerfil: widget.fotoPerfil, departamento: widget.departamento, ciudad: widget.ciudad),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
+  
 }

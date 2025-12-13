@@ -1,21 +1,42 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '1pantalla.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert'; 
+import 'mimascota.dart';
+import 'buscarTienda.dart';
+import 'buscarVeterinaria.dart';
+import 'buscarpaseador.dart';
+import 'calendariomispedidos.dart';
+import 'misreservascalendario.dart';
+import 'mispaseos.dart';
+import 'miscitas.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'iniciarsesion.dart';
 
 class MenuLateralAnimado extends StatefulWidget {
-  final VoidCallback onCerrar; // 👈 Mover aquí la propiedad
+  final VoidCallback onCerrar;
+  final int id;
+
 
   const MenuLateralAnimado({
     super.key,
-    required this.onCerrar, // 👈 Añadir al constructor
+    required this.onCerrar,
+    required this.id,
+
   });
 
   @override
   State<MenuLateralAnimado> createState() => _MenuLateralAnimadoState();
 }
 
+
 class _MenuLateralAnimadoState extends State<MenuLateralAnimado>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _offsetAnimation;
+  late final AnimationController _controller;
+  late final Animation<Offset> _offsetAnimation;
+
+  List<Map<String, dynamic>> dueno = [];
 
   @override
   void initState() {
@@ -32,6 +53,7 @@ class _MenuLateralAnimadoState extends State<MenuLateralAnimado>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
+    _obtenerUsuario();
   }
 
   @override
@@ -44,6 +66,37 @@ class _MenuLateralAnimadoState extends State<MenuLateralAnimado>
     _controller.reverse().then((_) {
       widget.onCerrar(); // 👈 ahora funciona correctamente
     });
+  }
+
+  Future<void> _obtenerUsuario() async {
+
+    final url = Uri.parse("https://apphuellitas-production.up.railway.app/obtenerUsuario");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_dueno": widget.id}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List duenoJson = data["usuario"] ?? [];
+
+      setState(() {
+        dueno = duenoJson.map<Map<String, dynamic>>((m) {
+          if (m["foto_perfil"] != null && m["foto_perfil"].isNotEmpty) {
+            try {
+              m["foto"] = base64Decode(m["foto_perfil"]);
+            } catch (e) {
+              print("❌ Error decodificando imagen: $e");
+              m["foto"] = null;
+            }
+          }
+          return Map<String, dynamic>.from(m);
+        }).toList();
+      });
+    } else {
+      print("Error al obtener mascotas: ${response.statusCode}");
+    }
   }
 
   @override
@@ -102,23 +155,129 @@ class _MenuLateralAnimadoState extends State<MenuLateralAnimado>
                 ),
                 const SizedBox(height: 30),
 
-                // Opciones del menú
-                _menuItem("Inicio", 'assets/casa.png'),
-                _menuItem("Mascotas", 'assets/mascotas.png'),
-                _menuItem("Tiendas", 'assets/Insumos.png'),
-                _menuItem("Mis pedidos", 'assets/bolso.png'),
-                _menuItem("Veterinarias", 'assets/Medico.png'),
-                _menuItem("Mis citas", 'assets/citas.png'),
-                _menuItem("Paseadores", 'assets/paseador.png'),
-                _menuItem("Paseos programados", 'assets/paisaje.png'),
-                _menuItem("Configuración", 'assets/engranaje.png'),
-
+                // Items del menú
+                _menuItem("Inicio", 'assets/casa.png', () {
+                  if (dueno.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Pantalla1(
+                          id: widget.id,
+                          cedula: dueno[0]["cedula"],
+                          nombreUsuario: dueno[0]["nombre"],
+                          apellidoUsuario: dueno[0]["apellido"],
+                          telefono: dueno[0]["telefono"],
+                          direccion: dueno[0]["direccion"],
+                          fotoPerfil: dueno[0]["foto"] ?? Uint8List(0),
+                          departamento: dueno[0]["departamento"],
+                          ciudad: dueno[0]["ciudad"],
+                        ),
+                      ),
+                    );
+                  } else {
+                    // Opcional: mostrar un mensaje de espera o error
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("❌ Usuario no cargado todavía")),
+                    );
+                  }
+                }),
+                _menuItem("Mascotas", 'assets/mascotas.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MiMascotaScreen(
+                        id_dueno: widget.id, cedula: dueno[0]["cedula"],
+                          nombreUsuario: dueno[0]["nombre"],
+                          apellidoUsuario: dueno[0]["apellido"],
+                          telefono: dueno[0]["telefono"],
+                          direccion: dueno[0]["direccion"],
+                          fotoPerfil: dueno[0]["foto"] ?? Uint8List(0),
+                          departamento: dueno[0]["departamento"],
+                          ciudad: dueno[0]["ciudad"],
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Tiendas", 'assets/Insumos.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TiendaMascotaScreen(
+                        id_dueno: widget.id,
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Mis pedidos", 'assets/bolso.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CalendarioTiendaScreen(
+                        id_dueno: widget.id,
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Mis reservas", 'assets/reserva.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CalendarioReservasScreen(
+                        id_dueno: widget.id,
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Veterinarias", 'assets/Medico.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BuscarvMascotaScreen(
+                        id_dueno: widget.id,
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Mis citas", 'assets/citas.png', () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CalendarioScreenc(
+                          id_dueno: widget.id,
+                        ),
+                      ),
+                    );
+                }),
+                _menuItem("Paseadores", 'assets/paseador.png', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BuscarPaseador(
+                        id_dueno: widget.id,
+                      ),
+                    ),
+                  );
+                }),
+                _menuItem("Paseos programados", 'assets/paisaje.png',
+                    () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CalendarioScreen(
+                          id_dueno: widget.id,
+                        ),
+                      ),
+                    );
+                }),
                 const SizedBox(height: 20),
                 Divider(color: Colors.grey),
                 const SizedBox(height: 10),
-
-                _menuItem("Soporte", 'assets/soporte.png'),
-                _menuItem("Cerrar sesión", 'assets/cerrarsesion.png'),
+                _menuItem("Soporte", 'assets/soporte.png', () {
+                  Navigator.pushNamed(context, "/pedidos");
+                }),
+                _menuItem("Cerrar sesión", 'assets/cerrar-sesion.png', () {
+                  cerrarSesion(context);
+                }),
               ],
             ),
           ),
@@ -127,13 +286,29 @@ class _MenuLateralAnimadoState extends State<MenuLateralAnimado>
     );
   }
 
-  Widget _menuItem(String label, String iconPath) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        leading: Image.asset(iconPath, width: 24, height: 24),
-        title: Text(label),
-        onTap: cerrarMenu,
+  Widget _menuItem(String texto, String icono, Function()? onTap) {
+    return ListTile(
+      leading: Image.asset(icono, width: 25, height: 25),
+      title: Text(texto),
+      onTap: onTap,   // 👈 aquí pasa lo que ejecutarás
+    );
+  }
+
+  Future<void> cerrarSesion(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Borramos toda la información de sesión
+    await prefs.remove('logueado');
+    await prefs.remove('idUsuario');
+    await prefs.remove('idVeterinaria');
+    await prefs.remove('idTienda');
+    await prefs.remove('idPaseador');
+
+    // Redirigimos al login
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
       ),
     );
   }

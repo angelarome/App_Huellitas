@@ -34,5 +34,28 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+
+  <script>
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwOXrXvkR7KVJt7NrZPy5t9aSMG3vGbiM",
+      authDomain: "huellitas-9c216.firebaseapp.com",
+      projectId: "huellitas-9c216",
+      storageBucket: "huellitas-9c216.firebasestorage.app",
+      messagingSenderId: "317394582572",
+      appId: "1:317394582572:web:6451f1d37a26cb441ea589",
+      measurementId: "G-C36RH7Y8WE"
+    };
+
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Inicializa Messaging
+    const messaging = firebase.messaging();
+  </script>
 </body>
 </html>

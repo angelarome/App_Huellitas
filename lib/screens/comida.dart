@@ -5,14 +5,18 @@ import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart'; 
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
 
 class SimpleFoodWaterCalendar extends StatefulWidget {
-final int idMascota;
+  final int idMascota;
+  final int id_dueno;
 
-const SimpleFoodWaterCalendar({super.key, required this.idMascota});
+  const SimpleFoodWaterCalendar({super.key, required this.idMascota, required this.id_dueno});
 
-@override
-_SimpleFoodWaterCalendarState createState() => _SimpleFoodWaterCalendarState();
+  @override
+  _SimpleFoodWaterCalendarState createState() => _SimpleFoodWaterCalendarState();
 }
 
 class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
@@ -22,6 +26,13 @@ class _SimpleFoodWaterCalendarState extends State<SimpleFoodWaterCalendar> {
   int _ultimoTotalAgua = 0;
   Map<int, bool> _diasComida = {};
   Map<int, bool> _diasAgua = {};
+  bool _menuAbierto = false;
+
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   @override
   void initState() {
@@ -696,7 +707,7 @@ Widget build(BuildContext context) {
             padding: const EdgeInsets.all(16.0), // ahora sí solo afecta el contenido
             child: Column(
               children: [
-                _barraSuperior(context),
+                _barraSuperiorConAtras(context),
                 const SizedBox(height: 20),
 
                 Align(
@@ -846,13 +857,14 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
+        if (_menuAbierto)
+          MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
+        const SizedBox(height: 120),
       ],
     ),
   );
 }
-
-}
-Widget _barraSuperior(BuildContext context) {
+  Widget _barraSuperior(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -867,10 +879,22 @@ Widget _barraSuperior(BuildContext context) {
         Row(
           children: [
             _iconoTop("assets/Perfil.png", () {
-              
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno,
+                ),
+              ));
             }),
             const SizedBox(width: 10),
-            _iconoTop("assets/Calendr.png", () {}),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
             const SizedBox(width: 10),
             _iconoTop("assets/Campana.png", () {}),
           ],
@@ -881,20 +905,38 @@ Widget _barraSuperior(BuildContext context) {
     );
   }
 
-Widget _iconoTop(String assetPath, VoidCallback onTap) {
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: 24,
-        height: 24,
-        child: Image.asset(assetPath),
-      ),
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
     );
   }
+}
 
-void _toggleMenu() {
-    // Lógica para abrir/cerrar el menú lateral
-  }
 class _HeaderMes extends StatelessWidget {
   final String titulo;
 

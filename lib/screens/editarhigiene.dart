@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:http/http.dart' as http; 
 import 'dart:convert';
 import 'higiene.dart';  
+import 'dart:typed_data';
 
 class EditarCuidadoScreen extends StatefulWidget {
   final int idMascota;
@@ -14,8 +15,10 @@ class EditarCuidadoScreen extends StatefulWidget {
   final String tipo;
   final String hora;
   final String fecha;
+  final int id_dueno;
+  final Uint8List? fotoMascota;
 
-  const EditarCuidadoScreen({super.key, required this.idMascota, required this.id_higiene, required this.nombreMascota, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const EditarCuidadoScreen({super.key, required this.idMascota, required this.id_higiene, required this.id_dueno, required this.nombreMascota, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha, required this.fotoMascota});
 
 
   @override
@@ -348,7 +351,7 @@ class _EditarCuidadoScreenState extends State<EditarCuidadoScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => HigieneScreen(
-            id: widget.idMascota,
+            id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota
           ),
         ),
       );

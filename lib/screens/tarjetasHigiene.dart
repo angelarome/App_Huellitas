@@ -6,6 +6,11 @@ import 'dart:typed_data'; // Para Uint8List
 import 'dart:io'; // Para File (solo en móvil, no en web)
 import 'higiene.dart';
 import 'editarhigiene.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'perfil_mascota.dart';
+
 
 class RecordatorioBanioScreen extends StatefulWidget {
   final int idMascota;
@@ -16,8 +21,11 @@ class RecordatorioBanioScreen extends StatefulWidget {
   final String tipo;
   final String hora;
   final String fecha;
+  final int id_dueno;
+  final String nombreMascota;
+  final Uint8List? fotoMascota;
 
-  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha});
+  const RecordatorioBanioScreen({super.key, required this.idMascota, required this.id_higiene, required this.frecuencia, required this.dias_personalizados, required this.notas, required this.tipo, required this.hora, required this.fecha, required this.id_dueno, required this.nombreMascota, required this.fotoMascota});
 
   @override
   State<RecordatorioBanioScreen> createState() => _RecordatorioBanioScreenState();
@@ -28,6 +36,13 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
   
+  bool _menuAbierto = false; // 👈 define esto en tu StatefulWidget
+
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   @override
   void initState() {
@@ -241,7 +256,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HigieneScreen(id: widget.idMascota),
+          builder: (context) => HigieneScreen(id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota),
         ),
       );
 
@@ -334,40 +349,7 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Encabezado superior (sin cambios)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Image.asset('assets/Menu.png', width: 24, height: 24),
-                      ),
-                      Row(
-                        children: [
-                          Image.asset('assets/Perfil.png', width: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Calendr.png', width: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Campana.png', width: 24),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Ícono de devolver alineado con menú
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: IconButton(
-                        icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  ),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 10),
 
                   // Tarjeta azul con contenido
@@ -482,6 +464,9 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
                                         tipo: widget.tipo,
                                         hora: widget.hora,
                                         fecha: widget.fecha,
+                                        id_dueno: widget.id_dueno,
+                                        fotoMascota: widget.fotoMascota
+
                                       ),
                                     ),
                                   ).then((value) {
@@ -512,6 +497,8 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
@@ -554,4 +541,76 @@ class _RecordatorioBanioScreenState extends State<RecordatorioBanioScreen> {
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 }

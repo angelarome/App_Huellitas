@@ -402,23 +402,7 @@ class _AgregarHistorialScreenState extends State<AgregarHistorialScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(width: 24, height: 24, child: Image.asset('assets/Menu.png')),
-                        onPressed: _toggleMenu,
-                    
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(width: 24, height: 24, child: Image.asset('assets/Calendr.png')),
-                          const SizedBox(width: 10),
-                          SizedBox(width: 24, height: 24, child: Image.asset('assets/Campana.png')),
-                        ],
-                      ),
-                    ],
-                  ),
+                   
                   const SizedBox(height: 20),
                   const Center(
                     child: Text(

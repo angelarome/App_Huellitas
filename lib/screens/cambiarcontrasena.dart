@@ -70,10 +70,12 @@ class _RecuperarCuentaPageState extends State<RecuperarCuentaPage>{
   
   ocultarLoading(context);
   if (response.statusCode == 200) {
+    confirmarController.clear();
+    passwordController.clear();
     final data = jsonDecode(response.body);
     mostrarMensajeFlotante(
       context,
-      data["mensaje"], // <--- usar el mensaje del backend
+      data["mensaje"], 
       colorFondo: const Color.fromARGB(255, 214, 255, 214),
       colorTexto: Colors.black,
     );

@@ -13,7 +13,8 @@ import 'veterinaria2.dart';
 import 'mitienda2.dart';
 import 'mipaseador2.dart';
 import 'recuperarcontrasena.dart';
-// nicolas 
+import 'package:shared_preferences/shared_preferences.dart';
+
 final TextEditingController correoController = TextEditingController();
 final TextEditingController passwordController = TextEditingController();
 
@@ -63,7 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     ocultarLoading(context);
+  
     if (response.statusCode == 200) {
+      correoController.clear();
+      passwordController.clear();
       final data = jsonDecode(response.body);
 
       final usuario = data["usuario"];
@@ -82,6 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
         final ciudad = detalles["ciudad"];
 
         final Uint8List bytes = base64Decode(foto);
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('logueado', true);
+        await prefs.setInt('idUsuario', id);
 
         Navigator.pushReplacement(
           context,
@@ -102,6 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } 
       else if (rol == "veterinaria") {
         final id = detalles["id_veterinaria"];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('logueado', true);
+        await prefs.setInt('idVeterinaria', id);
 
         Navigator.pushReplacement(
           context,
@@ -116,6 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
       else if (rol == "tienda") {
         final idtienda = detalles["idtienda"];
 
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('logueado', true);
+        await prefs.setInt('idTienda', idtienda);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -128,7 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       else if (rol == "paseador") {
         final id_paseador = detalles["id_paseador"];
-
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('logueado', true);
+        await prefs.setInt('idPaseador', id_paseador);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -488,7 +505,8 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
 }
 
 
-  Widget _campoPassword(String label, {
+  Widget _campoPassword(
+    String label, {
     required bool ocultar,
     required VoidCallback onToggle,
     required TextEditingController controller,
@@ -497,6 +515,7 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Etiqueta
         Text(
           label,
           style: const TextStyle(
@@ -506,17 +525,35 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
+
+        // Campo de texto
+        TextFormField(
           obscureText: ocultar,
           controller: controller,
+
+          // Esto evita que se ingresen caracteres indeseados
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+              RegExp(r'[a-zA-Z0-9@#\$%&*_-]'), // solo permitidos
+            ),
+          ],
+
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
             hintText: "ej: familia5577",
+
+            // Icono al inicio
             prefixIcon: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: SizedBox(width: 24, height: 24, child: icono),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: icono,
+              ),
             ),
+
+            // Icono para mostrar/ocultar contraseña
             suffixIcon: IconButton(
               onPressed: onToggle,
               icon: Icon(
@@ -524,13 +561,30 @@ Widget _campoTexto(String label, Widget icono, TextEditingController controller,
                 color: Colors.grey[700],
               ),
             ),
+
+            // Bordes
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
           ),
+
+          // Validación
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "La contraseña es obligatoria";
+            }
+
+            final regex = RegExp(r'^[a-zA-Z0-9@#\$%&*_-]{6,20}$');
+            if (!regex.hasMatch(value)) {
+              return "Contraseña inválida. Solo letras, números y @#\$%&*_-";
+            }
+
+            return null; // válido
+          },
         ),
       ],
     );
   }
+
 }

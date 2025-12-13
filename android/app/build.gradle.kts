@@ -1,14 +1,22 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
+    id("dev.flutter.flutter-gradle-plugin") // Flutter plugin
+    id("com.google.gms.google-services")    // Firebase
 }
 
 android {
     namespace = "com.example.huellitas"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 33 // valor explícito, no flutter.compileSdkVersion
+    ndkVersion = "25.2.9519653" // ejemplo, ajusta según tu proyecto
+
+    defaultConfig {
+        applicationId = "com.example.huellitas"
+        minSdk = 21 // valor explícito
+        targetSdk = 33 // valor explícito
+        versionCode = 1
+        versionName = "1.0"
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -16,27 +24,20 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
-    defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.huellitas"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        jvmTarget = "11"
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    // otras librerías Firebase que necesites
 }
 
 flutter {
