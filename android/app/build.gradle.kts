@@ -1,25 +1,24 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("dev.flutter.flutter-gradle-plugin") // Flutter plugin
-    id("com.google.gms.google-services")    // Firebase
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.huellitas"
-    compileSdk = 33 // valor explícito, no flutter.compileSdkVersion
-    ndkVersion = "25.2.9519653" // ejemplo, ajusta según tu proyecto
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.huellitas"
         minSdk = flutter.minSdkVersion
-        targetSdk = 33 // valor explícito
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
 
     buildFeatures {
-        buildConfig = true  // <--- esto es lo que Cloud Firestore necesita
+        buildConfig = true // ✅ correcto en Kotlin DSL
     }
 
     compileOptions {
@@ -39,9 +38,13 @@ android {
 }
 
 dependencies {
+    // Usa BOM para evitar conflictos de versiones
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    
+    // Firebase
     implementation("com.google.firebase:firebase-analytics")
-    // otras librerías Firebase que necesites
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-firestore")
 }
 
 flutter {

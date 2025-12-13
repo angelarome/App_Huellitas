@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
 
-// Handler de notificaciones en background (solo móvil)
+// Handler de background (solo móvil)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("📩 Mensaje en background: ${message.messageId}");
@@ -11,10 +11,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> configurarFCM() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  // Registrar handler de background
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
 
-  // Solicitar permisos
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     badge: true,
@@ -22,19 +22,20 @@ Future<void> configurarFCM() async {
   );
   print('Permiso: ${settings.authorizationStatus}');
 
-  // Obtener token
-  String? token = await messaging.getToken();
+  String? token;
+  if (kIsWeb) {
+    token = await messaging.getToken(
+      vapidKey: "TU_VAPID_KEY_DEL_FIREBASE_CONSOLE",
+    );
+  } else {
+    token = await messaging.getToken();
+  }
   print("🔑 Token FCM: $token");
 
-  // Mensajes en primer plano
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print("📩 Mensaje en foreground: ${message.notification?.title}");
-    if (message.notification?.body != null) {
-      print("📩 Body: ${message.notification?.body}");
-    }
+    print("📩 Mensaje foreground: ${message.notification?.title}");
   });
 
-  // Cuando se abre la app desde notificación
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     print("📩 App abierta desde notificación");
   });
