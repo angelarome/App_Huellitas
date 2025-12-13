@@ -239,7 +239,12 @@ class _AgregarPedidoScreenState extends State<AgregarPedidoScreen> {
   floatingActionButton: FloatingActionButton(
   backgroundColor: Colors.blue,
   onPressed: () {
-  // TODO: Acción de chat
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IaMascotasScreen(id_dueno: widget.id_dueno),
+      ),
+    );
   },
   child: Image.asset('assets/inteligent.png', width: 36, height: 36),
   ),

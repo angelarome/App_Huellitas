@@ -5,6 +5,10 @@ import 'dart:convert';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'solicitudes.dart';
 import 'mascotasCompartidas.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'interfazIA.dart';
 
 class ListVaciaCompartirScreen extends StatefulWidget {
   final int id_dueno;
@@ -33,6 +37,13 @@ class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
     _obtenerMascotas(); // Llamamos a la API apenas se abre la pantalla
   }
   bool cargando = true;
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   final List<String> tiposRelacion = [
     "Mamá",
@@ -305,7 +316,12 @@ class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 81, 68, 46),
         onPressed: () {
-          // TODO: Acción de chat
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => IaMascotasScreen(id_dueno: widget.id_dueno),
+            ),
+          );
         },
         child: Image.asset('assets/inteligent.png', width: 36, height: 36),
       ),
@@ -336,40 +352,7 @@ class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Encabezado con íconos
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: Image.asset('assets/Menu.png', width: 24, height: 24),
-                        onPressed: () {},
-                      ),
-                      Row(
-                        children: [
-                          Image.asset('assets/Calendr.png', width: 24, height: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Campana.png', width: 24, height: 24),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/Perfil.png', width: 24, height: 24),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Flecha debajo del menú
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/devolver5.png',
-                        width: 30,
-                        height: 30,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
-                  ),
-
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 10),
 
                   // Título
@@ -638,10 +621,84 @@ class _ListVaciaCompartirScreen extends State<ListVaciaCompartirScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _tarjetaComentarios() {
   // Filtrar para que no aparezca tu propio usuario
