@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'mitienda2.dart';
+import 'barralateraltienda.dart';
 
 class MilesFormatter extends TextInputFormatter {
   final NumberFormat _formatter = NumberFormat.decimalPattern('es_CO');
@@ -71,6 +72,13 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
   late TextEditingController nombreController;
   late TextEditingController tarifaController;
   late TextEditingController cantidadController;
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   @override
   void initState() {
@@ -414,28 +422,7 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(width: 24,height: 24, child: Image.asset('assets/Menu.png'),
-                        ),
-                        onPressed: () {},
-                      ),
-                      Row(
-                        children: [
-                          SizedBox(width: 24,height: 24, child: Image.asset('assets/Perfil.png'),
-                          ),
-                          const SizedBox(width: 10),
-                          SizedBox(width: 24,height: 24, child: Image.asset('assets/Calendr.png'),
-                          ),
-                          const SizedBox(width: 10),
-                          SizedBox(width: 24,height: 24, child: Image.asset('assets/Campana.png'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _barraSuperior(context),
 
                   const SizedBox(height: 20),
 
@@ -606,12 +593,46 @@ class _ProductoMascotaEditarScreen extends State<ProductoMascotaEditarScreen> {
             ),
           ),
         ),
+        if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.idtienda),
       ],
     ),
   );
 }
 
 
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+  
   Widget _campoDescripcion(String etiqueta, String assetPath, TextEditingController controller) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,

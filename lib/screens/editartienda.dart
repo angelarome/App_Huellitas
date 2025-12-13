@@ -10,7 +10,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'mitienda2.dart';
 import 'package:intl/intl.dart'; 
- import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';
+import 'barralateraltienda.dart';
 
 class Editartienda extends StatefulWidget {
   final int idtienda;
@@ -118,6 +119,13 @@ class _EditartiendaState extends State<Editartienda> {
     }
 
     _imagenBase64 = widget.imagen;
+  } 
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
   }
 
   String? departamentoSeleccionado;
@@ -722,45 +730,7 @@ class _EditartiendaState extends State<Editartienda> {
               child: Column(
                 children: [
                   // Row superior: menú y iconos
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Menu.png')),
-                        onPressed: () {},
-                      ),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Perfil.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Calendr.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Campana.png')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _barraSuperior(context),
 
                   const SizedBox(height: 20),
 
@@ -1068,12 +1038,46 @@ class _EditartiendaState extends State<Editartienda> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.idtienda),
         ],
       ),
     );
   }
 
-    
+    Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+
     String _formatearHora(TimeOfDay hora) {
       final horaInt = hora.hourOfPeriod == 0 ? 12 : hora.hourOfPeriod;
       final periodo = hora.period == DayPeriod.am ? "AM" : "PM";
