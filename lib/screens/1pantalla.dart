@@ -214,7 +214,7 @@ class _Pantalla1State extends State<Pantalla1> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => IaMascotasScreen(),
+              builder: (context) => IaMascotasScreen(id_dueno: widget.id),
             ),
           );
         },

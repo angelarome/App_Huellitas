@@ -550,13 +550,6 @@ class _AgregarVeterinariaScreenState extends State<AgregarVeterinariaScreen> {
  @override
 Widget build(BuildContext context) {
   return Scaffold(
-    floatingActionButton: FloatingActionButton(
-      backgroundColor: Colors.blue,
-      onPressed: () {
-        // TODO: Acción de chat
-      },
-      child: Image.asset('assets/inteligent.png', width: 36, height: 36),
-    ),
     body: Stack(
       children: [
         // Fondo con imagen

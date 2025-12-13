@@ -540,7 +540,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
       case 'DOCUMENTOS':
         Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => AgregarDocumentosScreen(id: widget.idMascota)),
+            MaterialPageRoute(builder: (_) => AgregarDocumentosScreen(id: widget.idMascota, id_dueno: widget.id_dueno, nombreMascota: widget.nombreMascota, fotoMascota: widget.fotoMascota)),
         );
         break;
       case 'HISTORIAL CLÍNICO':

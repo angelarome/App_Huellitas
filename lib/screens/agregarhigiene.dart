@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'compartirmascota.dart';
 import 'calendario.dart';
 import 'menu_lateral.dart';
+import 'interfazIA.dart';
 
 class AgregarCuidadoScreen extends StatefulWidget {
   const AgregarCuidadoScreen({super.key, required this.idMascota, required this.id_dueno, required this.nombreMascota, required this.fotoMascota});
@@ -363,7 +364,12 @@ class _AgregarCuidadoScreenState extends State<AgregarCuidadoScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: () {
-          // Acción de IA
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => IaMascotasScreen(id_dueno: widget.id_dueno),
+            ),
+          );
         },
         child: Image.asset('assets/inteligent.png', width: 36, height: 36, fit: BoxFit.contain),
       ),

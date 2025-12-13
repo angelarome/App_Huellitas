@@ -6,6 +6,7 @@ import 'higiene.dart';
 import 'package:flutter/services.dart';
 import 'historialClinico.dart';
 import 'verhistorial_clinico.dart';
+import 'interfazIA.dart';
 
 class AgregarHistorialScreen extends StatefulWidget {
   final int idMascota;
@@ -379,7 +380,7 @@ class _AgregarHistorialScreenState extends State<AgregarHistorialScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: () {
-          // Acción de IA
+          
         },
         child: Image.asset('assets/inteligent.png', width: 36, height: 36, fit: BoxFit.contain),
       ),
