@@ -30,7 +30,7 @@ Future<void> configurarFCM() async {
   String? token;
   if (kIsWeb) {
     token = await messaging.getToken(
-      vapidKey: "TU_VAPID_KEY_DEL_FIREBASE_CONSOLE",
+      vapidKey: "BGRwor2RqtfXUxiARcQz2F6FMT7OarRAuLeALC3nrK5z2KK0Ga3x0F7AIvGJVNaikrU2DIF4GIfSXIXinnNCnPs",
     );
   } else {
     token = await messaging.getToken();
