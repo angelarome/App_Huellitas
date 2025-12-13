@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/firebase_notifications.dart'; // Tu archivo con configurarFCM()
 import 'screens/InitScreen.dart';
-
+import 'package:permission_handler/permission_handler.dart';
+import 'screens/permisos.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Necesario para async en main
 
@@ -11,6 +12,7 @@ void main() async {
 
   // Configura notificaciones (Web + Móvil)
   await configurarFCM();
+  await solicitarPermisoNotificaciones();
 
   runApp(MyApp());
 }
