@@ -13,6 +13,10 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'interfazIA.dart';
 
 class MilesFormatter extends TextInputFormatter {
   @override
@@ -64,7 +68,13 @@ class _AgregarReservaScreenState extends State<AgregarReservaScreen> {
   List<String> _tipoPagoSeleccionado = [];
   TextEditingController _fechaHoraController = TextEditingController();
   TextEditingController _fechaHoraVencimientoController = TextEditingController();
-
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
+  
   @override
   void initState() {
     super.initState();
@@ -230,7 +240,12 @@ class _AgregarReservaScreenState extends State<AgregarReservaScreen> {
   floatingActionButton: FloatingActionButton(
   backgroundColor: Colors.blue,
   onPressed: () {
-  // TODO: Acción de chat
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IaMascotasScreen(id_dueno: widget.id_dueno),
+      ),
+    );
   },
   child: Image.asset('assets/inteligent.png', width: 36, height: 36),
   ),
@@ -254,46 +269,7 @@ class _AgregarReservaScreenState extends State<AgregarReservaScreen> {
   padding: const EdgeInsets.all(16),
   child: Column(
   children: [
-  // Row superior: menú y iconos
-  Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-  IconButton(
-  icon: SizedBox(
-  width: 24,
-  height: 24,
-  child: Image.asset('assets/Menu.png')),
-  onPressed: () {},
-  ),
-  Row(
-  children: [
-  GestureDetector(
-  onTap: () {},
-  child: SizedBox(
-  width: 24,
-  height: 24,
-  child: Image.asset('assets/Perfil.png')),
-  ),
-  const SizedBox(width: 10),
-  GestureDetector(
-  onTap: () {},
-  child: SizedBox(
-  width: 24,
-  height: 24,
-  child: Image.asset('assets/Calendr.png')),
-  ),
-  const SizedBox(width: 10),
-  GestureDetector(
-  onTap: () {},
-  child: SizedBox(
-  width: 24,
-  height: 24,
-  child: Image.asset('assets/Campana.png')),
-  ),
-  ],
-  ),
-  ],
-  ),
+  _barraSuperiorConAtras(context),
 
               const SizedBox(height: 20),
 
@@ -496,10 +472,84 @@ class _AgregarReservaScreenState extends State<AgregarReservaScreen> {
           ),
         ),
       ),
+      if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
     ],
   ),
 
 
+  );
+}
+
+  Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
   );
 }
 

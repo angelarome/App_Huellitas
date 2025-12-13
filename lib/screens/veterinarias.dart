@@ -12,6 +12,10 @@ import 'editarVeterinaria.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'compartirmascota.dart';
+import 'calendario.dart';
+import 'menu_lateral.dart';
+import 'interfazIA.dart';
 
 class PerfilVeterinariaScreen extends StatefulWidget {
   final int id_dueno;
@@ -35,6 +39,13 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
   List<Map<String, dynamic>> _calificacion = [];
   List<String> _mascotas= [];
   List<Uint8List?> _fotomascotas = [];
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   File? _imagen; // para móvil
   Uint8List? _webImagen; // para web
@@ -848,7 +859,14 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => IaMascotasScreen(id_dueno: widget.id_dueno),
+            ),
+          );
+        },
         child: Image.asset('assets/inteligent.png', width: 36, height: 36),
       ),
       body: Stack(
@@ -870,7 +888,7 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _menuSuperior(),
+                  _barraSuperiorConAtras(context),
                   const SizedBox(height: 20),
                   _fotoYNombre(),
                   const SizedBox(height: 12),
@@ -891,53 +909,85 @@ class _PerfilVeterinariaScreenState extends State<PerfilVeterinariaScreen> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_dueno),
         ],
       ),
     );
   }
 
   // ═══════════════════════════════════════════
-  // MENÚ SUPERIOR
-  Widget _menuSuperior() {
+  Widget _barraSuperior(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Menu.png')),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/devolver5.png')),
-            ),
-          ],
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
         ),
         Row(
           children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Perfil.png')),
-            ),
+            _iconoTop("assets/Perfil.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListVaciaCompartirScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Calendr.png')),
-            ),
+            _iconoTop("assets/Calendr.png", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarioEventosScreen(id_dueno: widget.id_dueno),
+                ),
+              );
+            }),
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Campana3.png')),
-            ),
+            _iconoTop("assets/Campana.png", () {}),
           ],
-        ),
+        )
+
+        
       ],
     );
   }
 
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
+  Widget _barraSuperiorConAtras(BuildContext context) {
+    return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // alinear a la izquierda
+    children: [
+      _barraSuperior(context), // tu barra original
+
+      // Tu botón de volver, justo debajo
+      
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            icon: Image.asset('assets/devolver5.png', width: 24, height: 24),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    ],
+  );
+}
   // ═══════════════════════════════════════════
   // FOTO Y NOMBRE
   Widget _fotoYNombre() {
