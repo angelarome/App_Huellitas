@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'mipaseador2.dart';
+import 'barralateralpaseador.dart';
 
 class _MilesFormatter extends TextInputFormatter {
   final NumberFormat _formatter = NumberFormat.decimalPattern('es_CO');
@@ -104,6 +105,13 @@ class _EditarPaseador extends State<EditarPaseador> {
   late TextEditingController _horariodomingo;
   late TextEditingController _cierredomingo;
   late TextEditingController _metodopago;
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
+  }
 
   bool _abreDomingo = false;
   List<String> _tipoPagoSeleccionado = [];
@@ -785,46 +793,7 @@ class _EditarPaseador extends State<EditarPaseador> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Row superior: menú y iconos
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Image.asset('assets/Menu.png')),
-                        onPressed: () {},
-                      ),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Perfil.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Calendr.png')),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {},
-                            child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: Image.asset('assets/Campana.png')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _barraSuperior(context),
 
                   const SizedBox(height: 20),
 
@@ -1250,8 +1219,42 @@ class _EditarPaseador extends State<EditarPaseador> {
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_paseador),
         ],
       ),
+    );
+  } 
+
+    Widget _barraSuperior(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
+        ),
+        Row(
+          children: [
+            
+            const SizedBox(width: 10),
+            _iconoTop("assets/Campana.png", () {}),
+          ],
+        )
+
+        
+      ],
+    );
+  }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
     );
   }
 

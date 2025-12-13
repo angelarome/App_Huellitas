@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'editarPaseador.dart';
 import 'calendariopaseador.dart';
 import 'iniciarsesion.dart';
+import 'barralateralpaseador.dart';
 class PerfilPaseadorScreen extends StatefulWidget {
   final int id_paseador;
 
@@ -40,6 +41,13 @@ class _PerfilPaseadorScreenState extends State<PerfilPaseadorScreen> {
   void initState() {
     super.initState();
     _obtenerPaseador(); // Llamamos a la API apenas se abre la pantalla
+  }
+
+  bool _menuAbierto = false;
+  void _toggleMenu() {
+    setState(() {
+      _menuAbierto = !_menuAbierto;
+    });
   }
 
   String capitalizar(String texto) {
@@ -617,11 +625,6 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        onPressed: () {},
-        child: Image.asset('assets/inteligent.png', width: 36, height: 36),
-      ),
       body: Stack(
         children: [
           // Fondo con desenfoque
@@ -644,7 +647,7 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _menuSuperior(),
+                  _barraSuperior(context),
                   const SizedBox(height: 20),
                   _fotoYNombre(),
                   const SizedBox(height: 20),
@@ -664,6 +667,8 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
               ),
             ),
           ),
+          if (_menuAbierto)
+            MenuLateralAnimado(onCerrar: _toggleMenu, id: widget.id_paseador),
         ],
       ),
     );
@@ -686,46 +691,38 @@ void mostrarConfirmacionAceptarRegistro(BuildContext context, VoidCallback onCon
     }
   }
   // ═══════════════════════════════════════════
-  // MENÚ SUPERIOR
-  Widget _menuSuperior() {
+  Widget _barraSuperior(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Menu.png')),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => LoginScreen(),
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/devolver5.png')),
-            ),
-          ],
+        IconButton(
+          icon: SizedBox(
+            width: 24,
+            height: 24,
+            child: Image.asset('assets/Menu.png'),
+          ),
+          onPressed: _toggleMenu,
         ),
         Row(
           children: [
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Perfil.png')),
-            ),
+            
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Calendr.png')),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {},
-              child: SizedBox(width: 24, height: 24, child: Image.asset('assets/Campana3.png')),
-            ),
+            _iconoTop("assets/Campana.png", () {}),
           ],
-        ),
+        )
+
+        
       ],
     );
   }
+
+  Widget _iconoTop(String asset, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(width: 24, height: 24, child: Image.asset(asset)),
+    );
+  }
+
 
   // ═══════════════════════════════════════════
   // FOTO Y NOMBRE
